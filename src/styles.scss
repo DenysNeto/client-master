@@ -1,0 +1,12 @@
+/* You can add global styles to this file, and also import other style files */
+body {
+	padding: 0;
+	margin: 0;
+}
+
+.draggable-cursor * {
+  cursor: move !important; /* fallback: no `url()` support or images disabled */
+  //cursor: -webkit-grabbing !important; /* Chrome 1-21, Safari 4+ */
+  //cursor:    -moz-grabbing !important; /* Firefox 1.5-26 */
+  //cursor:         grabbing !important; /* W3C standards syntax, should come least */
+}

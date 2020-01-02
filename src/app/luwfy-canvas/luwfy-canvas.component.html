@@ -1,0 +1,114 @@
+<div>
+  <button (click)="rerender()">rerender</button>
+</div>
+<!-- <ng-template #content> -->
+<div class="stage">
+  <ko-stage #stage [config]="KonvaUtil.createStage({width: 5000, height: 5000})"
+
+            (dragover)="handleDragOver($event)"
+            (dragstart)="handleDragStart($event)"
+            (click)="handleClickEvent($event)"
+            (dragend)="handleDragEnd($event)"
+
+            (mouseup)="handleMouseUp($event)"
+            (mousedown)="handleMouseDown($event)"
+            (mousemove)="handleMouseMove($event)">
+
+
+
+    <ko-layer>
+      <ko-line *ngFor="let item of [].constructor(250); let i = index"
+               [config]="KonvaUtil.getHorizontalLineInfo(i)"></ko-line>
+      <ko-line *ngFor="let item of [].constructor(250); let i = index"
+               [config]="KonvaUtil.getVerticallLineInfo(i)"></ko-line>
+    </ko-layer>
+
+
+    <!-- LINE -->
+
+    <!--    <ko-layer>-->
+    <!--      <ko-group>-->
+    <!--        <ko-path-->
+    <!--          [config]='KonvaUtil.createPath({"data":"M 240 200 C 315 200 395 160 470 160","stroke":"#fff","opacity":0,"strokeWidth":20})'></ko-path>-->
+    <!--        <ko-path-->
+    <!--          [config]='KonvaUtil.createPath({"data":"M 240 200 C 315 200 395 160 470 160","stroke":"#fff","strokeWidth":5})'></ko-path>-->
+    <!--        <ko-path-->
+    <!--          [config]='KonvaUtil.createPath({"data":"M 240 200 C 315 200 395 160 470 160","stroke":"#999","strokeWidth":3})'></ko-path>-->
+    <!--      </ko-group>-->
+    <!--    </ko-layer>-->
+
+
+    <ko-layer #lineLayer>
+      <!-- <ko-line [config]="KonvaUtil.createLine({x1: 800, y1:365, x2: 100, y2: 1000})"></ko-line> -->
+    </ko-layer>
+
+
+    <ko-layer #mainLayer>
+
+    </ko-layer>
+
+
+<!--    <ko-layer>-->
+<!--      <ko-group [config]="KonvaUtil.createGroup({x:item.x-160/2, y: item.y-30/2, draggable: true})"-->
+<!--                *ngFor="let item of data; let i = index">-->
+<!--        &lt;!&ndash; button right &ndash;&gt;-->
+<!--        <ko-group [config]="KonvaUtil.createGroup({x:154, y: 2})"-->
+<!--                  *ngIf="item.type.button && item.type.button.align === 'right'">-->
+<!--          <ko-rect [config]="KonvaUtil.createRect({width: 32,height: 26,fill: '#000', cornerRadius: 5})"></ko-rect>-->
+<!--          <ko-rect-->
+<!--            [config]="KonvaUtil.createRect({width: 16, height: 18, fill: item.type.color || 'blue', strokeWidth: '0', x:11, y:4, opacity: 1, cornerRadius: 4})"></ko-rect>-->
+<!--        </ko-group>-->
+
+<!--        &lt;!&ndash; button left &ndash;&gt;-->
+<!--        <ko-group [config]="KonvaUtil.createGroup({x:-32, y: 2})"-->
+<!--                  *ngIf="item.type.button && item.type.button.align === 'left'">-->
+<!--          <ko-rect [config]="KonvaUtil.createRect({width: 32,height: 26,fill: '#000', cornerRadius: 5})"></ko-rect>-->
+<!--          <ko-rect-->
+<!--            [config]="KonvaUtil.createRect({width: 16, height: 18, fill: item.type.color || 'blue', strokeWidth: '0', x:11, y:4, opacity: 1, cornerRadius: 4})"></ko-rect>-->
+<!--        </ko-group>-->
+
+<!--        &lt;!&ndash; rect &ndash;&gt;-->
+<!--        <ko-rect-->
+<!--          [config]="KonvaUtil.createRect({width: 160,height: 30,fill: item.type.color || 'blue', cornerRadius: 5})"></ko-rect>-->
+
+<!--        &lt;!&ndash; image &ndash;&gt;-->
+<!--        <ko-group [config]="KonvaUtil.createGroup({x:130, y: 0})">-->
+<!--          <ko-rect [config]="KonvaUtil.createRect({width: 30,height: 30})"></ko-rect>-->
+<!--          <ko-image [config]="KonvaUtil.createImage({width: 30,height: 30})"></ko-image>-->
+<!--          <ko-path [config]="KonvaUtil.createPath({data: 'M 0 1 l 0 28'})"></ko-path>-->
+<!--        </ko-group>-->
+
+<!--        &lt;!&ndash; top text &ndash;&gt;-->
+<!--        <ko-text [config]="KonvaUtil.createText({text: item._type, x: 0, y: -14, fill: 'red'})"></ko-text>-->
+
+<!--        &lt;!&ndash; status &ndash;&gt;-->
+<!--        <ko-group [config]="KonvaUtil.createGroup({x:3, y: 33})">-->
+<!--          <ko-rect-->
+<!--            [config]="KonvaUtil.createRect({x: 6, y:1, width: 9,height: 9, fill: 'green', strokeWidth: 3, cornerRadius:2})"></ko-rect>-->
+<!--          <ko-text [config]="KonvaUtil.createText({text: 'debug status', x: 20, y: 1, fill: 'green'})"></ko-text>-->
+<!--        </ko-group>-->
+
+<!--        &lt;!&ndash; required/modified &ndash;&gt;-->
+<!--        <ko-group [config]="KonvaUtil.createGroup({x:150, y: -2})">-->
+<!--          <ko-circle [config]="KonvaUtil.createCircle({radius: 5, fill: 'orange'})"></ko-circle>-->
+<!--        </ko-group>-->
+<!--        <ko-group [config]="KonvaUtil.createGroup({x:150, y: -2})">-->
+<!--          <ko-path [config]="KonvaUtil.createPath({data: 'M -5,4 l 10,0 -5,-8 z'})"></ko-path>-->
+<!--        </ko-group>-->
+
+<!--        &lt;!&ndash; input &ndash;&gt;-->
+<!--        <ko-group [config]="KonvaUtil.createGroup({x:-5, y: 10})" *ngIf="item.inputs || item.type.inputs">-->
+<!--          <ko-rect-->
+<!--            [config]="KonvaUtil.createRect({type: 'input', width: 10,height: 10,fill: 'red', cornerRadius: 3})"></ko-rect>-->
+<!--        </ko-group>-->
+
+<!--        &lt;!&ndash; output &ndash;&gt;,-->
+<!--        <ko-group [config]="KonvaUtil.createGroup({x:155, y: 10})">-->
+<!--          <ko-rect-->
+<!--            [config]="KonvaUtil.createRect({type: 'output', width: 10,height: 10,fill: 'blue', cornerRadius: 3})"></ko-rect>-->
+<!--        </ko-group>-->
+<!--      </ko-group>-->
+<!--    </ko-layer>-->
+  </ko-stage>
+</div>
+<!-- </ng-template> -->

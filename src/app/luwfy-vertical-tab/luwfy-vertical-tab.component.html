@@ -1,0 +1,49 @@
+<!--<div class="stage">-->
+<!--  <ko-stage #stage [config]="KonvaUtil.createStage({width: 100, height:1000})">-->
+
+<!--    <ko-layer>-->
+<!--      <div *ngFor="let value of values; let index">-->
+<!--        <ko-rect-->
+<!--          [config]="KonvaUtil.createRect({ x:10, y:index ?  10 + index * 30 : 10, width: 80,height: 20, fill: 'green', strokeWidth: 3, cornerRadius:2, draggable: true})">-->
+<!--        </ko-rect>-->
+<!--        <ko-text-->
+<!--          [config]="KonvaUtil.createText({text: 'Button ' + (index+1), x: 30, y: index ?  15 + index * 30 : 15, fill: 'black'})"></ko-text>-->
+
+<!--      </div>-->
+<!--    </ko-layer>-->
+
+
+<!--  </ko-stage>-->
+<!--</div>-->
+
+
+<!--<ko-rect-->
+<!--  [config]="KonvaUtil.createRect({ x:10, y:10, width: 80,height: 20, fill: 'green', strokeWidth: 3, cornerRadius:2})">-->
+<!--</ko-rect>-->
+<!--<ko-text [config]="KonvaUtil.createText({text: 'Button', x: 30, y: 15, fill: 'black'})"></ko-text>-->
+
+<!--<ko-rect-->
+<!--  [config]="KonvaUtil.createRect({ x:10, y:40, width: 80,height: 20, fill: 'green', strokeWidth: 3, cornerRadius:2})">-->
+<!--</ko-rect>-->
+<!--<ko-text [config]="KonvaUtil.createText({text: 'Button', x: 30, y: 45, fill: 'black'})"></ko-text>-->
+
+
+<div class="tab-wrapper">
+  <div style=" cursor: grab!important" id="func1-input" class="tab-function-input"
+       (dragstart)="dragEvent($event)"
+       draggable="true">
+    <p>Function Input 1</p>
+  </div>
+
+  <div id="func2-input" class="tab-function-input" (dragstart)="dragEvent($event)" draggable="true">
+    <p>Function Input 2</p>
+  </div>
+
+  <div id="func3-output" class="tab-function-output" (dragstart)="dragEvent($event)" draggable="true">
+    <p>Function Output 1</p>
+  </div>
+
+  <div id="func4-output" class="tab-function-output" (dragstart)="dragEvent($event)" draggable="true">
+    <p>Function Output 2</p>
+  </div>
+</div>

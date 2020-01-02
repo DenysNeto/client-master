@@ -1,0 +1,3 @@
+sad<button *ngFor="let tab of tabs; let i = index" (click)="acivateTab(tab.id)" [ngClass]="{'active': active_tab === tab.id}">
+	{{tab.label}}
+</button>
