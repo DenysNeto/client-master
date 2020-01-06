@@ -29,21 +29,102 @@
 
 
 <div class="tab-wrapper">
-  <div style=" cursor: grab!important" id="func1-input" class="tab-function-input"
-       (dragstart)="dragEvent($event)"
-       draggable="true">
-    <p>Function Input 1</p>
+
+  <!--  Blocks with Switch tabs -->
+  <div class="switch-block">
+    <span>Switch</span>
+    <div id="func1-input"
+         class="switch-function"
+         (dragstart)="dragEvent($event)"
+         draggable="true">
+      <div class="input-port"></div>
+      <div class="output-port1"></div>
+      <div class="output-port2"></div>
+    </div>
   </div>
 
-  <div id="func2-input" class="tab-function-input" (dragstart)="dragEvent($event)" draggable="true">
-    <p>Function Input 2</p>
+  <div class="switch-block">
+    <span>Switch</span>
+    <div id="func2-input"
+         class="switch-function"
+         (dragstart)="dragEvent($event)"
+         draggable="true">
+      <div class="input-port"></div>
+      <div class="output-port1"></div>
+      <div class="output-port2"></div>
+    </div>
   </div>
 
-  <div id="func3-output" class="tab-function-output" (dragstart)="dragEvent($event)" draggable="true">
-    <p>Function Output 1</p>
+  <div class="switch-block">
+    <span>Switch</span>
+    <div id="func3-output"
+         class="switch-function"
+         (dragstart)="dragEvent($event)"
+         draggable="true">
+      <div class="input-port"></div>
+      <div class="output-port1"></div>
+      <div class="output-port2"></div>
+    </div>
   </div>
 
-  <div id="func4-output" class="tab-function-output" (dragstart)="dragEvent($event)" draggable="true">
-    <p>Function Output 2</p>
+  <div class="switch-block">
+    <span>Switch</span>
+    <div id="func4-output"
+         class="switch-function"
+         (dragstart)="dragEvent($event)"
+         draggable="true">
+      <div class="input-port"></div>
+      <div class="output-port1"></div>
+      <div class="output-port2"></div>
+    </div>
   </div>
+
+  <!--  Blocks with Inject tabs (inject tabs doesn't works Drag&Drop)-->
+
+  <div class="inject-block">
+    <span>Inject</span>
+    <div class="inject-function">
+      <div class="input-port"></div>
+      <div class="switch-on">
+        <div class="switch-circle"></div>
+        <span>Push</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="inject-block">
+    <span>Inject</span>
+    <div class="inject-function">
+      <div class="input-port"></div>
+      <div class="switch-off">
+        <div class="switch-circle"></div>
+        <span>Push</span>
+      </div>
+    </div>
+  </div>
+
+  <!--  Blocks with Debug tabs (debug tabs doesn't works Drag&Drop)-->
+
+  <div class="debug-block">
+    <span>Debug</span>
+    <div class="debug-function-on">
+      <div class="input-port"></div>
+      <div class="switch-on">
+        <div class="switch-circle"></div>
+        <span>On</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="debug-block">
+    <span>Debug</span>
+    <div class="debug-function-off">
+      <div class="input-port"></div>
+      <div class="switch-off">
+        <span>Off</span>
+        <div class="switch-circle"></div>
+      </div>
+    </div>
+  </div>
+
 </div>
