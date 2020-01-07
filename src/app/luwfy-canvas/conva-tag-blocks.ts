@@ -1,5 +1,5 @@
 import Konva from 'konva';
-import {theme} from './colors';
+import {theme} from './theme';
 
 export const switchBlock = new Konva.Group({
   draggable: true
