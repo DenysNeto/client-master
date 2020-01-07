@@ -5,8 +5,8 @@ import {theme} from './colors';
 
 import Konva from 'konva';
 // import * as d3 from 'd3';
-import {Observable, of} from 'rxjs';
-import {CanvasService} from '../services/canvas.service.ts.service';
+
+
 import {debugBlock, injectBlock, switchBlock} from './conva-tag-blocks';
 import {Observable, of} from 'rxjs';
 import {CanvasService} from '../services/canvas.service.ts.service';
@@ -518,10 +518,10 @@ export class CanvasComponent implements OnInit {
 
         });
 
-      this.createdGroup.absolutePosition({
-        x: e.pageX,
-        y: e.pageY,
-      });
+      // this.createdGroup.absolutePosition({
+      //   x: e.pageX,
+      //   y: e.pageY,
+      // });
 
       this.createdGroup.add(this.rectangle);
       this.createdGroup.add(circle);

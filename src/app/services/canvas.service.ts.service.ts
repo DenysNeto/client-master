@@ -48,7 +48,7 @@ export class CanvasService {
       return null;
     }
 
-    last_path
+
 
 
 
