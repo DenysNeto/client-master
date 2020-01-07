@@ -31,6 +31,77 @@ export class CanvasService {
 
   }
 
+  getLastPathFromGroup = (component: Group) => {
+
+
+
+    if (component) {
+      return component.find((elem) => {
+        if (elem.className == 'Path' && elem.attrs.last_path) {
+          return elem;
+        }
+
+      });
+
+
+    } else {
+      return null;
+    }
+
+    last_path
+
+
+
+  };
+
+  getAllPathsFromGroup = (component:Group) => {
+
+    if (component) {
+      return component.find((elem) => {
+        if (elem.className == 'Path') {
+          return elem;
+        }
+
+      });
+
+
+    } else {
+      return null;
+    }
+
+  };
+
+  getRectFromGroup(component:StageComponent) {
+    if (component) {
+
+      return component.getStage().findOne((elem) => {
+        console.log('[c]', elem.className === 'Rect');
+
+        if (elem.className === 'Circle') {
+          return elem;
+        }
+      });
+    } else {
+      return null;
+    }
+  }
+
+  getCircleFromGroup(component: Group) {
+    if (component) {
+
+      return component.findOne((elem) => {
+        //  console.log('bbbb', elem.className);
+        console.log('[c]', elem.className === 'Circle');
+
+        if (elem.className === 'Circle') {
+          return elem;
+        }
+      });
+    } else {
+      return null;
+    }
+  }
+
   getPathFromGroup(component: StageComponent | any) {
     if (component) {
       return component.findOne((elem) => {

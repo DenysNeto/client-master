@@ -7,6 +7,7 @@ import Konva from 'konva';
 // import * as d3 from 'd3';
 import {Observable, of} from 'rxjs';
 import {CanvasService} from '../services/canvas.service.ts.service';
+import {IGroupCustom, IPathCustom, IRectCustom} from './shapes-interface';
 
 @Component({
   selector: 'luwfy-canvas',
@@ -26,7 +27,7 @@ export class CanvasComponent implements OnInit {
   drawningLine = false;
   KonvaUtil = KonvaUtil;
 
-  currentShape: any = new Konva.Rect({
+  rectangle:  IRectCustom = new Konva.Rect({
     x: null,
     y: null,
     width: 100,
@@ -37,7 +38,7 @@ export class CanvasComponent implements OnInit {
   });
 
 
-  createdGroup: any = new Konva.Group({
+  createdGroup: IGroupCustom = new Konva.Group({
     draggable: true,
     x: 0,
     y: 0,
@@ -239,19 +240,20 @@ export class CanvasComponent implements OnInit {
 
   handleDragOver = (e) => {
 
-    if (!this.currentShape || this.idChangedTrigger) {
+    if (!this.rectangle || this.idChangedTrigger) {
 
-      this.currentShape = new Konva.Rect({
+      this.rectangle  = new Konva.Rect({
         width: 100,
-        // x: -10,
-        // y: 0,
         height: 50,
+
+        //todo change to separate types colors
+
         fill: this.currentId.includes('input') ? 'red' : 'blue',
         stroke: 'black',
         draggable: false,
       });
 
-      let circle = new Konva.Circle({
+      let circle : IPathCustom  = new Konva.Circle({
         radius: 20,
         x: this.currentId.includes('input') ? 100 : 0,
         y: 25,
@@ -266,20 +268,27 @@ export class CanvasComponent implements OnInit {
               return elem;
             }
           });
-          if (temp_path && temp_path.isVisible()) {
-            temp_path.hide();
 
-            this.currentLineToDraw.isLineDrawable = false;
-            return 0;
-          }
+
+          // if (temp_path && temp_path.isVisible()) {
+          //   //temp_path.hide();
+          //
+          //   this.currentLineToDraw.isLineDrawable = false;
+          //   return 0;
+          // }
 
           this.currentLineToDraw.isLineDrawable = true;
           this.currentLineToDraw.groupId = event.target.parent._id;
 
           event.target.setAttr('fill', 'blue');
 
-          this.currentLineToDraw.prevX = this.stage.getStage().getPointerPosition().x;
-          this.currentLineToDraw.prevY = this.stage.getStage().getPointerPosition().y;
+
+          // this.currentLineToDraw.prevX = this.stage.getStage().getPointerPosition().x;
+          // this.currentLineToDraw.prevY = this.stage.getStage().getPointerPosition().y;
+
+          this.currentLineToDraw.prevX = event.target.parent.attrs.x + 100;
+          this.currentLineToDraw.prevY = event.target.parent.attrs.y + 25;
+
 
           let current_group = this.mainLayer.getStage().findOne((elem) => {
             if (elem._id === this.currentLineToDraw.groupId) {
@@ -294,12 +303,12 @@ export class CanvasComponent implements OnInit {
 
           });
 
-          if (!isCurrentPath) {
+          if (true || !isCurrentPath) {
             event.target.parent.add(new Konva.Path({
               data: '',
               attached: true,
               custom_id: 'line_' + event.target._id,
-
+              last_path: 'true',
               strokeWidth: 3,
               lineJoin: 'round',
               opacity: 1,
@@ -308,53 +317,14 @@ export class CanvasComponent implements OnInit {
             event.target.parent.zIndex(100);
           }
 
-        } else if (event.target.parent.attrs.type.includes('output')) {
-          if (this.currentLineToDraw.isLineDrawable) {
-            event.target.setAttr('fill', 'red');
-            let current_group = this.mainLayer.getStage().findOne((elem) => {
-              if (elem._id === this.currentLineToDraw.groupId) {
-                return elem;
-              }
-            });
-            console.log('[OUTPUT group]', current_group);
-            const pos = this.stage.getStage().getPointerPosition();
-
-            let current_path = current_group.findOne((elem) => {
-              if (elem.attrs.custom_id && elem.attrs.custom_id.includes('line')) {
-                return elem;
-              }
-            });
-
-            current_path.zIndex(100);
-            current_path.setAttr('data', KonvaUtil.generateLinkPath(this.currentLineToDraw.prevX - current_group.getPosition().x, this.currentLineToDraw.prevY - current_group.getPosition().y,
-              Math.ceil((pos.x - current_group.getPosition().x) / 5) * 5,
-              Math.ceil((pos.y - current_group.getPosition().y) / 5) * 5, 1));
-
-            current_path.setAttr('custom_id_output', event.target.parent._id);
-
-            if (event.target.parent.attrs.input_group) {
-              let arr_temp: { path_id: number, group_id: number }[] = event.target.parent.attrs.input_group;
-              arr_temp.push({
-                path_id: current_path._id,
-                group_id: current_group._id,
-              });
-              event.target.parent.setAttr('input_group', arr_temp);
-
-            } else {
-              let arr_temp = [];
-              arr_temp.push({
-                path_id: current_path._id,
-                group_id: current_group._id,
-              });
-              event.target.parent.setAttr('input_group', arr_temp);
-            }
-
-            this.currentLineToDraw.isLineDrawable = false;
-            current_group.draw();
-            return 0;
-
-          }
         }
+
+
+
+      }).on('mouseenter', (event) => {
+
+
+
 
       });
 
@@ -380,23 +350,99 @@ export class CanvasComponent implements OnInit {
         }
 
       }).on('dragstart', (event) => {
+        if (this.currentLineToDraw.isLineDrawable) {
+          return 0;
+        }
         this.activeWrapperBlock.isDraw = false;
         this.activeWrapperBlock.rectangle.setAttr('visible', false);
       }).on('mousedown', (event) => {
         this.activeWrapperBlock.isActive = false;
         this.activeWrapperBlock.isDraw = false;
         this.activeWrapperBlock.rectangle.setAttr('visible', false);
-      }).on('dragstart', (event) => {
-        if (this.currentLineToDraw.isLineDrawable) {
-          return 0;
-        }
       })
         .on('mousedown', (event) => {
           event.target.position();
 
+        }).on('mouseup', (event) => {
+
+
+          if (event.target.parent.attrs.type && event.target.parent.attrs.type.includes('output')) {
+
+            if (this.currentLineToDraw.isLineDrawable) {
+              let current_circle = this.canvasService.getCircleFromGroup(event.target.parent);
+              current_circle.setAttr('fill', 'red');
+              // let current_group = this.mainLayer.getStage().findOne((elem) => {
+              //   if (elem._id === this.currentLineToDraw.groupId) {
+              //     return elem;
+              //   }
+              // });
+              const pos = this.stage.getStage().getPointerPosition();
+              let current_path_group = this.canvasService.getGroupById(this.currentLineToDraw.groupId, this.mainLayer);
+              let current_path = current_path_group.findOne((elem) => {
+                if (elem.attrs.custom_id && elem.attrs.custom_id.includes('line')) {
+                  return elem;
+                }
+              });
+              let current_output_rectangle = this.canvasService.getRectFromGroup(event.target.parent);
+              current_path.zIndex(100);
+              current_path.setAttr('data', KonvaUtil.generateLinkPath(this.currentLineToDraw.prevX - current_path_group.getPosition().x, this.currentLineToDraw.prevY - current_path_group.getPosition().y,
+                event.target.parent.attrs.x - current_path_group.attrs.x,
+                event.target.parent.attrs.y - current_path_group.attrs.y + 25, 1));
+
+              current_path.setAttr('custom_id_output', event.target._id);
+
+
+              if (event.target.parent.attrs.input_group) {
+                let arr_temp: { path_id: number, group_id: number }[] = event.target.parent.attrs.input_group;
+                arr_temp.push({
+                  path_id: current_path._id,
+                  //input id
+                  group_id: current_path.parent._id,
+                });
+                event.target.parent.setAttr('input_group', arr_temp);
+
+              }
+
+              else {
+                let arr_temp = [];
+                arr_temp.push({
+                  path_id: current_path._id,
+                  group_id: current_path.parent._id,
+                });
+                event.target.parent.setAttr('input_group', arr_temp);
+              }
+
+              this.currentLineToDraw.isLineDrawable = false;
+              event.target.parent.draw();
+              return 0;
+
+            }
+          }
+        }).on('mouseenter', (event) => {
+          if (event.target.parent.attrs.type && event.target.parent.attrs.type.includes('output')) {
+            if (this.currentLineToDraw.isLineDrawable) {
+              let current_circle = this.canvasService.getCircleFromGroup(event.target.parent);
+              current_circle.setAttr('fill', theme.circle_background_output);
+            }
+
+          }
+
+
+        }).on('mouseleave', (event) => {
+          if (event.target.parent.attrs.type && event.target.parent.attrs.type.includes('output')) {
+            if (this.currentLineToDraw.isLineDrawable) {
+              let current_circle = this.canvasService.getCircleFromGroup(event.target.parent);
+              current_circle.setAttr('fill', 'white');
+            }
+
+          }
         })
 
         .on('dragmove', (event) => {
+          if(!event)
+          {
+            return 0;
+          }
           let isPathInGroup = this.canvasService.isPathInGroup(event.target);
 
           if (isPathInGroup) {
@@ -406,43 +452,62 @@ export class CanvasComponent implements OnInit {
             this.currentLineToDraw.prevX = event.target.attrs.x + 100;
             this.currentLineToDraw.prevY = event.target.attrs.y + 25;
 
+
+            console.log('[c] PPPPP', event.target);
+
             let current_path = this.canvasService.getPathFromGroup(event.target);
-            console.log('[c] bbbbbb', current_path.attrs.custom_id_output);
+            console.log('[c] current_path', current_path);
 
             let current_output_group = this.canvasService.getGroupById(current_path.attrs.custom_id_output, this.mainLayer);
 
-            console.log('[c] output group', current_output_group);
-            this.currentLineToDraw.swapOrientation();
-            this.currentLineToDraw.positionEnd = {
-              x: current_output_group.attrs.x,
-              y: current_output_group.attrs.y + 25,
-            };
+            console.log('[c] output group', current_output_group.parent.attrs.x, current_output_group.parent.attrs.y);
+
+            // this.currentLineToDraw.swapOrientation();
+            //
+            // this.currentLineToDraw.positionEnd = {
+            //   x: current_output_group.attrs.x,
+            //   y: current_output_group.attrs.y + 25,
+            // };
+
+            console.log('[c] (x,y) start', this.currentLineToDraw.positionEnd.x, this.currentLineToDraw.positionEnd.y);
+            console.log('[c] (x,y) end', event.target.attrs.x, event.target.attrs.y);
 
             event.target.zIndex(100);
 
             // current_path.setAttr('data', KonvaUtil.generateLinkPath(Math.abs(this.currentLineToDraw.prevMainX - event.target.getPosition().x),Math.abs (this.currentLineToDraw.prevMainY - event.target.getPosition().y), Math.ceil((pos.x - event.target.getPosition().x +  event.evt.movementX) / 5) * 5, Math.ceil((pos.y  + event.evt.movementY) / 5) * 5, 1));
-            current_path.setAttr('data', KonvaUtil.generateLinkPath(this.currentLineToDraw.positionEnd.x - event.target.getPosition().x, this.currentLineToDraw.positionEnd.y - event.target.getPosition().y, Math.ceil((event.target.attrs.x - event.target.getPosition().x + 100) / 5) * 5, Math.ceil((event.target.attrs.y - event.target.getPosition().y + 25) / 5) * 5, 0));
+
+
+            current_path.setAttr('data', KonvaUtil.generateLinkPath(current_output_group.parent.attrs.x - event.target.attrs.x, current_output_group.parent.attrs.y - event.target.attrs.y + 25,  100,  25, 0));
+
+            ;
+
+
             //current_path.rotate(3);
 
             // this.currentLineToDraw.prevX = event.target.attrs.x + 100;
             // this.currentLineToDraw.prevY = event.target.attrs.y + 25;
           } else if (event.target.attrs.input_group) {
+
+
             let inputGroup_temp = event.target.attrs.input_group;
-            console.log('[c] elem HHHHH', event.target.attrs.input_group);
 
             inputGroup_temp.forEach((elem) => {
-              this.currentLineToDraw.prevMainX = event.target.attrs.x + 10;
+              this.currentLineToDraw.prevMainX = event.target.attrs.x + 100;
               this.currentLineToDraw.prevMainY = event.target.attrs.y + 25;
               let current_input_group = this.canvasService.getGroupById(elem.group_id, this.mainLayer);
-
               this.currentLineToDraw.prevX = current_input_group.attrs.x + 100;
               this.currentLineToDraw.prevY = current_input_group.attrs.y + 25;
 
-              console.log('[c] current group  HHHHH', current_input_group);
+
               let current_path = this.canvasService.getPathFromGroup(current_input_group);
-              current_path.setAttr('data', KonvaUtil.generateLinkPath(this.currentLineToDraw.prevX - current_input_group.getPosition().x, this.currentLineToDraw.prevY - current_input_group.getPosition().y, Math.ceil((event.target.attrs.x - current_input_group.getPosition().x + 10) / 5) * 5, Math.ceil((event.target.attrs.y - current_input_group.getPosition().y + 25) / 5) * 5, 1));
-              // this.currentLineToDraw.prevMainX = event.target.attrs.x + 10;
-              // this.currentLineToDraw.prevMainY = event.target.attrs.y + 25;
+
+
+              current_path.setAttr('data', KonvaUtil.generateLinkPath(
+                this.currentLineToDraw.prevX - current_input_group.getPosition().x,
+                this.currentLineToDraw.prevY - current_input_group.getPosition().y,
+                Math.ceil((event.target.attrs.x - current_input_group.getPosition().x + 10) / 5) * 5,
+                Math.ceil((event.target.attrs.y - current_input_group.getPosition().y + 25) / 5) * 5, 1));
+
             });
 
             // current_path.setAttr('data', KonvaUtil.generateLinkPath(this.currentLineToDraw.positionEnd.x - event.target.getPosition().x, this.currentLineToDraw.positionEnd.y - event.target.getPosition().y, Math.ceil((event.target.attrs.x - event.target.getPosition().x + 100) / 5) * 5, Math.ceil((event.target.attrs.y - event.target.getPosition().y + 25) / 5) * 5, 0));
@@ -455,34 +520,16 @@ export class CanvasComponent implements OnInit {
         y: e.pageY,
       });
 
-      this.createdGroup.add(this.currentShape);
+      this.createdGroup.add(this.rectangle);
       this.createdGroup.add(circle);
 
-      //
-      // this.currentShape.setAttr('x', e.layerX);
-      // this.currentShape.setAttr('y', e.layerY);
-
-      this.prev_X = e.layerX;
-      this.prev_Y = e.layerY;
       this.idChangedTrigger = false;
-      // this.mainLayer.getStage().add(this.currentShape);
       this.mainLayer.getStage().add(this.createdGroup);
       this.mainLayer.getStage().draw();
 
     } else
-      // if (Math.abs(this.prev_X - e.layerX) > 1 || Math.abs(this.prev_Y - e.layerY) > 1)
+
     {
-
-      //let temp_shape = this.mainLayer.getStage().children[0];
-
-      // this.mainLayer.getStage().clear();
-
-      // console.log()
-
-      // this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].hide();
-      // this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].draw();
-
-      //this.createdGroup.setAttr('x', 0);
 
       this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].position({
         x: e.layerX,
@@ -490,16 +537,6 @@ export class CanvasComponent implements OnInit {
       });
 
       this.createdGroup = null;
-
-      // temp_shape.draw();
-      // temp_shape.shouldDrawHit(false);
-
-      // this.prev_X = e.layerX;
-      // this.prev_Y = e.layerY;
-
-      //setTimeout(()=> , 0);
-
-      //temp_shape.draw();
 
     }
 
@@ -645,11 +682,7 @@ export class CanvasComponent implements OnInit {
   checkValueBetween = (obj: { x: number, y: number }, width, height) => {
     // up and left
 
-    console.log('[c] CHECK_VALUE', obj);
-    console.log('[c] CHECK_VALUE WRAPPER_BLOCK [init]', this.activeWrapperBlock.initial_position.x, this.activeWrapperBlock.initial_position.y);
-    console.log('[c] CHECK_VALUE WRAPPER_BLOCK [now]', this.activeWrapperBlock.now_position.x, this.activeWrapperBlock.now_position.y);
-    console.log('[c] CHECK_VALUE width', width);
-    console.log('[c] CHECK_VALUE height', height);
+
 
     let condition_up_and_left = (
 
@@ -770,11 +803,14 @@ export class CanvasComponent implements OnInit {
     if (!e) {
       return 0;
     }
-    console.log('[c] line drawable uuuuu 1', this.currentLineToDraw.isLineDrawable);
+
+
+
+
+
     if (this.currentLineToDraw.isLineDrawable) {
 
       const pos = this.stage.getStage().getPointerPosition();
-      console.log('[c] delta', Math.abs(this.currentLineToDraw.prevMainX - pos.x) > 30 || Math.abs(this.currentLineToDraw.prevMainY - pos.y) > 30);
       if (Math.abs(this.currentLineToDraw.prevMainX - pos.x) > 10 || Math.abs(this.currentLineToDraw.prevMainY - pos.y) > 10) {
 
         //console.log ( '[c] line drawable uuuuu 2' );
@@ -785,6 +821,9 @@ export class CanvasComponent implements OnInit {
         // this.currentLineToDraw.line.points(arr);
         // this.currentLineToDraw.prevX = e.layerX;
         // this.currentLineToDraw.prevY = e.layerY;
+
+
+
         const pos = this.stage.getStage().getPointerPosition();
 
         //  let current_group = this.canvasService.getGroupById(this.currentLineToDraw.groupId, this.mainLayer);
@@ -797,9 +836,9 @@ export class CanvasComponent implements OnInit {
 
         });
 
-        console.log('[c] current group', current_group);
 
-        // let current_path = this.canvasService.getPathFromGroup(current_group);
+       let all_paths =  this.canvasService.getAllPathsFromGroup(current_group);
+
         let current_path = current_group.findOne((elem) => {
           console.log('elem', elem);
           if (elem.attrs.custom_id && elem.attrs.custom_id.includes('line')) {
@@ -808,7 +847,7 @@ export class CanvasComponent implements OnInit {
 
         });
 
-        console.log('[c] current_path', current_path);
+
         if (current_path) {
           this.currentLineToDraw.prevMainX = pos.x;
           this.currentLineToDraw.prevMainY = pos.y;
@@ -817,8 +856,6 @@ export class CanvasComponent implements OnInit {
           current_path.zIndex(100);
           current_path.show();
 
-          //this.currentLineToDraw.line =  current_path;
-          // current_group.draw ();
         }
 
         // else {
