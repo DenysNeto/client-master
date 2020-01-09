@@ -7,6 +7,7 @@ $background_gray: #5b5b5b;
 $background_white: white;
 $text_color_white: white;
 
+$color_test: #10253e;
 
 .stage {
   background: red;
@@ -27,6 +28,7 @@ $text_color_white: white;
 .switch-block {
   text-align: center;
 
+
   span {
     padding: 0;
     margin: 0;
@@ -38,27 +40,34 @@ $text_color_white: white;
 .switch-function {
   width: 80px;
   height: 80px;
-  color: transparent;
   border: 2px solid $switch_color;
+  //background: url("src/assets/switch.svg") no-repeat center;
   border-radius: 10px;
-  margin: 0px auto 10px;
+  margin: 0 auto 10px;
   cursor: pointer;
 
   .input-port {
     position: relative;
+    left: -13px;
     top: 30px;
-    left: -12px;
     width: 18px;
     height: 18px;
     background-color: $switch_color;
     border: 2px solid $switch_color;
     border-radius: 10px;
+    float: left;
+  }
+  svg{
+    position: relative;
+    float: left;
+    top: 13px;
+    right: 8px;
   }
 
   .output-port1 {
     position: relative;
     left: 70px;
-    top: -15px;
+    top: 8px;
     width: 18px;
     height: 18px;
     background-color: $background_gray;
@@ -69,7 +78,7 @@ $text_color_white: white;
   .output-port2 {
     position: relative;
     left: 70px;
-    top: 8px;
+    top: 28px;
     width: 18px;
     height: 18px;
     background-color: $background_gray;
@@ -196,7 +205,7 @@ $text_color_white: white;
 
   .switch-on {
     position: relative;
-    background-color: $background_white;
+    background-color: steelblue;
     left: 20px;
     top: 48px;
     width: 35px;
@@ -219,7 +228,7 @@ $text_color_white: white;
       position: relative;
       top: -1px;
       font: 400 11px Roboto, sans-serif;
-      color: white;
+      color: $background_white;
     }
   }
 }
@@ -251,7 +260,7 @@ $text_color_white: white;
     background-color: $gray_switcher;
     left: 20px;
     top: 48px;
-    width: 35px;
+    width: 40px;
     height: 18px;
     border: 2px solid $gray_switcher;
     border-radius: 10px;
@@ -269,7 +278,8 @@ $text_color_white: white;
 
     span {
       position: relative;
-      top: -1px;
+      top: 3px;
+      float: left;
       font: 400 11px Roboto, sans-serif;
       color: $text_color_white;
     }

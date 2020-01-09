@@ -3,10 +3,13 @@ import {RegistryService} from '../services/registry.service';
 import KonvaUtil from './konva-util';
 import {theme} from './colors';
 import Konva from 'konva';
-// import * as d3 from 'd3';
 import {Observable, of} from 'rxjs';
 import {CanvasService} from '../services/canvas.service.ts.service';
-import {debugBlock, injectBlock, switchBlock} from './conva-tag-blocks';
+import {debugGroup1, injectGroup1, switchGroup1} from './conva-tag-blocks';
+import {MatDialog, MatDialogRef} from '@angular/material';
+import {ModalPropComponent} from '../popups/modal-prop/modal-prop.component';
+import {BlocksRedactorService} from '../popups/blocks-redactor.service';
+import {Group} from 'konva/types/Group';
 
 @Component({
   selector: 'luwfy-canvas',
@@ -15,7 +18,8 @@ import {debugBlock, injectBlock, switchBlock} from './conva-tag-blocks';
 })
 
 export class CanvasComponent implements OnInit {
-  constructor(private RegistryService: RegistryService, private canvasService: CanvasService) {
+  constructor(private RegistryService: RegistryService, private canvasService: CanvasService, private dialog: MatDialog,
+              private blocksRedactorService: BlocksRedactorService) {
   }
 
   temp = 'hello';
@@ -24,6 +28,7 @@ export class CanvasComponent implements OnInit {
   lines = [];
   drawningLine = false;
   KonvaUtil = KonvaUtil;
+  fileNameDialogRef: MatDialogRef<ModalPropComponent>;
 
 
   currentShape: any = new Konva.Rect({
@@ -949,11 +954,19 @@ export class CanvasComponent implements OnInit {
       //this.mainLayer.getStage ().add ( line_q );
 
       //todo draw
+      let arrBlocks = [switchGroup1, injectGroup1, debugGroup1];
 
+      const addOnLayerAndModalHandler = (group: Group) => {
+        group.findOne(elem => elem.attrs.type === 'iconGroup').on('click', () => {
+          if (!this.blocksRedactorService.checkerOnExistBlock(group)) {
+            this.blocksRedactorService.addBlock(group);
+          }
+          this.fileNameDialogRef = this.dialog.open(ModalPropComponent, {data: group._id});
+        });
+        this.mainLayer.getStage().add(group);
+      };
 
-      this.mainLayer.getStage().add(switchBlock);
-      this.mainLayer.getStage().add(injectBlock);
-      this.mainLayer.getStage().add(debugBlock);
+      arrBlocks.forEach(group => addOnLayerAndModalHandler(group));
 
       //  this.mainLayer.getStage ().add ( path);
     }, 0);
