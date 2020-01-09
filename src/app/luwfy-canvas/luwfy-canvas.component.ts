@@ -3,12 +3,15 @@ import {RegistryService} from '../services/registry.service';
 import KonvaUtil from './konva-util';
 import {theme} from './theme';
 
-import Konva from 'konva';
+import Konva, {Collection} from 'konva';
 import {Observable, of} from 'rxjs';
 import {CanvasService} from '../services/canvas.service';
-import {IGroupCustom, IPathCustom, IRectCustom, TypeGroup} from './shapes-interface';
+import {CircleTypes, IActiveWrapperBlock, ICurrentLineToDraw, IGroupCustom, IPathCustom, IRectCustom, TypeGroup} from './shapes-interface';
+import {Group} from 'konva/types/Group';
+import {Path} from 'konva/types/shapes/Path';
 
 // import * as d3 from 'd3';
+
 
 @Component({
   selector: 'luwfy-canvas',
@@ -20,6 +23,7 @@ export class CanvasComponent implements OnInit {
   constructor(private RegistryService: RegistryService, private canvasService: CanvasService) {
 
   }
+
 
   temp = 'hello';
   data = [];
@@ -39,18 +43,20 @@ export class CanvasComponent implements OnInit {
   });
 
 
-  createdGroup: IGroupCustom = new Konva.Group({
-    draggable: true,
-    x: 0,
-    y: 0,
-  });
+  // createdGroup: IGroupCustom | Group = new Konva.Group({
+  //   draggable: true,
+  //   x: 0,
+  //   y: 0,
+  //   number_of_groups: 0
+  // });
 
   currentId: string;
   idChangedTrigger: boolean = false;
 
-  currentLineToDraw = {
+  currentLineToDraw: ICurrentLineToDraw = {
     isLineDrawable: false,
     groupId: 0,
+    lineId: 0,
     line: new Konva.Path({
       attached: false,
       width: 1,
@@ -71,30 +77,106 @@ export class CanvasComponent implements OnInit {
       x: 0, y: 0,
     },
 
-    swapOrientation: () => {
-      this.currentLineToDraw.positionStart = {x: this.currentLineToDraw.prevX, y: this.currentLineToDraw.prevY};
-      this.currentLineToDraw.positionEnd = {
-        x: this.currentLineToDraw.prevMainX,
-        y: this.currentLineToDraw.prevMainY,
-      };
-    },
   };
 
   //todo move to service
 
 
-
-  currentActiveGroup = new Konva.Group({
+  currentActiveGroup: Group = new Konva.Group({
     draggable: true,
     visible: true,
   }).on('dragstart', (event) => {
+    console.log('[c] 777');
+
     this.activeWrapperBlock.isDraw = false;
     this.activeWrapperBlock.rectangle.setAttr('visible', false);
+  }).on('dragmove', (event) => {
+
+
+    if (!event) {
+      return 0;
+    }
+
+
+    let isPathInGroup = this.canvasService.isPathInGroup(event.target);
+
+
+    let input_paths: Collection<IPathCustom> = this.canvasService.getAllInputLinesFromGroup(this.mainLayer, event.target as Group | IGroupCustom);
+    console.log('[c] input path zzz', input_paths);
+    if (isPathInGroup || input_paths) {
+
+
+      let output_paths: Collection<IPathCustom> = this.canvasService.getAllOutputLinesFromGroup(event.target as Group | IGroupCustom);
+
+
+      if (output_paths) {
+
+        output_paths.each((elem) => {
+
+
+          //start point
+          let temp_start_point_group = this.canvasService.getGroupById(elem.attrs.end_info.end_group_id, this.mainLayer.getStage());
+          let temp_end_point_circle = this.canvasService.getCircleFromGroupById(event.target.getStage(), elem.attrs.start_info.start_circle_id);
+
+
+          let temp_start_circle = this.canvasService.getCircleFromGroupById(temp_start_point_group, elem.attrs.end_info.end_circle_id);
+
+
+          //end point
+
+
+          elem.setAttr('data',
+            KonvaUtil.generateLinkPath(temp_start_point_group.getAbsolutePosition().x - event.target.attrs.x + temp_start_circle.attrs.x,
+              temp_start_point_group.getAbsolutePosition().y - event.target.attrs.y + temp_start_circle.attrs.y,
+              temp_end_point_circle.attrs.x, temp_end_point_circle.attrs.y, -3));
+
+
+        });
+
+
+      }
+
+      if (input_paths) {
+
+
+        console.log('[c] input_path',);
+        input_paths.each((elem) => {
+
+
+          //start point
+          let temp_start_point_group = this.canvasService.getGroupById(elem.attrs.start_info.start_group_id, mainLayer.getStage());
+          let temp_end_point_circle = this.canvasService.getCircleFromGroupById(event.target.getStage(), elem.attrs.end_info.end_circle_id);
+
+          let temp_start_point_circle = this.canvasService.getCircleFromGroupById(event.target.getStage(), elem.attrs.start_info.start_circle_id);
+
+
+          let temp_start_circle = this.canvasService.getCircleFromGroupById(temp_start_point_group, elem.attrs.start_info.start_circle_id);
+
+          let temp_input_circle = event.target.getStage().findOne((elem) => {
+            if (elem.className === 'Circle' && elem.attrs.type === CircleTypes.Input) {
+              return elem;
+            }
+          });
+          console.log('[c] i', event.target);
+
+          elem.setAttr('data',
+            KonvaUtil.generateLinkPath(temp_start_point_group.getAbsolutePosition().x - temp_start_point_group.attrs.x + temp_start_circle.attrs.x,
+              temp_start_point_group.getAbsolutePosition().y - temp_start_point_group.attrs.y + temp_start_circle.attrs.y,
+              event.target.attrs.x - temp_start_point_group.attrs.x, event.target.attrs.y - temp_start_point_group.attrs.y + temp_input_circle.attrs.y, 3));
+        });
+
+
+      }
+
+
+    }
+
+
   });
 
 
   // mouse rectangle selection
-  activeWrapperBlock = {
+  activeWrapperBlock: IActiveWrapperBlock = {
 
     initial_position: {
       x: 0,
@@ -103,20 +185,18 @@ export class CanvasComponent implements OnInit {
     now_position: {
       x: 0, y: 0,
     },
+
     isActive: false,
     isDraw: false,
     rectangle: new Konva.Rect({
       stroke: 'blue',
       draggable: false,
+      isActive_block: true
     }),
 
   };
 
-  //reverse mouse rectangle selection depending on move
-  // left & up
-  // left & down
-  // right & up
-  // right & down
+
   reverseFunction = (r1, r2) => {
     let r1x = r1.x,
       r1y = r1.y,
@@ -138,12 +218,6 @@ export class CanvasComponent implements OnInit {
   updateDragWrapper(posIn: { x: number, y: number }) {
     this.activeWrapperBlock.now_position = {x: posIn.x, y: posIn.y};
     let posRect = this.reverseFunction(this.activeWrapperBlock.initial_position, this.activeWrapperBlock.now_position);
-    // this.activeWrapperBlock.rectangle.setAttr ( 'x', posRect.x1 );
-    // this.activeWrapperBlock.rectangle.setAttr ( 'y', posRect.y1 );
-    //
-    // this.activeWrapperBlock.rectangle.setAttr ( 'width', posRect.x2 - posRect.x1 );
-    // this.activeWrapperBlock.rectangle.setAttr ( 'height', posRect.y2 - posRect.y1 );
-    // this.activeWrapperBlock.rectangle.setAttr ( 'visible', true );
 
     this.activeWrapperBlock.rectangle.setAttrs({
       width: posRect.x2 - posRect.x1,
@@ -157,27 +231,6 @@ export class CanvasComponent implements OnInit {
   @ViewChild('stage', null) stage: any;
   @ViewChild('lineLayer', null) lineLayer: any;
   @ViewChild('mainLayer', null) mainLayer: any = new Konva.Layer({});
-
-
-  private path_background: Observable<any> = of({
-    data: 'M 240 200 C 315 200 395 160 470 160',
-    stroke: '#fff',
-    opacity: 0,
-    strokeWidth: 20,
-  });
-
-
-  private path_outline: Observable<any> = of({
-    data: 'M 240 200 C 315 200 395 160 470 160',
-    stroke: '#fff',
-    strokeWidth: 5,
-  });
-
-  private path_link_line: Observable<any> = of({
-    data: 'M 240 200 C 315 200 395 160 470 160',
-    stroke: '#999',
-    strokeWidth: 3,
-  });
 
 
   //delete all objects from the selection rectangle
@@ -206,6 +259,32 @@ export class CanvasComponent implements OnInit {
       this.mainLayer.getStage().draw();
 
     }
+
+  };
+
+  setClickEventForGroup = (group: Group) => {
+    group.on('click', (event) => {
+
+      event.cancelBubble = true;
+
+      if (event.evt.ctrlKey) {
+
+        event.target.parent.setAttr('x', event.target.parent.position().x - this.currentActiveGroup.position().x);
+        event.target.parent.setAttr('y', event.target.parent.position().y - this.currentActiveGroup.position().y);
+
+        this.currentActiveGroup.add(event.target.parent as Group);
+        event.target.parent.children.each((elem) => {
+          elem.setAttr('stroke', 'yellow');
+          elem.setAttr('draggable', false);
+
+        });
+        event.target.parent.setAttr('draggable', false);
+
+      }
+
+    });
+
+    //todo add switches for different group types
 
   };
 
@@ -245,257 +324,14 @@ export class CanvasComponent implements OnInit {
 
   handleDragOver = (e) => {
 
-    if (!this.rectangle || this.idChangedTrigger) {
-
-      this.rectangle = new Konva.Rect({
-        width: 100,
-        height: 50,
-
-        //todo change to separate types colors
-
-        fill: this.currentId.includes('input') ? 'red' : 'blue',
-        stroke: 'black',
-        draggable: false,
-      });
-
-      let circle: IPathCustom = new Konva.Circle({
-        radius: 20,
-        x: this.currentId.includes('input') ? 100 : 0,
-        y: 25,
-        fill: 'white',
-        stroke: 'black',
-        strokeWidth: 5,
-      }).on('mousedown', (event) => {
-        if (event.target.parent.attrs.type.includes('input')) {
-          event.cancelBubble = true;
-          let temp_path = event.target.parent.findOne((elem) => {
-            if (elem.attrs.custom_id && elem.attrs.custom_id.includes(event.target._id.toString())) {
-              return elem;
-            }
-          });
+    if (this.idChangedTrigger) {
 
 
-          // if (temp_path && temp_path.isVisible()) {
-          //   //temp_path.hide();
-          //
-          //   this.currentLineToDraw.isLineDrawable = false;
-          //   return 0;
-          // }
-
-          this.currentLineToDraw.isLineDrawable = true;
-          this.currentLineToDraw.groupId = event.target.parent._id;
-
-          event.target.setAttr('fill', 'blue');
-
-
-          // this.currentLineToDraw.prevX = this.stage.getStage().getPointerPosition().x;
-          // this.currentLineToDraw.prevY = this.stage.getStage().getPointerPosition().y;
-
-          this.currentLineToDraw.prevX = event.target.parent.attrs.x + 100;
-          this.currentLineToDraw.prevY = event.target.parent.attrs.y + 25;
-
-
-          let current_group = this.mainLayer.getStage().findOne((elem) => {
-            if (elem._id === this.currentLineToDraw.groupId) {
-              return elem;
-            }
-          });
-
-          let isCurrentPath = current_group.findOne((elem) => {
-            if (elem.attrs.custom_id && elem.attrs.custom_id.includes('line')) {
-              return true;
-            }
-
-          });
-
-          if (true || !isCurrentPath) {
-            event.target.parent.add(new Konva.Path({
-              data: '',
-              attached: true,
-              custom_id: 'line_' + event.target._id,
-              last_path: 'true',
-              strokeWidth: 3,
-              lineJoin: 'round',
-              opacity: 1,
-              stroke: '#999',
-            }));
-            event.target.parent.zIndex(100);
-          }
-
-        }
-
-
-      }).on('mouseenter', (event) => {
-
-
-      });
-
-      this.createdGroup = new Konva.Group({
-        draggable: true,
-        type: this.currentId,
-      }).on('click', (event) => {
-
-        event.cancelBubble = true;
-
-        if (event.evt.ctrlKey) {
-
-          event.target.parent.setAttr('x', event.target.parent.position().x - this.currentActiveGroup.position().x);
-          event.target.parent.setAttr('y', event.target.parent.position().y - this.currentActiveGroup.position().y);
-
-          this.currentActiveGroup.add(event.target.parent);
-          event.target.parent.children.each((elem) => {
-            elem.setAttr('stroke', 'yellow');
-            elem.setAttr('draggable', false);
-
-          });
-          event.target.parent.setAttr('draggable', false);
-
-        }
-
-      }).on('mousedown', (event) => {
-        this.activeWrapperBlock.isActive = false;
-        this.activeWrapperBlock.isDraw = false;
-        this.activeWrapperBlock.rectangle.setAttr('visible', false);
-      })
-        .on('mousedown', (event) => {
-          event.target.position();
-
-        }).on('mouseup', (event) => {
-
-
-          if (event.target.parent.attrs.type && event.target.parent.attrs.type.includes('output')) {
-
-            if (this.currentLineToDraw.isLineDrawable) {
-              let current_circle = this.canvasService.getCircleFromGroup(event.target.parent);
-              current_circle.setAttr('fill', 'red');
-              // let current_group = this.mainLayer.getStage().findOne((elem) => {
-              //   if (elem._id === this.currentLineToDraw.groupId) {
-              //     return elem;
-              //   }
-              // });
-              const pos = this.stage.getStage().getPointerPosition();
-              let current_path_group = this.canvasService.getGroupById(this.currentLineToDraw.groupId, this.mainLayer);
-              let current_path = current_path_group.findOne((elem) => {
-                if (elem.attrs.custom_id && elem.attrs.custom_id.includes('line')) {
-                  return elem;
-                }
-              });
-              let current_output_rectangle = this.canvasService.getRectFromGroup(event.target.parent);
-              current_path.zIndex(100);
-              current_path.setAttr('data', KonvaUtil.generateLinkPath(this.currentLineToDraw.prevX - current_path_group.getPosition().x, this.currentLineToDraw.prevY - current_path_group.getPosition().y,
-                event.target.parent.attrs.x - current_path_group.attrs.x,
-                event.target.parent.attrs.y - current_path_group.attrs.y + 25, 1));
-
-              current_path.setAttr('custom_id_output', event.target._id);
-
-
-              if (event.target.parent.attrs.input_group) {
-                let arr_temp: { path_id: number, group_id: number }[] = event.target.parent.attrs.input_group;
-                arr_temp.push({
-                  path_id: current_path._id,
-                  //input id
-                  group_id: current_path.parent._id,
-                });
-                event.target.parent.setAttr('input_group', arr_temp);
-
-              } else {
-                let arr_temp = [];
-                arr_temp.push({
-                  path_id: current_path._id,
-                  group_id: current_path.parent._id,
-                });
-                event.target.parent.setAttr('input_group', arr_temp);
-              }
-
-              this.currentLineToDraw.isLineDrawable = false;
-              event.target.parent.draw();
-              return 0;
-
-            }
-          }
-        }).on('mouseenter', (event) => {
-          if (event.target.parent.attrs.type && event.target.parent.attrs.type.includes('output')) {
-            if (this.currentLineToDraw.isLineDrawable) {
-              let current_circle = this.canvasService.getCircleFromGroup(event.target.parent);
-              current_circle.setAttr('fill', theme.circle_background_output);
-            }
-
-          }
-
-
-        }).on('mouseleave', (event) => {
-          if (event.target.parent.attrs.type && event.target.parent.attrs.type.includes('output')) {
-            if (this.currentLineToDraw.isLineDrawable) {
-              let current_circle = this.canvasService.getCircleFromGroup(event.target.parent);
-              current_circle.setAttr('fill', 'white');
-            }
-
-          }
-        });
-
-        // .on('dragmove', (event) => {
-        //   if (!event) {
-        //     return 0;
-        //   }
-        //   let isPathInGroup = this.canvasService.isPathInGroup(event.target);
-        //
-        //   if (isPathInGroup) {
-        //
-        //     //todo add
-        //
-        //     this.currentLineToDraw.prevX = event.target.attrs.x + 100;
-        //     this.currentLineToDraw.prevY = event.target.attrs.y + 25;
-        //
-        //
-        //
-        //     let current_path = this.canvasService.getPathFromGroup(event.target);
-        //
-        //     let current_output_group = this.canvasService.getGroupById(current_path.attrs.custom_id_output, this.mainLayer);
-        //
-        //
-        //     event.target.zIndex(100);
-        //
-        //     current_path.setAttr('data', KonvaUtil.generateLinkPath(current_output_group.parent.attrs.x - event.target.attrs.x, current_output_group.parent.attrs.y - event.target.attrs.y + 25, 100, 25, 0));
-        //   } else if (event.target.attrs.input_group) {
-        //
-        //
-        //     let inputGroup_temp = event.target.attrs.input_group;
-        //
-        //     inputGroup_temp.forEach((elem) => {
-        //       this.currentLineToDraw.prevMainX = event.target.attrs.x + 100;
-        //       this.currentLineToDraw.prevMainY = event.target.attrs.y + 25;
-        //       let current_input_group = this.canvasService.getGroupById(elem.group_id, this.mainLayer);
-        //       this.currentLineToDraw.prevX = current_input_group.attrs.x + 100;
-        //       this.currentLineToDraw.prevY = current_input_group.attrs.y + 25;
-        //
-        //
-        //       let current_path = this.canvasService.getPathFromGroup(current_input_group);
-        //
-        //
-        //       current_path.setAttr('data', KonvaUtil.generateLinkPath(
-        //         this.currentLineToDraw.prevX - current_input_group.getPosition().x,
-        //         this.currentLineToDraw.prevY - current_input_group.getPosition().y,
-        //         Math.ceil((event.target.attrs.x - current_input_group.getPosition().x + 10) / 5) * 5,
-        //         Math.ceil((event.target.attrs.y - current_input_group.getPosition().y + 25) / 5) * 5, 1));
-        //
-        //     });
-        //
-        //     // current_path.setAttr('data', KonvaUtil.generateLinkPath(this.currentLineToDraw.positionEnd.x - event.target.getPosition().x, this.currentLineToDraw.positionEnd.y - event.target.getPosition().y, Math.ceil((event.target.attrs.x - event.target.getPosition().x + 100) / 5) * 5, Math.ceil((event.target.attrs.y - event.target.getPosition().y + 25) / 5) * 5, 0));
-        //   }
-        //
-        // });
-
-      // this.createdGroup.absolutePosition({
-      //   x: e.pageX,
-      //   y: e.pageY,
-      // });
-
-      this.createdGroup.add(this.rectangle);
-      this.createdGroup.add(circle);
-
+      let current_group = this.canvasService.createDefaultGroup(4, TypeGroup.Regular, this.mainLayer, this.activeWrapperBlock, this.currentActiveGroup);
       this.idChangedTrigger = false;
-      this.mainLayer.getStage().add(this.createdGroup);
-      this.mainLayer.getStage().draw();
+      this.setClickEventForGroup(current_group);
+      this.mainLayer.getStage().add(current_group);
+
 
     } else {
 
@@ -504,115 +340,17 @@ export class CanvasComponent implements OnInit {
         y: e.layerY,
       });
 
-      this.createdGroup = null;
 
     }
 
   };
 
-  // handleMouseDown = ( e ) => {
-  //     if ( !e ) {
-  //         return;
-  //     }
-  //     var stage = this.stage.getStage ();
-  //
-  //     if ( !stage.clickStartShape ) {
-  //         return;
-  //     }
-  //
-  //     var output    = stage.clickStartShape;
-  //     var group     = output.parent.parent;
-  //     var container = output.parent;
-  //
-  //     group.draggable ( false );
-  //
-  //     const onOutput = output instanceof Konva.Rect && output.attrs.type === 'output';
-  //
-  //     if ( onOutput ) {
-  //         console.log ( 'should draw line' );
-  //         this.drawningLine = true;
-  //
-  //         var line_layer = this.lineLayer.getStage ();
-  //
-  //         var Path = new Konva.Path ( {
-  //             _x         : container.x () + group.x (),
-  //             _y         : container.y () + group.y (),
-  //             attached   : false,
-  //             data       : '',
-  //             stroke     : '#999',
-  //             opacity    : 1,
-  //             strokeWidth: 3,
-  //         } );
-  //
-  //         console.log ( '[c] event move', e );
-  //         console.log ( '[c] event (x;y)', container.x () + group.x (), container.y () + group.y () );
-  //         this.lines.push ( Path );
-  //         line_layer.add ( Path );
-  //
-  //         line_layer.draw ();
-  //
-  //     }
-  // };
-  //
-  // handleMouseMove = ( e ) => {
-  //     if ( !this.drawningLine ) {
-  //         return;
-  //     }
-  //     var stage      = this.stage.getStage ();
-  //     var line_layer = this.lineLayer.getStage ();
-  //
-  //     const pos      = stage.getPointerPosition ();
-  //     const lastLine = this.lines[ this.lines.length - 1 ];
-  //     // lastLine.setAttr('points', [lastLine.attrs.points[0],lastLine.attrs.points[1], Math.ceil(pos.x / 20) * 20, Math.ceil(pos.y / 20) * 20]);
-  //     // lastLine.setAttr('points', [lastLine.attrs.points[0],lastLine.attrs.points[1], Math.ceil(pos.x / 5) * 5, Math.ceil(pos.y / 5) * 5]);
-  //
-  //     console.log ( 'dest X', Math.ceil ( pos.x / 5 ) * 5, 'dest y', Math.ceil ( pos.y / 5 ) * 5 );
-  //     console.log ( '[c] dddd', KonvaUtil.generateLinkPath ( lastLine.attrs._x, lastLine.attrs._y, Math.ceil ( pos.x / 5 ) * 5, Math.ceil ( pos.y / 5 ) * 5, 1 ) );
-  //
-  //     lastLine.setAttr ( 'data', KonvaUtil.generateLinkPath ( lastLine.attrs._x, lastLine.attrs._y, Math.ceil ( pos.x / 5 ) * 5, Math.ceil ( pos.y / 5 ) * 5, 1 ) );
-  //
-  //     line_layer.draw ();
-  // };
-  //
-  // handleMouseUp = ( e ) => {
-  //     if ( !e ) {
-  //         return;
-  //     }
-  //     if ( this.drawningLine ) {
-  //         this.drawningLine = false;
-  //         const lastLine    = this.lines[ this.lines.length - 1 ];
-  //         lastLine.destroy ();
-  //
-  //         var stage  = this.stage.getStage ();
-  //         var output = stage.clickStartShape;
-  //         var input  = stage.clickEndShape;
-  //
-  //         if ( !output || !input || !output.parent || !input.parent ) {
-  //             return;
-  //         }
-  //
-  //         var output_group = output.parent.parent;
-  //         var input_group  = input.parent.parent;
-  //         var container    = output.parent;
-  //
-  //         const onInput = input instanceof Konva.Rect && input.attrs.type === 'input';
-  //
-  //         if ( onInput && output_group !== input_group ) {
-  //             alert ( 'attach path' );
-  //         }
-  //
-  //         stage.clickStartShape = null;
-  //         stage.clickEndShape   = null;
-  //
-  //         return;
-  //     }
-  // };
 
   //todo uncomment
 
   handleMouseUp = (e) => {
 
-    console.log('[c]   mouse up canvas');
+
     let elem = this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1];
     let i = this.mainLayer.getStage().children.length;
 
@@ -724,8 +462,6 @@ export class CanvasComponent implements OnInit {
     if (this.activeWrapperBlock.initial_position.x >= this.activeWrapperBlock.now_position.x && this.activeWrapperBlock.initial_position.y >= this.activeWrapperBlock.now_position.y) {
       if (condition_up_and_left) {
         return true;
-        //todo add elem to group
-
       }
 
     }
@@ -741,8 +477,6 @@ export class CanvasComponent implements OnInit {
     if (this.activeWrapperBlock.initial_position.x >= this.activeWrapperBlock.now_position.x && this.activeWrapperBlock.initial_position.y <= this.activeWrapperBlock.now_position.y) {
       if (condition_down_and_left) {
         return true;
-        //todo add elem to group
-
       }
 
     }
@@ -771,25 +505,12 @@ export class CanvasComponent implements OnInit {
       return 0;
     }
 
-
     if (this.currentLineToDraw.isLineDrawable) {
-
       const pos = this.stage.getStage().getPointerPosition();
       if (Math.abs(this.currentLineToDraw.prevMainX - pos.x) > 10 || Math.abs(this.currentLineToDraw.prevMainY - pos.y) > 10) {
 
-        //console.log ( '[c] line drawable uuuuu 2' );
-        // console.log ( '[c] LAYER(cond)', Math.abs ( this.currentLineToDraw.prevX - e.layerX ) > 500 || Math.abs ( this.currentLineToDraw.prevY - e.layerY ) > 500 );
-
-        // let arr = this.currentLineToDraw.line.points();
-        // arr.push(e.layerX, e.layerY);
-        // this.currentLineToDraw.line.points(arr);
-        // this.currentLineToDraw.prevX = e.layerX;
-        // this.currentLineToDraw.prevY = e.layerY;
-
-
         const pos = this.stage.getStage().getPointerPosition();
 
-        //  let current_group = this.canvasService.getGroupById(this.currentLineToDraw.groupId, this.mainLayer);
 
         let current_group = this.mainLayer.getStage().findOne((elem) => {
 
@@ -799,12 +520,8 @@ export class CanvasComponent implements OnInit {
 
         });
 
-
-        let all_paths = this.canvasService.getAllPathsFromGroup(current_group);
-
         let current_path = current_group.findOne((elem) => {
-          console.log('elem', elem);
-          if (elem.attrs.custom_id && elem.attrs.custom_id.includes('line')) {
+          if (elem._id === this.currentLineToDraw.lineId) {
             return elem;
           }
 
@@ -812,36 +529,16 @@ export class CanvasComponent implements OnInit {
 
 
         if (current_path) {
-          this.currentLineToDraw.prevMainX = pos.x;
-          this.currentLineToDraw.prevMainY = pos.y;
-          current_path.setAttr('data', KonvaUtil.generateLinkPath(this.currentLineToDraw.prevX - current_group.getPosition().x, this.currentLineToDraw.prevY - current_group.getPosition().y, Math.ceil((pos.x - current_group.getPosition().x) / 5) * 5, Math.ceil((pos.y - current_group.getPosition().y) / 5) * 5, 1));
+
+          current_path.setAttr('data', KonvaUtil.generateLinkPath(this.currentLineToDraw.prevX - current_group.getPosition().x - 20, this.currentLineToDraw.prevY - current_group.getPosition().y, Math.ceil((pos.x - current_group.getPosition().x) / 5) * 5, Math.ceil((pos.y - current_group.getPosition().y) / 5) * 5, 1));
 
           current_path.zIndex(100);
           current_path.show();
 
         }
-
-        // else {
-        //     console.log ( '[c] path not exists' );
-        //     this.currentLineToDraw.line.setAttr ( 'data', KonvaUtil.generateLinkPath ( this.currentLineToDraw.prevX, this.currentLineToDraw.prevY, Math.ceil ( (pos.x) / 5 ) * 5, Math.ceil ( (pos.y) / 5 ) * 5, 1 ) );
-        //     this.currentLineToDraw.line.show ();
-        //     // current_group.add ( this.currentLineToDraw.line );
-        // }
-        //
-        // console.log ( '[c] current group', current_group );
-        //  current_group.draw ();
-
-        // this.currentLineToDraw.line.points ( [ ...this.current_line.points (), ...[ e.layerY, e.layerX ] ] );
-
-        // this.currentLineToDraw.prevX = e.pageX;
-        // this.currentLineToDraw.prevY = e.pageY;
-
-        //  //todo draw line
-
       }
-
-      // }
     }
+
     if (this.activeWrapperBlock.isDraw) {
       this.updateDragWrapper({x: e.layerX, y: e.layerY});
 
@@ -851,8 +548,6 @@ export class CanvasComponent implements OnInit {
 //todo uncomment
 
   handleMouseDown = (e) => {
-    console.log('[c]   mouse down canvas');
-
     if (this.currentLineToDraw.isLineDrawable) {
       return 0;
     }
@@ -869,12 +564,6 @@ export class CanvasComponent implements OnInit {
 
   };
 
-  // @ViewChild("content", {read: TemplateRef}) contentRef: TemplateRef<any>;
-
-  // rerender () {
-  //
-  // }
-
   ngOnInit() {
 
     this.RegistryService.currentDraggableItem.subscribe((data) => {
@@ -886,14 +575,12 @@ export class CanvasComponent implements OnInit {
       this.data = blocks;
     });
 
-    var line_layer = this.lineLayer.getStage();
+    this.canvasService.lineToDraw.subscribe((data) => {
+      this.currentLineToDraw = data;
+    });
 
-    var line_q = new Konva.Line({
-      x: 100,
-      y: 50,
-      points: [10, 10, 20, 20, 40, 40, 180, 210],
-      stroke: 'red',
-      tension: 1,
+    this.canvasService.activeBlock.subscribe((data) => {
+      this.activeWrapperBlock = data;
     });
 
 
@@ -926,19 +613,28 @@ export class CanvasComponent implements OnInit {
       this.mainLayer.getStage().add(this.currentActiveGroup);
       this.mainLayer.getStage().add(this.currentLineToDraw.line);
 
-      var path = new Konva.Path({
-        x: 240,
-        y: 40,
-        data: 'M12.582,9.551C3.251,16.237,0.921,29.021,7.08,38.564l-2.36,1.689l4.893,2.262l4.893,2.262l-0.568-5.36l-0.567-5.359l-2.365,1.694c-4.657-7.375-2.83-17.185,4.352-22.33c7.451-5.338,17.817-3.625,23.156,3.824c5.337,7.449,3.625,17.813-3.821,23.152l2.857,3.988c9.617-6.893,11.827-20.277,4.935-29.896C35.591,4.87,22.204,2.658,12.582,9.551z',
-        scaleX: 2,
-        scaleY: 2,
-      });
+
       //this.mainLayer.getStage ().add ( line_q );
 
       //todo draw
-      let group = this.canvasService.createDefaultGroup(16, TypeGroup.Regular);
+      // let group = this.canvasService.createDefaultGroup(50, TypeGroup.Regular, this.mainLayer, this.activeWrapperBlock, this.currentActiveGroup);
+      // let group2 = this.canvasService.createDefaultGroup(5, TypeGroup.Regular, this.mainLayer, this.activeWrapperBlock, this.currentActiveGroup);
+      // let group3 = this.canvasService.createDefaultGroup(10, TypeGroup.Regular, this.mainLayer, this.activeWrapperBlock, this.currentActiveGroup);
+      // let group2 = this.canvasService.createDefaultGroup(5, TypeGroup.Regular, this.mainLayer, this.activeWrapperBlock, this.currentActiveGroup);
 
-      this.mainLayer.getStage().add(group);
+      //todo put in one place
+
+      // this.setClickEventForGroup(group);
+
+      // this.setClickEventForGroup(group2);
+      // this.setClickEventForGroup(group3);
+
+      // this.mainLayer.getStage().add(group);
+
+      // this.mainLayer.getStage().add(group2);
+      // this.mainLayer.getStage().add(group3);
+
+      // this.mainLayer.getStage().add(group2);
       // this.mainLayer.getStage().add(switchBlock);
       // this.mainLayer.getStage().add(injectBlock);
       // this.mainLayer.getStage().add(debugBlock);

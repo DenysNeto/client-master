@@ -150,6 +150,10 @@ export default {
             }
             cp[2][0] = topX;
         }
+
+
+
+
         return "M "+origX+" "+origY+
             " C "+
                cp[0][0]+" "+cp[0][1]+" "+

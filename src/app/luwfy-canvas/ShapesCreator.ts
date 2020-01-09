@@ -1,7 +1,7 @@
 import Konva from 'konva';
 import {theme} from './theme';
 import {ShapesSizes as sizes} from './sizes';
-import {IPathCustom, IRectCustom} from './shapes-interface';
+import {CircleTypes, ICircleCustom, IPathCustom, IRectCustom, IStartPointPathInfo} from './shapes-interface';
 
 
 const ShapeCreator = {
@@ -14,6 +14,7 @@ const ShapeCreator = {
       y: y ? y : sizes.block_height / 2,
       radius: sizes.circle_radius,
       fill: theme.circle_background_input,
+      type: CircleTypes.Input,
     });
 
   },
@@ -24,7 +25,8 @@ const ShapeCreator = {
       y,
       radius: sizes.circle_radius,
       fill: theme.circle_background_output,
-      stroke:theme.rect_switch_stroke
+      stroke: theme.rect_switch_stroke,
+      type: CircleTypes.Output,
     });
   },
 
@@ -35,6 +37,7 @@ const ShapeCreator = {
       fill: theme.switcher_unactivated_background,
       cornerRadius: 10,
       stroke: 'red',
+      type: CircleTypes.Error
     });
 
   },
@@ -50,17 +53,19 @@ const ShapeCreator = {
 
   },
 
-  createLine: (): IPathCustom => {
+  createLine: (start_info: IStartPointPathInfo) => {
 
     return new Konva.Path({
         data: '',
+        start_info,
         attached: true,
         custom_id_output: 0,
         strokeWidth: 3,
         lineJoin: 'round',
+
         opacity: 1,
         stroke: theme.line_color,
-        isLastPathInGroup: 'true'
+        isLastPathInGroup: true
       }
     );
   }
