@@ -5,11 +5,7 @@ import {Rect} from 'konva/types/shapes/Rect';
 import Konva from 'konva';
 
 
-export enum TypeGroup {
-  Debug = 'debug',
-  Inject = 'inject',
-  Regular = 'regular'
-}
+
 
 export enum CircleTypes {
   Input = 'input',

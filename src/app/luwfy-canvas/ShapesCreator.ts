@@ -6,7 +6,7 @@ import {CircleTypes, ICircleCustom, IPathCustom, IRectCustom, IStartPointPathInf
 
 const ShapeCreator = {
 
-  createCircleInput: (y?: number) => {
+  createCircleInput: (  y?: number, payload?: any,) => {
 
 
     return new Konva.Circle({
@@ -19,7 +19,7 @@ const ShapeCreator = {
 
   },
 
-  createCircleOutput: (y?: number) => {
+  createCircleOutput: ( y?: number, payload?: any) => {
     return new Konva.Circle({
       x: sizes.block_width,
       y,
@@ -30,7 +30,7 @@ const ShapeCreator = {
     });
   },
 
-  createCircleError: () => {
+  createCircleError: (payload?:any) => {
     return new Konva.Rect({
       width: sizes.block_width,
       height: sizes.block_height,
@@ -42,7 +42,7 @@ const ShapeCreator = {
 
   },
 
-  createRect: (strokeColor: string, height?: number): IRectCustom => {
+  createRect: (strokeColor: string, height?: number, payload?:any): IRectCustom => {
     return new Konva.Rect({
       width: sizes.block_width,
       height: height || sizes.block_height,
@@ -53,7 +53,7 @@ const ShapeCreator = {
 
   },
 
-  createLine: (start_info: IStartPointPathInfo) => {
+  createLine: (start_info: IStartPointPathInfo, payload?:any) => {
 
     return new Konva.Path({
         data: '',
