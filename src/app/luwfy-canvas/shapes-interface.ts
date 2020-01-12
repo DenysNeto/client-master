@@ -36,8 +36,6 @@ export interface ICurrentLineToDraw {
 
 
 export interface IActiveWrapperBlock {
-
-
   initial_position: { x: number, y: number },
   now_position: { x: number, y: number },
   isActive: boolean,

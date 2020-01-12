@@ -136,7 +136,7 @@ export class CanvasComponent implements OnInit {
               KonvaUtil.generateLinkPath(temp_end_point_circle.attrs.x,
                 temp_end_point_circle.attrs.y,
                 temp_start_point_group.getAbsolutePosition().x - event.target.getAbsolutePosition().x - temp_end_point_group.attrs.x,
-                temp_start_point_group.getAbsolutePosition().y - event.target.getAbsolutePosition().y - temp_end_point_group.attrs.y + temp_start_circle.attrs.y, 3));
+                temp_start_point_group.getAbsolutePosition().y - event.target.getAbsolutePosition().y - temp_end_point_group.attrs.y + temp_start_circle.attrs.y, 1));
 
           });
 
@@ -163,7 +163,7 @@ export class CanvasComponent implements OnInit {
               KonvaUtil.generateLinkPath(temp_start_point_circle.attrs.x,
                 temp_start_point_circle.attrs.y,
                 +event.target.getAbsolutePosition().x - temp_start_point_group.getAbsolutePosition().x + temp_end_point_group.attrs.x,
-                event.target.getAbsolutePosition().y - temp_start_point_group.getAbsolutePosition().y + temp_end_point_group.attrs.y + temp_input_circle.attrs.y, 3));
+                event.target.getAbsolutePosition().y - temp_start_point_group.getAbsolutePosition().y + temp_end_point_group.attrs.y + temp_input_circle.attrs.y, 1));
           });
 
         }
@@ -287,35 +287,34 @@ export class CanvasComponent implements OnInit {
 
   handleClickEvent = (event) => {
 
-    if (this.currentLineToDraw.isLineDrawable) {
-      this.currentLineToDraw.isLineDrawable = false;
-
-      let current_group = this.mainLayer.getStage().findOne((elem) => {
-        if (elem._id === this.currentLineToDraw.groupId) {
-          return elem;
-        }
-
-      });
-
-      let current_path = current_group.findOne((elem) => {
-        if (elem.attrs.custom_id && elem.attrs.custom_id.includes('line')) {
-          return elem;
-        }
-
-      });
-
-      if (current_path) {
-        console.log('[c] case 1');
-        current_path.hide();
-      } else {
-        console.log('[c] case 2');
-        this.currentLineToDraw.line.hide();
-      }
-      current_group.draw();
-
-      return 0;
-
-    }
+    // if (this.currentLineToDraw.isLineDrawable) {
+    //   this.currentLineToDraw.isLineDrawable = false;
+    //
+    //   let current_group = this.mainLayer.getStage().findOne((elem) => {
+    //     if (elem._id === this.currentLineToDraw.groupId) {
+    //       return elem;
+    //     }
+    //
+    //   });
+    //
+    //   let current_path = current_group.findOne((elem) => {
+    //     if (elem.attrs.custom_id && elem.attrs.custom_id.includes('line')) {
+    //       return elem;
+    //     }
+    //
+    //   });
+    //
+    //   if (current_path) {
+    //     current_path.hide();
+    //   } else {
+    //     console.log('[c] case 2');
+    //     this.currentLineToDraw.line.hide();
+    //   }
+    //   current_group.draw();
+    //
+    //   return 0;
+    //
+    // }
     this.deleteShapesFromGroup();
   };
 
@@ -342,6 +341,21 @@ export class CanvasComponent implements OnInit {
   //todo uncomment
 
   handleMouseUp = (e) => {
+
+
+    if (this.currentLineToDraw.isLineDrawable) {
+      console.log('[c] mouse up qqq 2');
+      let current_group = this.canvasService.getGroupById(this.currentLineToDraw.groupId, this.mainLayer);
+      let temp_path = this.canvasService.getPathFromGroupById(this.currentLineToDraw.lineId, current_group);
+
+      if (!temp_path.start_info || !temp_path.end_info) {
+        console.log('[c] mouse up qqq 2');
+        temp_path.remove();
+      }
+      return 0;
+
+    }
+
 
     let elem = this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1];
     let i = this.mainLayer.getStage().children.length;
@@ -524,8 +538,8 @@ export class CanvasComponent implements OnInit {
 
           current_path.setAttr('data', KonvaUtil.generateLinkPath(this.currentLineToDraw.prevX - current_group.getPosition().x - 20, this.currentLineToDraw.prevY - current_group.getPosition().y, Math.ceil((pos.x - current_group.getPosition().x) / 5) * 5, Math.ceil((pos.y - current_group.getPosition().y) / 5) * 5, 1));
 
-          current_path.zIndex(100);
-          current_path.show();
+         // current_path.zIndex(100);
+          //current_path.show();
 
         }
       }
@@ -618,7 +632,7 @@ export class CanvasComponent implements OnInit {
         this.mainLayer.getStage().add(group);
       };
 
-       arrBlocks.forEach(group => addOnLayerAndModalHandler(group));
+      //arrBlocks.forEach(group => addOnLayerAndModalHandler(group));
 
     }, 0);
 
