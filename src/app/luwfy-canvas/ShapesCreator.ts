@@ -62,7 +62,6 @@ const ShapeCreator = {
         custom_id_output: 0,
         strokeWidth: 3,
         lineJoin: 'round',
-
         opacity: 1,
         stroke: theme.line_color,
         isLastPathInGroup: true
