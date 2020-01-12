@@ -17,24 +17,31 @@ import { Group } from 'konva/types/Group';
 import { Collection } from 'konva/types/Util';
 
 // import * as d3 from 'd3';
+import {Observable, of} from 'rxjs';
+import {debugGroup1, injectGroup1, switchGroup1} from './conva-tag-blocks';
+import {MatDialog, MatDialogRef} from '@angular/material';
+import {ModalPropComponent} from '../popups/modal-prop/modal-prop.component';
+import {BlocksRedactorService} from '../popups/blocks-redactor.service';
+import {Group} from 'konva/types/Group';
 
-@Component ( {
-    selector   : 'luwfy-canvas',
-    templateUrl: './luwfy-canvas.component.html',
-    styleUrls  : [ './luwfy-canvas.component.scss' ],
-} )
+@Component({
+  selector: 'luwfy-canvas',
+  templateUrl: './luwfy-canvas.component.html',
+  styleUrls: ['./luwfy-canvas.component.scss'],
+})
 
 export class CanvasComponent implements OnInit {
-    constructor ( private RegistryService: RegistryService, private canvasService: CanvasService ) {
+  constructor(private RegistryService: RegistryService, private canvasService: CanvasService, private dialog: MatDialog,
+              private blocksRedactorService: BlocksRedactorService) {
+  }
 
-    }
-
-    temp           = 'hello';
-    data           = [];
-    selected_items = [];
-    lines          = [];
-    drawningLine   = false;
-    KonvaUtil      = KonvaUtil;
+  temp = 'hello';
+  data = [];
+  selected_items = [];
+  lines = [];
+  drawningLine = false;
+  KonvaUtil = KonvaUtil;
+  fileNameDialogRef: MatDialogRef<ModalPropComponent>;
 
     rectangle: IRectCustom = new Konva.Rect ( {
         x        : null,
@@ -600,10 +607,20 @@ export class CanvasComponent implements OnInit {
             this.mainLayer.getStage ().add ( this.currentLineToDraw.line );
 
 
-            //todo draw
+      //todo draw
+      let arrBlocks = [switchGroup1, injectGroup1, debugGroup1];
 
+      const addOnLayerAndModalHandler = (group: Group) => {
+        group.findOne(elem => elem.attrs.type === 'iconGroup').on('click', () => {
+          if (!this.blocksRedactorService.checkerOnExistBlock(group)) {
+            this.blocksRedactorService.addBlock(group);
+          }
+          this.fileNameDialogRef = this.dialog.open(ModalPropComponent, {data: group._id});
+        });
+        this.mainLayer.getStage().add(group);
+      };
 
-            //todo put in one place
+      arrBlocks.forEach(group => addOnLayerAndModalHandler(group));
 
         }, 0 );
 

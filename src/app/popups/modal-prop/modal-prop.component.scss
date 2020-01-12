@@ -1,0 +1,38 @@
+::ng-deep .mat-dialog-container {
+  padding: 0;
+}
+
+.container {
+  width: 935px;
+  height: 770px;
+  position: relative;
+
+  .head_line {
+    background-color: #1b6580;
+    height: 50px;
+
+    span {
+      color: white;
+    }
+  }
+}
+
+.tabs_list {
+  position: absolute;
+  right: 10px;
+
+  a {
+    cursor: pointer;
+  }
+}
+
+::ng-deep .mat-tab-label{
+  i{
+    padding-right: 20px;
+
+    &:hover{
+      color: steelblue;
+    }
+  }
+}
+

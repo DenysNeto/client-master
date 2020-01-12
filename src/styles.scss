@@ -12,3 +12,6 @@
   //cursor:    -moz-grabbing !important; /* Firefox 1.5-26 */
   //cursor:         grabbing !important; /* W3C standards syntax, should come least */
 }
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

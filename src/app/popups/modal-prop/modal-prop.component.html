@@ -1,0 +1,35 @@
+<div class="container">
+
+  <div class="head_line">
+    <span>Block appearance</span>
+  </div>
+
+  <div class="block_tabs">
+    <mat-tab-group [(selectedIndex)]="selected">
+      <mat-tab *ngFor="let tab of tabs">
+        <ng-template mat-tab-label>
+          <i
+            class="fa fa-times-circle-o"
+            aria-hidden="true"
+            (click)="onRemove(tab._id)"
+          ></i>
+          <span>
+          Tab - {{tab._id}}
+          </span>
+        </ng-template>
+        {{tab._id}}
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+
+  <div class="tabs_list" *ngIf="tabs.length > 0">
+    <a mat-button [matMenuTriggerFor]="menu">
+      <mat-icon>arrow_drop_down_circle</mat-icon>
+    </a>
+    <mat-menu #menu="matMenu">
+      <button *ngFor="let item of tabs; let index = index" (click)="selected = index" mat-menu-item>Tab
+        - {{item._id}}</button>
+    </mat-menu>
+  </div>
+
+</div>
