@@ -3,9 +3,9 @@
     "name": "switch",
     "label": "new switch",
     "inputs": 1,
-    "outputs": 1,
-    "output_errors": 0,
-    "color": "#fff",
+    "outputs": 2,
+    "output_errors": 1,
+    "color": "orange",
     "setting_icons": {
       "edit_icon": "\uf040",
       "wizard_icon": "\uf1de",
@@ -17,9 +17,9 @@
   {
     "name": "inject",
     "label": "new inject",
-    "inputs": 3,
-    "outputs": 2,
-    "output_errors": 2,
+    "inputs": 1,
+    "outputs": 3,
+    "output_errors": 0,
     "color": "#4fd0d6",
     "setting_icons": {
       "edit_icon": "\uf040",
@@ -39,8 +39,8 @@
     "name": "debug",
     "label": "new debug",
     "inputs": 1,
-    "outputs": 1,
-    "output_errors": 3,
+    "outputs": 2,
+    "output_errors": 1,
     "color": "#1fce43",
     "setting_icons": {
       "edit_icon": "\uf040",

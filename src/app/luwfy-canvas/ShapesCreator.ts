@@ -18,28 +18,6 @@ const ShapeCreator = {
     });
   },
 
-  // createCircleInput: (y?: number, payload?: any, color?: string) => {
-  //   return new Konva.Circle({
-  //     x: 0,
-  //     y: y ? y : sizes.block_height / 2,
-  //     radius: sizes.circle_radius,
-  //     stroke: color,
-  //     fill: color,
-  //     type: CircleTypes.Input,
-  //   });
-  // },
-  //
-  // createCircleOutput: (y?: number, payload?: any, color?: string) => {
-  //   return new Konva.Circle({
-  //     x: sizes.block_width,
-  //     y: y ? y : sizes.block_height / 2,
-  //     radius: sizes.circle_radius,
-  //     fill: theme.circle_background_output,
-  //     stroke: color,
-  //     type: CircleTypes.Output,
-  //   });
-  // },
-
   createPortCircle: (x, y, color, inputPort: boolean) => {
     return new Konva.Circle({
       x,
@@ -47,20 +25,18 @@ const ShapeCreator = {
       radius: sizes.circle_radius,
       fill: inputPort ? color : theme.circle_background,
       stroke: color,
-      type: inputPort ? null : CircleTypes.Output
+      type: inputPort ? CircleTypes.Input : CircleTypes.Output
     });
   },
 
   createErrorOutput: (y) => {
     return new Konva.Text({
-      x: sizes.block_width - (sizes.error_icon_size / 2),
+      x: sizes.block_width - (sizes.error_icon_size / 2.5),
       y,
       text: '\uf05c',
       fontFamily: 'FontAwesome',
       fontSize: sizes.error_icon_size,
-      fill: 'orange',
-      stroke: 'red',
-      strokeWidth: 2
+      fill: 'red'
     });
   },
 
@@ -74,19 +50,18 @@ const ShapeCreator = {
     });
   },
 
-  createLine: (start_info: IStartPointPathInfo, payload?: any) => {
+  createLine: (start_info: IStartPointPathInfo, strokeLine) => {
     return new Konva.Path({
-        data: '',
-        start_info,
-        attached: true,
-        custom_id_output: 0,
-        strokeWidth: 3,
-        lineJoin: 'round',
-        opacity: 1,
-        stroke: theme.line_color,
-        isLastPathInGroup: true
-      }
-    );
+      data: '',
+      start_info,
+      attached: true,
+      custom_id_output: 0,
+      strokeWidth: 3,
+      lineJoin: 'round',
+      opacity: 1,
+      stroke: strokeLine,
+      isLastPathInGroup: true
+    });
   },
 
   iconGroupCreator: (x, y, iconsGroup: SettingIcons) => {
@@ -152,7 +127,8 @@ const ShapeCreator = {
         height: 14,
         stroke: 'gray',
         strokeWidth: 1,
-        fill: 'white'
+        fill: 'red',
+        //type: CircleTypes.Output
       }));
   },
 

@@ -11,7 +11,7 @@ export const ShapesSizes = {
   margin_between_two_ports: 19,
   margin_between_amount_of_ports: 10,
   face_img_font_size: 50,
-  error_icon_size: 24
+  error_icon_size: 19
 };
 
 export const SwitcherSizes = {

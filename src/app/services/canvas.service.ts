@@ -14,15 +14,12 @@ import {ShapesSizes, ShapesSizes as sizes, SwitcherSizes} from '../luwfy-canvas/
 import {theme} from '../luwfy-canvas/theme';
 import KonvaUtil from '../luwfy-canvas/konva-util';
 import {Layer} from 'konva/types/Layer';
-import {Shape, ShapeConfig} from 'konva/types/Shape';
-import {Stage} from 'konva/types/Stage';
 import {BehaviorSubject, Subject} from 'rxjs';
 import {Collection} from 'konva/types/Util';
 import {Path} from 'konva/types/shapes/Path';
 import {ModalPropComponent} from '../popups/modal-prop/modal-prop.component';
 import {MatDialog, MatDialogRef} from '@angular/material';
 import {BlocksRedactorService} from '../popups/blocks-redactor.service';
-import {log} from 'util';
 import {BlocksService} from './blocks.service';
 
 @Injectable({
@@ -140,7 +137,10 @@ export class CanvasService {
     group.on('mouseup', (event) => {
 
       if (this.currentLineToDraw.isLineDrawable) {
-        let input_circle = this.getInputCircleFromGroup(event.target as Group);
+        //console.log('[c] zzz', event.target.parent);
+        let input_circle = this.getInputCircleFromGroup(event.target.parent as Group);
+
+        console.log('[c]  tttt', input_circle);
 
         let current_path_group = this.getGroupById(this.currentLineToDraw.groupId, mainLayer.getStage());
 
@@ -168,7 +168,7 @@ export class CanvasService {
           event.target.parent.attrs.x - current_path_group.attrs.x,
           event.target.parent.attrs.y - current_path_group.attrs.y + input_circle.attrs.y, this.setParamForLine(deltaX, deltaY)));
 
-        console.log('[c] current_path eee', current_path);
+        // console.log('[c] current_path eee', current_path);
 
         current_path.setAttr('custom_id_output', event.target._id);
 
@@ -176,6 +176,22 @@ export class CanvasService {
           end_group_id: event.target.parent._id,
           end_circle_id: input_circle._id,
         });
+
+        // add start and end points for gradient for path
+
+        current_path.strokeLinearGradientStartPoint({
+          x: start_circle.attrs.x,
+          y: start_circle.attrs.y
+        });
+
+        current_path.strokeLinearGradientEndPoint({
+          x: event.target.parent.attrs.x - current_path_group.attrs.x,
+          y: event.target.parent.attrs.y - current_path_group.attrs.y + input_circle.attrs.y
+        });
+
+        let startColor = current_path.parent.parent.findOne(elem => elem._id === current_path.attrs.start_info.start_circle_id).attrs.stroke;
+        let endColor = current_path.parent.parent.findOne(elem => elem._id === current_path.attrs.end_info.end_circle_id).attrs.fill;
+        current_path.strokeLinearGradientColorStops([0, startColor, 1, endColor]);
 
         if (!current_path.attrs.end_info || current_path.attrs.start_info.start_group_id === current_path.attrs.end_info.end_group_id) {
           console.log('[c] removing');
@@ -185,11 +201,8 @@ export class CanvasService {
         this.currentLineToDraw.isLineDrawable = false;
         this.lineToDraw.next(this.currentLineToDraw);
         console.log('[c] CANVAS', current_path);
-        // event.target.parent.draw();
         return 0;
-
       }
-
     });
 
     group.on('mouseenter', (event) => {
@@ -205,12 +218,9 @@ export class CanvasService {
       if (event.target.parent.attrs.type && event.target.parent.attrs.type.includes('output')) {
         if (this.currentLineToDraw.isLineDrawable) {
           let current_circle = this.getCircleFromGroup(event.target.parent as Group);
-
         }
-
       }
     });
-
   }
 
   setMouseDownEventForSwitchCircle(circle: ICircleCustom, mainLayer: Layer) {
@@ -218,11 +228,10 @@ export class CanvasService {
     circle.on('mousedown', (event) => {
       console.log('[c] bbb', event);
       if (event.target.attrs.type === CircleTypes.Output) {
-
         let line_temp = ShapeCreator.createLine({
           start_circle_id: event.target._id,
           start_group_id: event.target.parent._id,
-        });
+        }, circle.attrs.stroke);
 
         //this.setClickEventForPath(line_temp);
 
@@ -249,55 +258,39 @@ export class CanvasService {
     path.on('click', (event) => {
       console.log('[c] click path', event);
       if (event.evt.ctrlKey) {
-
-
       }
-
       //todo add chooser
       //
-
     });
 
   }
 
   getInputCircleFromGroup(component: Group | IGroupCustom) {
     if (component) {
-      return component.getStage().findOne((elem) => {
-        if (elem.className == 'Circle' || elem.attrs.type === CircleTypes.Input) {
+      return component.findOne((elem) => {
+        if (elem.className == 'Circle' && elem.attrs.type === CircleTypes.Input) {
           return elem;
         }
-
       });
-
     } else {
       return null;
     }
-
   }
 
   setClickEvent(group: IGroupCustom, mainLayer: Layer, activeWrapperBlock: IActiveWrapperBlock, currentActiveGroup: Group) {
-
     group.on('click', (event) => {
-
       event.cancelBubble = true;
-
       if (event.evt.ctrlKey) {
-
         event.target.parent.setAttr('x', event.target.parent.position().x - currentActiveGroup.position().x);
         event.target.parent.setAttr('y', event.target.parent.position().y - currentActiveGroup.position().y);
-
         currentActiveGroup.add(event.target.parent as Group);
         event.target.parent.children.each((elem) => {
           elem.setAttr('stroke', 'yellow');
           elem.setAttr('draggable', false);
-
         });
         event.target.parent.setAttr('draggable', false);
-
       }
-
     });
-
   }
 
   setParamForLine(deltaX: number, deltaY: number) {
@@ -444,67 +437,12 @@ export class CanvasService {
     });
   };
 
-  // createOutputPorts(number_of_ports: number, color, temp_group: Group, height: number) {
-  //   if (number_of_ports === 1) {
-  //     temp_group.add(ShapeCreator.createCircleOutput(height / 2, null, color));
-  //   } else if (number_of_ports === 2) {
-  //     temp_group.add(ShapeCreator.createCircleOutput(height / 3, null, color));
-  //     temp_group.add(ShapeCreator.createCircleOutput((height / 3) * number_of_ports, null, color));
-  //   } else if (number_of_ports >= 3) {
-  //     let a = (number_of_ports - 1);
-  //     let margin_temp = (height - a * 30) / 2 - 10;
-  //     let y;
-  //     for (let i = 0; i < number_of_ports;) {
-  //       i++;
-  //       if (i == 1) {
-  //         y = margin_temp + 10;
-  //         let temp_circle = ShapeCreator.createCircleOutput(y, null, color);
-  //         temp_group.add(temp_circle);
-  //         temp_circle.zIndex(1);
-  //       } else {
-  //         y = margin_temp + i * (20) + (i - 2) * 10;
-  //         let temp_circle = ShapeCreator.createCircleOutput(y, null, color);
-  //         temp_group.add(temp_circle);
-  //         temp_circle.zIndex(1);
-  //       }
-  //     }
-  //   }
-  // };
-  //
-  // createInputPorts(number_of_ports: number, color, temp_group: Group, height: number) {
-  //   if (number_of_ports === 1) {
-  //     temp_group.add(ShapeCreator.createCircleInput(height / 2, null, color));
-  //   } else if (number_of_ports === 2) {
-  //     temp_group.add(ShapeCreator.createCircleInput(height / 3, null, color));
-  //     temp_group.add(ShapeCreator.createCircleInput((height / 3) * number_of_ports, null, color));
-  //   } else if (number_of_ports >= 3) {
-  //     let a = (number_of_ports - 1);
-  //     let margin_temp = (height - a * 30) / 2 - 10;
-  //     let y;
-  //     for (let i = 0; i < number_of_ports;) {
-  //       i++;
-  //       if (i == 1) {
-  //         y = margin_temp + 10;
-  //         let temp_circle = ShapeCreator.createCircleInput(y, null, color);
-  //         temp_group.add(temp_circle);
-  //         temp_circle.zIndex(1);
-  //       } else {
-  //         y = margin_temp + i * (20) + (i - 2) * 10;
-  //         let temp_circle = ShapeCreator.createCircleInput(y, null, color);
-  //         temp_group.add(temp_circle);
-  //         temp_circle.zIndex(1);
-  //       }
-  //     }
-  //   }
-  // };
-// }
-
   // function add all ports (input, output, error)
   createPorts(blockVariables: InputBlocksInterface, temp_group: Group, height: number) {
-    let max_ports = (blockVariables.outputs + blockVariables.output_errors) > blockVariables.inputs ? (blockVariables.outputs + blockVariables.output_errors) : blockVariables.inputs;
     let inputPorts = blockVariables.inputs;
     let outputPorts = blockVariables.outputs;
     let errorPorts = blockVariables.output_errors;
+    let max_ports = errorPorts + outputPorts > inputPorts ? errorPorts + outputPorts : inputPorts;
     let delayInput = height / (inputPorts + 1);
     let delayOutput = height / ((outputPorts + errorPorts) + 1);
     for (let i = 1; i <= max_ports; i++) {
@@ -522,7 +460,6 @@ export class CanvasService {
     }
   }
 
-
   switcherAnimation(event, colorActive, colorDisabled, blockColor) {
     let parent = event.target.parent;
     let elemSwitchRect = parent.findOne('Rect');
@@ -533,23 +470,21 @@ export class CanvasService {
     let highSwitchCircle = highParent.findOne('Circle');
     if (parent.attrs.switched) {
       elemSwitchRect.attrs.fill = elemSwitchRect.attrs.stroke = highSwitchCircle.attrs.fill = highSwitchRect.attrs.stroke = colorDisabled;
-      elemSwitchText.attrs.fill = 'white';
+      elemSwitchText.attrs.fill = colorActive;
       elemSwitchText.offsetX(17);
       elemSwitchText.text('OFF');
       elemSwitchCircle.offsetX(-27);
-      elemSwitchCircle.attrs.fill = theme.rect_debug_stroke;
-      elemSwitchCircle.attrs.stroke = theme.rect_debug_stroke;
+      elemSwitchCircle.attrs.fill = colorActive;
       console.log(false);
       parent.attrs.switched = !parent.attrs.switched;
     } else {
-      elemSwitchRect.attrs.fill = 'steelblue';
+      elemSwitchRect.attrs.fill = colorActive;
       elemSwitchRect.attrs.stroke = highSwitchRect.attrs.stroke = highSwitchCircle.attrs.fill = blockColor;
-      elemSwitchText.attrs.fill = 'white';
+      elemSwitchText.attrs.fill = colorDisabled;
       elemSwitchText.offsetX(0);
       elemSwitchText.text('ON');
       elemSwitchCircle.offsetX(0);
       elemSwitchCircle.attrs.fill = 'white';
-      elemSwitchCircle.attrs.stroke = 'gray';
       console.log(true);
       parent.attrs.switched = !parent.attrs.switched;
     }
@@ -571,62 +506,47 @@ export class CanvasService {
 
   // TODO create universal block creator using data from JSON with properties for block
   createDefaultGroup(mainLayer: Layer, activeWrapperBlock, currentActiveGroup: Group, blockName) {
-
     let newBlockVariables = this.blocksArr.find(block => block.name === blockName);
-
     let temp_group = new Konva.Group({
       draggable: true
     }) as IGroupCustom;
-
     // mouseInsideRectangle is flag set true when mouse inside rectangle
     // and will changes when mouse leave rectangle
     let mouseInsideRectangle: boolean;
     let height;
-
     if ((newBlockVariables.outputs + newBlockVariables.output_errors) > 2 || newBlockVariables.inputs > 2) {
-      let max_ports = (newBlockVariables.outputs + newBlockVariables.output_errors) > newBlockVariables.inputs ? (newBlockVariables.outputs + newBlockVariables.output_errors) : newBlockVariables.inputs;
+      let max_ports = (newBlockVariables.outputs + newBlockVariables.output_errors) > newBlockVariables.inputs ?
+        (newBlockVariables.outputs + newBlockVariables.output_errors) : newBlockVariables.inputs;
       height = sizes.block_height + (max_ports - 1) * 30;
     } else {
       height = sizes.block_height;
     }
-
     temp_group.add(ShapeCreator.createShapeName(newBlockVariables.label, newBlockVariables.color));
-
     temp_group.add(ShapeCreator.createRect(newBlockVariables.color, height).on('mouseenter', (event) => {
       mouseInsideRectangle = true;
       onChangeHiddenElement(temp_group);
     }));
-
     this.createPorts(newBlockVariables, temp_group, height);
-    // this.createOutputPorts(newBlockVariables.outputs, newBlockVariables.color, temp_group, height);
-    // this.createInputPorts(newBlockVariables.inputs, newBlockVariables.color, temp_group, height);
-
-
     temp_group.add(ShapeCreator.iconGroupCreator(SwitcherSizes.margin_left, (height - SwitcherSizes.iconsFontSize) / 2,
       newBlockVariables.setting_icons).hide());
-
     temp_group.add(ShapeCreator.createFaceImage((ShapesSizes.block_width - ShapesSizes.face_img_font_size - 10),
       (height - ShapesSizes.face_img_font_size) / 2, newBlockVariables.color, newBlockVariables.setting_icons.face_image));
-
-    if (newBlockVariables.btn_event_block.switch === 1) {
+    if (newBlockVariables.btn_event_block.switch > -1) {
       temp_group.add(ShapeCreator.switcherGroupCreator((ShapesSizes.block_width - 45) / 2,
         height - 9, 45, newBlockVariables.color, newBlockVariables.btn_event_block));
-      temp_group.findOne(elem => !!elem.attrs.switched).on('click', event =>
-        this.switcherAnimation(event, newBlockVariables.btn_event_block.color_active,
+      let blockSwitcher = temp_group.findOne(elem => !!elem.attrs.switched);
+
+      if (newBlockVariables.btn_event_block.switch === 1) {
+        blockSwitcher.on('click', event => this.switcherAnimation(event, newBlockVariables.btn_event_block.color_active,
           newBlockVariables.btn_event_block.color_disabled, newBlockVariables.color));
-    } else if (newBlockVariables.btn_event_block.switch === 0) {
-      temp_group.add(ShapeCreator.switcherGroupCreator((ShapesSizes.block_width - 45) / 2,
-        height - 9, 45, newBlockVariables.color, newBlockVariables.btn_event_block));
-      temp_group.findOne(elem => !!elem.attrs.switched).on('mousedown', event => {
-        this.clickButtonAnimation(event);
-      });
+      } else if (newBlockVariables.btn_event_block.switch === 0) {
+        blockSwitcher.on('mousedown', event => this.clickButtonAnimation(event));
+      }
     }
-
     temp_group.on('mouseleave', (event) => {
       mouseInsideRectangle = false;
       onChangeHiddenElement(temp_group);
     });
-
     // Take icons group from created shape and add listeners on icons
     let icons_group = temp_group.findOne(elem => elem.attrs.type === 'iconGroup');
     Array.from(icons_group.children).forEach(elem => {
@@ -652,12 +572,10 @@ export class CanvasService {
     };
 
     let circles_collection = this.getAllCirclesFromGroup(temp_group);
-
     circles_collection && circles_collection.each((elem: ICircleCustom) => {
       elem.setAttr('zIndex', 1000);
       this.setMouseDownEventForSwitchCircle(elem, mainLayer);
     });
-
     this.setRegularGroupHandlers(temp_group, mainLayer, activeWrapperBlock, currentActiveGroup);
     return temp_group;
   }
