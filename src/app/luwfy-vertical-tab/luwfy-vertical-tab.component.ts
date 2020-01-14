@@ -1,7 +1,7 @@
 import {Component, OnInit} from '@angular/core';
-import KonvaUtil from './konvaUtils';
 import {RegistryService} from '../services/registry.service';
-import {$} from 'protractor';
+import {BlocksService} from '../services/blocks.service';
+import {InputBlocksInterface} from '../luwfy-canvas/shapes-interface';
 
 @Component({
   selector: 'luwfy-vertical-tab',
@@ -9,27 +9,19 @@ import {$} from 'protractor';
   styleUrls: ['./luwfy-vertical-tab.component.scss']
 })
 export class LuwfyVerticalTabComponent implements OnInit {
-  values: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
 
-  constructor(private registryService: RegistryService) {
-    // this.value  = Array(5).fill().map((x,i)=>i); // [0,1,2,3,4];
+  blocksArr: InputBlocksInterface[];
+
+  constructor(private registryService: RegistryService, private blocksService: BlocksService) {
+  }
+
+  ngOnInit() {
+    this.blocksArr = this.blocksService.getBlocks() as InputBlocksInterface[];
   }
 
   dragEvent(event: any) {
     let emptyImage = document.createElement('img');
-    // emptyImage.style.height = '1';
-    // emptyImage.style.width = '1';
     event.dataTransfer.setDragImage(emptyImage, 0, 0);
-    // event.dataTransfer.dropEffect = "move" ;
-    // $('html').addClass("draggable-cursor");
-    // event.target.className = "draggable-cursor";
-    // event.target.style.cursor = 'grab';
-    // console.log('[c] event', event);
     this.registryService.setCurrentDraggableItem(event.target.id);
-    // event.dataTransfer.setData('text', event.target.id);
   }
-
-  ngOnInit() {
-  }
-
 }

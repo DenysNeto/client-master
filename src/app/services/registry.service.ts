@@ -121,7 +121,6 @@ export class RegistryService {
   private registerBlock(block, is_new?: boolean) {
     var unknown_block_type = this.blockDefinitionsSource.getValue().find(t => t.type === '_unknown');
     var block_type = this.blockDefinitionsSource.getValue().find(t => t.type === block.type);
-
     var existing_id_in_use = this.blockSetSource.getValue().find(b => b.id === block.id);
 
     block._type = block.type;

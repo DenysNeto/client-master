@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { RegistryService } from '../services/registry.service';
-import { BlockType, Registry, Block } from '../models/registry';
 
 @Component({
   selector: 'luwfy-tabs',

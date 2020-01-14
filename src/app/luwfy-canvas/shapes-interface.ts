@@ -2,9 +2,6 @@ import {Group} from 'konva/types/Group';
 import {Path} from 'konva/types/shapes/Path';
 import {Circle} from 'konva/types/shapes/Circle';
 import {Rect} from 'konva/types/shapes/Rect';
-import Konva from 'konva';
-
-
 
 
 export enum CircleTypes {
@@ -21,7 +18,7 @@ export interface ICoordinates {
 
 export interface ICurrentLineToDraw {
   isLineDrawable: boolean,
-  lineId:number
+  lineId: number
   groupId: number,
   line: Path | IPathCustom,
   prevX: number,
@@ -34,10 +31,7 @@ export interface ICurrentLineToDraw {
 
 }
 
-
 export interface IActiveWrapperBlock {
-
-
   initial_position: { x: number, y: number },
   now_position: { x: number, y: number },
   isActive: boolean,
@@ -55,8 +49,6 @@ export interface IGroupCustom extends Group {
       group_id: number,
     }
   number_of_ports: string
-
-
 }
 
 export interface IStartPointPathInfo {
@@ -86,3 +78,36 @@ export interface IRectCustom extends Rect {
 
 }
 
+
+// interface for icons group in shape group
+export interface SettingIcons {
+  face_image: string;
+  settings_icon: string,
+  edit_icon: string,
+  wizard_icon: string
+}
+
+// interface for buttons group in shape group
+// if we have data about button we check
+// is switcher(Debug shape) or button(Inject shape)
+export interface BtnEventBlock {
+  name: string,
+  label: string,
+  switch: number,
+  color_active: string,
+  color_disabled: string
+}
+
+// Interfaces for creating group from JSON
+// checking data we must understand which
+// shape we took and create it.
+export interface InputBlocksInterface {
+  name: string,
+  label: string,
+  inputs: number,
+  outputs: number,
+  output_errors: number,
+  color: string,
+  setting_icons: SettingIcons,
+  btn_event_block: BtnEventBlock
+}

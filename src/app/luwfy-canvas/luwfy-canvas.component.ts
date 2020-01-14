@@ -14,13 +14,6 @@ import {
   IRectCustom,
 } from './shapes-interface';
 import {Collection} from 'konva/types/Util';
-
-// import * as d3 from 'd3';
-import {Observable, of} from 'rxjs';
-import {debugGroup1, injectGroup1, switchGroup1} from './conva-tag-blocks';
-import {MatDialog, MatDialogRef} from '@angular/material';
-import {ModalPropComponent} from '../popups/modal-prop/modal-prop.component';
-import {BlocksRedactorService} from '../popups/blocks-redactor.service';
 import {Group} from 'konva/types/Group';
 
 @Component({
@@ -30,8 +23,7 @@ import {Group} from 'konva/types/Group';
 })
 
 export class CanvasComponent implements OnInit {
-  constructor(private RegistryService: RegistryService, private canvasService: CanvasService, private dialog: MatDialog,
-              private blocksRedactorService: BlocksRedactorService) {
+  constructor(private RegistryService: RegistryService, private canvasService: CanvasService) {
   }
 
   temp = 'hello';
@@ -40,7 +32,6 @@ export class CanvasComponent implements OnInit {
   lines = [];
   drawningLine = false;
   KonvaUtil = KonvaUtil;
-  fileNameDialogRef: MatDialogRef<ModalPropComponent>;
 
   rectangle: IRectCustom = new Konva.Rect({
     x: null,
@@ -176,7 +167,6 @@ export class CanvasComponent implements OnInit {
 
   // mouse rectangle selection
   activeWrapperBlock: IActiveWrapperBlock = {
-
     initial_position: {
       x: 0,
       y: 0,
@@ -184,7 +174,6 @@ export class CanvasComponent implements OnInit {
     now_position: {
       x: 0, y: 0,
     },
-
     isActive: false,
     isDraw: false,
     rectangle: new Konva.Rect({
@@ -192,7 +181,6 @@ export class CanvasComponent implements OnInit {
       draggable: false,
       isActive_block: true,
     }),
-
   };
 
   reverseFunction = (r1, r2) => {
@@ -232,7 +220,6 @@ export class CanvasComponent implements OnInit {
 
   //delete all objects from the selection rectangle
   deleteShapesFromGroup = () => {
-
     let group_children_temp = this.currentActiveGroup.children;
 
     if (group_children_temp.length > 0) {
@@ -249,24 +236,17 @@ export class CanvasComponent implements OnInit {
           group_children_temp[group_children_temp.length - 1].position().y + this.currentActiveGroup.position().y);
         this.mainLayer.getStage().add(group_children_temp[group_children_temp.length - 1]);
       }
-
       this.currentActiveGroup.removeChildren();
       this.mainLayer.getStage().draw();
-
     }
-
   };
 
   setClickEventForGroup = (group: Group) => {
     group.on('click', (event) => {
-
       event.cancelBubble = true;
-
       if (event.evt.ctrlKey) {
-
         event.target.parent.setAttr('x', event.target.parent.position().x - this.currentActiveGroup.position().x);
         event.target.parent.setAttr('y', event.target.parent.position().y - this.currentActiveGroup.position().y);
-
         this.currentActiveGroup.add(event.target.parent as Group);
         event.target.parent.children.each((elem) => {
           if (elem.className !== 'Path') {
@@ -276,34 +256,24 @@ export class CanvasComponent implements OnInit {
           elem.setAttr('draggable', false);
         });
         event.target.parent.setAttr('draggable', false);
-
       }
-
     });
-
     //todo add switches for different group types
-
   };
 
   handleClickEvent = (event) => {
-
     if (this.currentLineToDraw.isLineDrawable) {
       this.currentLineToDraw.isLineDrawable = false;
-
       let current_group = this.mainLayer.getStage().findOne((elem) => {
         if (elem._id === this.currentLineToDraw.groupId) {
           return elem;
         }
-
       });
-
       let current_path = current_group.findOne((elem) => {
         if (elem.attrs.custom_id && elem.attrs.custom_id.includes('line')) {
           return elem;
         }
-
       });
-
       if (current_path) {
         console.log('[c] case 1');
         current_path.hide();
@@ -312,31 +282,24 @@ export class CanvasComponent implements OnInit {
         this.currentLineToDraw.line.hide();
       }
       current_group.draw();
-
       return 0;
-
     }
     this.deleteShapesFromGroup();
   };
 
   handleDragOver = (e) => {
-
+    console.log('[c] tttttt', this.currentId);
     if (this.idChangedTrigger) {
-
-      let current_group = this.canvasService.createDefaultGroup(4, this.mainLayer, this.activeWrapperBlock, this.currentActiveGroup);
+      let current_group = this.canvasService.createDefaultGroup(this.mainLayer, this.activeWrapperBlock, this.currentActiveGroup, this.currentId);
       this.idChangedTrigger = false;
       this.setClickEventForGroup(current_group);
       this.mainLayer.getStage().add(current_group);
-
     } else {
-
       this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].position({
         x: e.layerX,
         y: e.layerY,
       });
-
     }
-
   };
 
   //todo uncomment
@@ -371,13 +334,9 @@ export class CanvasComponent implements OnInit {
       }
     }
 
-    //
-
     this.activeWrapperBlock.isActive = true;
-
     this.activeWrapperBlock.isDraw = false;
     this.activeWrapperBlock.rectangle.setAttr('visible', false);
-
   };
 
   checkValueBetween = (obj: { x: number, y: number }, width, height) => {
@@ -557,8 +516,8 @@ export class CanvasComponent implements OnInit {
   };
 
   ngOnInit() {
-
     this.RegistryService.currentDraggableItem.subscribe((data) => {
+      console.log('[c] yyy', data);
       this.currentId = data;
       this.idChangedTrigger = true;
     });
@@ -600,25 +559,20 @@ export class CanvasComponent implements OnInit {
     //   }
     //
     // }, 0);
+    // todo draw
     setTimeout(() => {
       this.mainLayer.getStage().add(this.currentActiveGroup);
       this.mainLayer.getStage().add(this.currentLineToDraw.line);
 
-
-      //todo draw
-      let arrBlocks = [switchGroup1, injectGroup1, debugGroup1];
+      // let arrBlocks = [switchGroup1, injectGroup1, debugGroup1];
 
       const addOnLayerAndModalHandler = (group: Group) => {
-        group.findOne(elem => elem.attrs.type === 'iconGroup').on('click', () => {
-          if (!this.blocksRedactorService.checkerOnExistBlock(group)) {
-            this.blocksRedactorService.addBlock(group);
-          }
-          this.fileNameDialogRef = this.dialog.open(ModalPropComponent, {data: group._id});
-        });
+        group;
+
         this.mainLayer.getStage().add(group);
       };
 
-       arrBlocks.forEach(group => addOnLayerAndModalHandler(group));
+      // arrBlocks.forEach(group => addOnLayerAndModalHandler(group));
 
     }, 0);
 

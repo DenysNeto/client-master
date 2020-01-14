@@ -5,16 +5,11 @@
 <!-- <ng-template #content> -->
 <div class="stage">
   <ko-stage #stage [config]="KonvaUtil.createStage({width: 5000, height: 5000})"
-
             (dragover)="handleDragOver($event)"
-
             (click)="handleClickEvent($event)"
-
-
             (mouseup)="handleMouseUp($event)"
             (mousedown)="handleMouseDown($event)"
             (mousemove)="handleMouseMove($event)">
-
 
 
     <ko-layer>
@@ -43,9 +38,7 @@
       <!-- <ko-line [config]="KonvaUtil.createLine({x1: 800, y1:365, x2: 100, y2: 1000})"></ko-line> -->
     </ko-layer>
 
-
     <ko-layer #mainLayer>
-
     </ko-layer>
 
 

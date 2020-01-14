@@ -1,0 +1,59 @@
+[
+  {
+    "name": "switch",
+    "label": "new switch",
+    "inputs": 1,
+    "outputs": 1,
+    "output_errors": 0,
+    "color": "#fff",
+    "setting_icons": {
+      "edit_icon": "\uf040",
+      "wizard_icon": "\uf1de",
+      "settings_icon": "\uf013",
+      "face_image": "\uf061"
+    },
+    "btn_event_block": "null"
+  },
+  {
+    "name": "inject",
+    "label": "new inject",
+    "inputs": 3,
+    "outputs": 2,
+    "output_errors": 2,
+    "color": "#4fd0d6",
+    "setting_icons": {
+      "edit_icon": "\uf040",
+      "wizard_icon": "\uf1de",
+      "settings_icon": "\uf013",
+      "face_image": "\uf061"
+    },
+    "btn_event_block": {
+      "name": "button",
+      "label": "Push",
+      "switch": 0,
+      "color_active": "white",
+      "color_disabled": "steelblue"
+    }
+  },
+  {
+    "name": "debug",
+    "label": "new debug",
+    "inputs": 1,
+    "outputs": 1,
+    "output_errors": 3,
+    "color": "#1fce43",
+    "setting_icons": {
+      "edit_icon": "\uf040",
+      "wizard_icon": "\uf1de",
+      "settings_icon": "\uf013",
+      "face_image": "\uf061"
+    },
+    "btn_event_block": {
+      "name": "button",
+      "label": "ON",
+      "switch": 1,
+      "color_active": "steelblue",
+      "color_disabled": "silver"
+    }
+  }
+]

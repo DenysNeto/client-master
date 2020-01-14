@@ -1,3 +1,53 @@
+<div class="tab-wrapper">
+  <ng-container *ngFor="let block of blocksArr; let  i = index">
+    <div class="block">
+      <span [ngStyle]="{color: block.color}">{{block.name}}</span>
+      <div id="{{block.name}}"
+           [ngStyle]="{borderColor: block.color}"
+           class="function"
+           (dragstart)="dragEvent($event)"
+           draggable="true">
+        <svg xmlns="http://www.w3.org/2000/svg" width="51" height="52" viewBox="0 0 51 52">
+          <g id="Group_1363" data-name="Group 1363" transform="translate(0 1)">
+            <path [ngStyle]="{stroke: block.color}" id="Path_1" data-name="Path 1"
+                  d="M499.584,386.565H492.3a3,3,0,0,1-2.605-1.905l-5.483-13.229a5.175,5.175,0,0,1,0-4.3l5.483-13.229A3,3,0,0,1,492.3,352h7.285"
+                  transform="translate(-462.876 -344.384)" fill="none" stroke-miterlimit="10"
+                  stroke-width="2"/>
+            <path [ngStyle]="{stroke: block.color}" id="Path_26" data-name="Path 26" d="M21.146,0H0"
+                  transform="translate(0 24.886)" fill="#fff"
+                  stroke-width="2"/>
+            <path [ngStyle]="{stroke: block.color}" id="Path_33" data-name="Path 33"
+                  d="M504.5,495.094V479.672l6.779,4.031,6.577,3.856-6.779,3.856Z"
+                  transform="translate(-467.856 -445.094)" fill="none" stroke-linecap="round"
+                  stroke-linejoin="round" stroke-width="2"/>
+            <path [ngStyle]="{stroke: block.color}" id="Path_34" data-name="Path 34"
+                  d="M504.5,495.094V479.672l6.779,4.031,6.577,3.856-6.779,3.856Z"
+                  transform="translate(-467.856 -479.672)" fill="none" stroke-linecap="round"
+                  stroke-linejoin="round" stroke-width="2"/>
+          </g>
+        </svg>
+        <div class="input-port" [ngStyle]="{borderColor: block.color, backgroundColor: block.color}"></div>
+        <div class="output-port" [ngStyle]="{borderColor: block.color}"></div>
+
+        <div class="click_button"
+             *ngIf="block.btn_event_block.switch === 1"
+             [ngStyle]="{borderColor: block.color, backgroundColor: block.btn_event_block.color_active}">
+          <div class="switch-circle"></div>
+          <span [ngStyle]="{color: block.btn_event_block.color_disabled}">{{block.btn_event_block.label}}</span>
+        </div>
+
+        <div class="switcher"
+             *ngIf="block.btn_event_block.switch === 0"
+             [ngStyle]="{borderColor: block.color, backgroundColor: block.btn_event_block.color_active}">
+          <div class="switch-circle"></div>
+          <span [ngStyle]="{color: block.btn_event_block.color_disabled}"> {{block.btn_event_block.label}}</span>
+        </div>
+
+      </div>
+    </div>
+  </ng-container>
+</div>
+
 <!--<div class="stage">-->
 <!--  <ko-stage #stage [config]="KonvaUtil.createStage({width: 100, height:1000})">-->
 
@@ -27,168 +77,149 @@
 <!--</ko-rect>-->
 <!--<ko-text [config]="KonvaUtil.createText({text: 'Button', x: 30, y: 45, fill: 'black'})"></ko-text>-->
 
+<!--  <div class="switch-block">-->
+<!--    <span>Switch</span>-->
+<!--    <div id="func2-input"-->
+<!--         class="switch-function"-->
+<!--         (dragstart)="dragEvent($event)"-->
+<!--         draggable="true">-->
+<!--      <div class="input-port"></div>-->
+<!--      <svg xmlns="http://www.w3.org/2000/svg" width="51" height="52" viewBox="0 0 51 52">-->
+<!--        <g id="Group_1363" data-name="Group 1363" transform="translate(0 1)">-->
+<!--          <path id="Path_1" data-name="Path 1"-->
+<!--                d="M499.584,386.565H492.3a3,3,0,0,1-2.605-1.905l-5.483-13.229a5.175,5.175,0,0,1,0-4.3l5.483-13.229A3,3,0,0,1,492.3,352h7.285"-->
+<!--                transform="translate(-462.876 -344.384)" fill="none" stroke="white" stroke-miterlimit="10"-->
+<!--                stroke-width="2"/>-->
+<!--          <path id="Path_26" data-name="Path 26" d="M21.146,0H0" transform="translate(0 24.886)" fill="#fff"-->
+<!--                stroke="white" stroke-width="2"/>-->
+<!--          <path id="Path_33" data-name="Path 33" d="M504.5,495.094V479.672l6.779,4.031,6.577,3.856-6.779,3.856Z"-->
+<!--                transform="translate(-467.856 -445.094)" fill="none" stroke="white" stroke-linecap="round"-->
+<!--                stroke-linejoin="round" stroke-width="2"/>-->
+<!--          <path id="Path_34" data-name="Path 34" d="M504.5,495.094V479.672l6.779,4.031,6.577,3.856-6.779,3.856Z"-->
+<!--                transform="translate(-467.856 -479.672)" fill="none" stroke="white" stroke-linecap="round"-->
+<!--                stroke-linejoin="round" stroke-width="2"/>-->
+<!--        </g>-->
+<!--      </svg>-->
+<!--      <div class="output-port1"></div>-->
+<!--      <div class="output-port2"></div>-->
+<!--    </div>-->
+<!--  </div>-->
 
-<div class="tab-wrapper">
+<!--  <div class="switch-block">-->
+<!--    <span>Switch</span>-->
+<!--    <div id="func3-output"-->
+<!--         class="switch-function"-->
+<!--         (dragstart)="dragEvent($event)"-->
+<!--         draggable="true">-->
+<!--      <div class="input-port"></div>-->
+<!--      <svg xmlns="http://www.w3.org/2000/svg" width="51" height="52" viewBox="0 0 51 52">-->
+<!--        <g id="Group_1363" data-name="Group 1363" transform="translate(0 1)">-->
+<!--          <path id="Path_1" data-name="Path 1"-->
+<!--                d="M499.584,386.565H492.3a3,3,0,0,1-2.605-1.905l-5.483-13.229a5.175,5.175,0,0,1,0-4.3l5.483-13.229A3,3,0,0,1,492.3,352h7.285"-->
+<!--                transform="translate(-462.876 -344.384)" fill="none" stroke="white" stroke-miterlimit="10"-->
+<!--                stroke-width="2"/>-->
+<!--          <path id="Path_26" data-name="Path 26" d="M21.146,0H0" transform="translate(0 24.886)" fill="#fff"-->
+<!--                stroke="white" stroke-width="2"/>-->
+<!--          <path id="Path_33" data-name="Path 33" d="M504.5,495.094V479.672l6.779,4.031,6.577,3.856-6.779,3.856Z"-->
+<!--                transform="translate(-467.856 -445.094)" fill="none" stroke="white" stroke-linecap="round"-->
+<!--                stroke-linejoin="round" stroke-width="2"/>-->
+<!--          <path id="Path_34" data-name="Path 34" d="M504.5,495.094V479.672l6.779,4.031,6.577,3.856-6.779,3.856Z"-->
+<!--                transform="translate(-467.856 -479.672)" fill="none" stroke="white" stroke-linecap="round"-->
+<!--                stroke-linejoin="round" stroke-width="2"/>-->
+<!--        </g>-->
+<!--      </svg>-->
+<!--      <div class="output-port1"></div>-->
+<!--      <div class="output-port2"></div>-->
+<!--    </div>-->
+<!--  </div>-->
 
-  <!--  Blocks with Switch tabs -->
-  <div class="switch-block">
-    <span>Switch</span>
-    <div id="func1-input"
-         class="switch-function"
-         (dragstart)="dragEvent($event)"
-         draggable="true">
-      <div class="input-port"></div>
-      <svg xmlns="http://www.w3.org/2000/svg" width="51" height="52" viewBox="0 0 51 52">
-        <g id="Group_1363" data-name="Group 1363" transform="translate(0 1)">
-          <path id="Path_1" data-name="Path 1"
-                d="M499.584,386.565H492.3a3,3,0,0,1-2.605-1.905l-5.483-13.229a5.175,5.175,0,0,1,0-4.3l5.483-13.229A3,3,0,0,1,492.3,352h7.285"
-                transform="translate(-462.876 -344.384)" fill="none" stroke="white" stroke-miterlimit="10"
-                stroke-width="2"/>
-          <path id="Path_26" data-name="Path 26" d="M21.146,0H0" transform="translate(0 24.886)" fill="#fff"
-                stroke="white" stroke-width="2"/>
-          <path id="Path_33" data-name="Path 33" d="M504.5,495.094V479.672l6.779,4.031,6.577,3.856-6.779,3.856Z"
-                transform="translate(-467.856 -445.094)" fill="none" stroke="white" stroke-linecap="round"
-                stroke-linejoin="round" stroke-width="2"/>
-          <path id="Path_34" data-name="Path 34" d="M504.5,495.094V479.672l6.779,4.031,6.577,3.856-6.779,3.856Z"
-                transform="translate(-467.856 -479.672)" fill="none" stroke="white" stroke-linecap="round"
-                stroke-linejoin="round" stroke-width="2"/>
-        </g>
-      </svg>
-      <div class="output-port1"></div>
-      <div class="output-port2"></div>
-    </div>
-  </div>
-
-  <div class="switch-block">
-    <span>Switch</span>
-    <div id="func2-input"
-         class="switch-function"
-         (dragstart)="dragEvent($event)"
-         draggable="true">
-      <div class="input-port"></div>
-      <svg xmlns="http://www.w3.org/2000/svg" width="51" height="52" viewBox="0 0 51 52">
-        <g id="Group_1363" data-name="Group 1363" transform="translate(0 1)">
-          <path id="Path_1" data-name="Path 1"
-                d="M499.584,386.565H492.3a3,3,0,0,1-2.605-1.905l-5.483-13.229a5.175,5.175,0,0,1,0-4.3l5.483-13.229A3,3,0,0,1,492.3,352h7.285"
-                transform="translate(-462.876 -344.384)" fill="none" stroke="white" stroke-miterlimit="10"
-                stroke-width="2"/>
-          <path id="Path_26" data-name="Path 26" d="M21.146,0H0" transform="translate(0 24.886)" fill="#fff"
-                stroke="white" stroke-width="2"/>
-          <path id="Path_33" data-name="Path 33" d="M504.5,495.094V479.672l6.779,4.031,6.577,3.856-6.779,3.856Z"
-                transform="translate(-467.856 -445.094)" fill="none" stroke="white" stroke-linecap="round"
-                stroke-linejoin="round" stroke-width="2"/>
-          <path id="Path_34" data-name="Path 34" d="M504.5,495.094V479.672l6.779,4.031,6.577,3.856-6.779,3.856Z"
-                transform="translate(-467.856 -479.672)" fill="none" stroke="white" stroke-linecap="round"
-                stroke-linejoin="round" stroke-width="2"/>
-        </g>
-      </svg>
-      <div class="output-port1"></div>
-      <div class="output-port2"></div>
-    </div>
-  </div>
-
-  <div class="switch-block">
-    <span>Switch</span>
-    <div id="func3-output"
-         class="switch-function"
-         (dragstart)="dragEvent($event)"
-         draggable="true">
-      <div class="input-port"></div>
-      <svg xmlns="http://www.w3.org/2000/svg" width="51" height="52" viewBox="0 0 51 52">
-        <g id="Group_1363" data-name="Group 1363" transform="translate(0 1)">
-          <path id="Path_1" data-name="Path 1"
-                d="M499.584,386.565H492.3a3,3,0,0,1-2.605-1.905l-5.483-13.229a5.175,5.175,0,0,1,0-4.3l5.483-13.229A3,3,0,0,1,492.3,352h7.285"
-                transform="translate(-462.876 -344.384)" fill="none" stroke="white" stroke-miterlimit="10"
-                stroke-width="2"/>
-          <path id="Path_26" data-name="Path 26" d="M21.146,0H0" transform="translate(0 24.886)" fill="#fff"
-                stroke="white" stroke-width="2"/>
-          <path id="Path_33" data-name="Path 33" d="M504.5,495.094V479.672l6.779,4.031,6.577,3.856-6.779,3.856Z"
-                transform="translate(-467.856 -445.094)" fill="none" stroke="white" stroke-linecap="round"
-                stroke-linejoin="round" stroke-width="2"/>
-          <path id="Path_34" data-name="Path 34" d="M504.5,495.094V479.672l6.779,4.031,6.577,3.856-6.779,3.856Z"
-                transform="translate(-467.856 -479.672)" fill="none" stroke="white" stroke-linecap="round"
-                stroke-linejoin="round" stroke-width="2"/>
-        </g>
-      </svg>
-      <div class="output-port1"></div>
-      <div class="output-port2"></div>
-    </div>
-  </div>
-
-  <div class="switch-block">
-    <span>Switch</span>
-    <div id="func4-output"
-         class="switch-function"
-         (dragstart)="dragEvent($event)"
-         draggable="true">
-      <div class="input-port"></div>
-      <svg xmlns="http://www.w3.org/2000/svg" width="51" height="52" viewBox="0 0 51 52">
-        <g id="Group_1363" data-name="Group 1363" transform="translate(0 1)">
-          <path id="Path_1" data-name="Path 1"
-                d="M499.584,386.565H492.3a3,3,0,0,1-2.605-1.905l-5.483-13.229a5.175,5.175,0,0,1,0-4.3l5.483-13.229A3,3,0,0,1,492.3,352h7.285"
-                transform="translate(-462.876 -344.384)" fill="none" stroke="white" stroke-miterlimit="10"
-                stroke-width="2"/>
-          <path id="Path_26" data-name="Path 26" d="M21.146,0H0" transform="translate(0 24.886)" fill="#fff"
-                stroke="white" stroke-width="2"/>
-          <path id="Path_33" data-name="Path 33" d="M504.5,495.094V479.672l6.779,4.031,6.577,3.856-6.779,3.856Z"
-                transform="translate(-467.856 -445.094)" fill="none" stroke="white" stroke-linecap="round"
-                stroke-linejoin="round" stroke-width="2"/>
-          <path id="Path_34" data-name="Path 34" d="M504.5,495.094V479.672l6.779,4.031,6.577,3.856-6.779,3.856Z"
-                transform="translate(-467.856 -479.672)" fill="none" stroke="white" stroke-linecap="round"
-                stroke-linejoin="round" stroke-width="2"/>
-        </g>
-      </svg>
-      <div class="output-port1"></div>
-      <div class="output-port2"></div>
-    </div>
-  </div>
+<!--  <div class="switch-block">-->
+<!--    <span>Switch</span>-->
+<!--    <div id="func4-output"-->
+<!--         class="switch-function"-->
+<!--         (dragstart)="dragEvent($event)"-->
+<!--         draggable="true">-->
+<!--      <div class="input-port"></div>-->
+<!--      <svg xmlns="http://www.w3.org/2000/svg" width="51" height="52" viewBox="0 0 51 52">-->
+<!--        <g id="Group_1363" data-name="Group 1363" transform="translate(0 1)">-->
+<!--          <path id="Path_1" data-name="Path 1"-->
+<!--                d="M499.584,386.565H492.3a3,3,0,0,1-2.605-1.905l-5.483-13.229a5.175,5.175,0,0,1,0-4.3l5.483-13.229A3,3,0,0,1,492.3,352h7.285"-->
+<!--                transform="translate(-462.876 -344.384)" fill="none" stroke="white" stroke-miterlimit="10"-->
+<!--                stroke-width="2"/>-->
+<!--          <path id="Path_26" data-name="Path 26" d="M21.146,0H0" transform="translate(0 24.886)" fill="#fff"-->
+<!--                stroke="white" stroke-width="2"/>-->
+<!--          <path id="Path_33" data-name="Path 33" d="M504.5,495.094V479.672l6.779,4.031,6.577,3.856-6.779,3.856Z"-->
+<!--                transform="translate(-467.856 -445.094)" fill="none" stroke="white" stroke-linecap="round"-->
+<!--                stroke-linejoin="round" stroke-width="2"/>-->
+<!--          <path id="Path_34" data-name="Path 34" d="M504.5,495.094V479.672l6.779,4.031,6.577,3.856-6.779,3.856Z"-->
+<!--                transform="translate(-467.856 -479.672)" fill="none" stroke="white" stroke-linecap="round"-->
+<!--                stroke-linejoin="round" stroke-width="2"/>-->
+<!--        </g>-->
+<!--      </svg>-->
+<!--      <div class="output-port1"></div>-->
+<!--      <div class="output-port2"></div>-->
+<!--    </div>-->
+<!--  </div>-->
 
 
-  <!--  Blocks with Inject tabs (inject tabs doesn't works Drag&Drop)-->
+<!--  &lt;!&ndash;  Blocks with Inject tabs &ndash;&gt;-->
 
-  <div class="inject-block">
-    <span>Inject</span>
-    <div class="inject-function">
-      <div class="input-port"></div>
-      <div class="switch-on">
-        <div class="switch-circle"></div>
-        <span>Push</span>
-      </div>
-    </div>
-  </div>
+<!--  <div class="inject-block">-->
+<!--    <span>Inject</span>-->
+<!--    <div id="func5-output"-->
+<!--         draggable="true"-->
+<!--         (dragstart)="dragEvent($event)"-->
+<!--         class="inject-function">-->
+<!--      <div class="input-port"></div>-->
+<!--      <div class="switch-on">-->
+<!--        <div class="switch-circle"></div>-->
+<!--        <span>Push</span>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--  </div>-->
 
-  <div class="inject-block">
-    <span>Inject</span>
-    <div class="inject-function">
-      <div class="input-port"></div>
-      <div class="switch-off">
-        <div class="switch-circle"></div>
-        <span>Push</span>
-      </div>
-    </div>
-  </div>
+<!--  <div class="inject-block">-->
+<!--    <span>Inject</span>-->
+<!--    <div id="func6-output"-->
+<!--         draggable="true"-->
+<!--         (dragstart)="dragEvent($event)"-->
+<!--         class="inject-function">-->
+<!--      <div class="input-port"></div>-->
+<!--      <div class="switch-off">-->
+<!--        <div class="switch-circle"></div>-->
+<!--        <span>Push</span>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--  </div>-->
 
-  <!--  Blocks with Debug tabs (debug tabs doesn't works Drag&Drop)-->
+<!--  &lt;!&ndash;  Blocks with Debug tabs &ndash;&gt;-->
 
-  <div class="debug-block">
-    <span>Debug</span>
-    <div class="debug-function-on">
-      <div class="input-port"></div>
-      <div class="switch-on">
-        <div class="switch-circle"></div>
-        <span>ON</span>
-      </div>
-    </div>
-  </div>
+<!--  <div class="debug-block">-->
+<!--    <span>Debug</span>-->
+<!--    <div id="func7-output"-->
+<!--         draggable="true"-->
+<!--         (dragstart)="dragEvent($event)"-->
+<!--         class="debug-function-on">-->
+<!--      <div class="input-port"></div>-->
+<!--      <div class="switch-on">-->
+<!--        <div class="switch-circle"></div>-->
+<!--        <span>ON</span>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--  </div>-->
 
-  <div class="debug-block">
-    <span>Debug</span>
-    <div class="debug-function-off">
-      <div class="input-port"></div>
-      <div class="switch-off">
-        <span>OFF</span>
-        <div class="switch-circle"></div>
-      </div>
-    </div>
-  </div>
-</div>
+<!--  <div class="debug-block">-->
+<!--    <span>Debug</span>-->
+<!--    <div id="func8-output"-->
+<!--         draggable="true"-->
+<!--         (dragstart)="dragEvent($event)"-->
+<!--         class="debug-function-off">-->
+<!--      <div class="input-port"></div>-->
+<!--      <div class="switch-off">-->
+<!--        <span>OFF</span>-->
+<!--        <div class="switch-circle"></div>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--  </div>-->
+
+

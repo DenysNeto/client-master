@@ -1,16 +1,36 @@
 //$switch_color: #802a6e; // open after change background on light color
-$switch_color: white;
-$inject_color: #4fd0d6;
-$debug_color: #1fce43;
 $gray_switcher: #8dc0c2;
 $background_gray: #5b5b5b;
 $background_white: white;
 $text_color_white: white;
+$switcher_width: 45px;
 
-$color_test: #10253e;
+@mixin switcher_block(){
+  display: inline-block;
+  position: relative;
+  top: 18px;
+  width: $switcher_width;
+  height: 18px;
+  border: 2px solid;
+  border-radius: 10px;
+}
 
-.stage {
-  background: red;
+@mixin switch_circle {
+  position: relative;
+  float: left;
+  top: 1px;
+  width: 14px;
+  height: 14px;
+  background-color: $background_white;
+  border: 1px solid $gray_switcher;
+  border-radius: 10px;
+}
+
+@mixin switch_name($colorName) {
+  position: relative;
+  top: -2px;
+  font: 400 11px Roboto, sans-serif;
+  color: $colorName;
 }
 
 .tab-wrapper {
@@ -25,263 +45,282 @@ $color_test: #10253e;
 
 // Styles for Switch blocks
 
-.switch-block {
+.block {
   text-align: center;
-
+  margin-bottom: 10px;
 
   span {
     padding: 0;
     margin: 0;
-    color: $switch_color;
     font: 14px Roboto, sans-serif;
   }
 }
 
-.switch-function {
+.function {
   width: 80px;
   height: 80px;
-  border: 2px solid $switch_color;
-  //background: url("src/assets/switch.svg") no-repeat center;
+  border: 2px solid;
   border-radius: 10px;
   margin: 0 auto 10px;
   cursor: pointer;
 
   .input-port {
     position: relative;
-    left: -13px;
-    top: 30px;
+    left: -12px;
+    top: 28px;
     width: 18px;
     height: 18px;
-    background-color: $switch_color;
-    border: 2px solid $switch_color;
+    border: 2px solid;
     border-radius: 10px;
     float: left;
   }
-  svg{
+
+  svg {
     position: relative;
-    float: left;
+    float: right;
     top: 13px;
-    right: 8px;
+    right: 15px;
   }
 
-  .output-port1 {
-    position: relative;
-    left: 70px;
-    top: 8px;
-    width: 18px;
-    height: 18px;
-    background-color: $background_gray;
-    border: 2px solid $switch_color;
-    border-radius: 10px;
-  }
-
-  .output-port2 {
+  .output-port {
     position: relative;
     left: 70px;
     top: 28px;
     width: 18px;
     height: 18px;
     background-color: $background_gray;
-    border: 2px solid $switch_color;
-    border-radius: 10px;
-  }
-}
-
-// Styles for Inject blocks
-
-.inject-block {
-  text-align: center;
-
-  span {
-    padding: 0;
-    margin: 0;
-    color: $inject_color;
-    font: 14px Roboto, sans-serif;
-  }
-}
-
-.inject-function {
-  width: 80px;
-  height: 80px;
-  color: transparent;
-  border: 2px solid $inject_color;
-  border-radius: 10px;
-  margin: 0px auto 10px;
-  cursor: pointer;
-
-  .input-port {
-    position: relative;
-    top: 30px;
-    left: -12px;
-    width: 18px;
-    height: 18px;
-    background-color: $inject_color;
-    border: 2px solid $inject_color;
+    border: 2px solid;
     border-radius: 10px;
   }
 
-  .switch-on {
-    position: relative;
-    background-color: $background_white;
-    left: 16px;
-    top: 48px;
-    width: 45px;
-    height: 18px;
-    border: 2px solid $inject_color;
-    border-radius: 10px;
-
-    span {
-      position: relative;
-      top: -1px;
-      font: 400 11px Roboto, sans-serif;
-      color: steelblue;
-    }
-  }
-
-  .switch-off {
-    display: block;
-    position: relative;
-    background-color: steelblue;
-    left: 16px;
-    top: 48px;
-    width: 45px;
-    height: 18px;
-    border: 2px solid $inject_color;
-    border-radius: 10px;
-
-    span {
-      position: relative;
-      top: -1px;
-      font: 400 11px Roboto, sans-serif;
-      color: $text_color_white;
-    }
-  }
-
-  .switch-circle {
-    position: relative;
-    float: left;
-    top: 1px;
-    width: 14px;
-    height: 14px;
-    background-color: $background_white;
-    border: 1px solid $gray_switcher;
-    border-radius: 10px;
-  }
-}
-
-// Styles for debug blocks
-
-.debug-block {
-  text-align: center;
-
-  span {
-    padding: 0;
-    margin: 0;
-    color: $debug_color;
-    font: 14px Roboto, sans-serif;
-  }
-}
-
-// This debug styles with on switcher
-.debug-function-on {
-  width: 80px;
-  height: 80px;
-  color: transparent;
-  border: 2px solid $debug_color;
-  border-radius: 10px;
-  margin: 0px auto 10px;
-  cursor: pointer;
-
-  .input-port {
-    position: relative;
-    top: 30px;
-    left: 70px;
-    width: 18px;
-    height: 18px;
-    background-color: $debug_color;
-    border: 2px solid $debug_color;
-    border-radius: 10px;
-  }
-
-  .switch-on {
-    position: relative;
-    background-color: steelblue;
-    left: 20px;
-    top: 48px;
-    width: 35px;
-    height: 18px;
-    border: 2px solid $debug_color;
-    border-radius: 10px;
+  .switcher {
+    @include switcher_block;
 
     .switch-circle {
-      position: relative;
-      float: left;
-      top: 1px;
-      width: 14px;
-      height: 14px;
-      background-color: $background_white;
-      border: 1px solid $gray_switcher;
-      border-radius: 10px;
+      @include switch_circle;
     }
 
     span {
-      position: relative;
-      top: -1px;
-      font: 400 11px Roboto, sans-serif;
-      color: $background_white;
+      @include switch_name(steelblue);
     }
   }
-}
 
-// This debug styles with off switcher
-.debug-function-off {
-  width: 80px;
-  height: 80px;
-  color: transparent;
-  border: 2px solid $gray_switcher;
-  border-radius: 10px;
-  margin: 0px auto 10px;
-  cursor: pointer;
-
-  .input-port {
-    position: relative;
-    top: 30px;
-    left: 70px;
-    width: 18px;
-    height: 18px;
-    background-color: $gray_switcher;
-    border: 2px solid $gray_switcher;
-    border-radius: 10px;
-  }
-
-  .switch-off {
-    display: block;
-    position: relative;
-    background-color: $gray_switcher;
-    left: 20px;
-    top: 48px;
-    width: 40px;
-    height: 18px;
-    border: 2px solid $gray_switcher;
-    border-radius: 10px;
+  .click_button {
+    @include switcher_block;
+    //display: inline-block;
+    //position: relative;
+    //background-color: steelblue;
+    //top: 18px;
+    //width: $switcher_width;
+    //height: 18px;
+    //border: 2px solid;
+    //border-radius: 10px;
 
     .switch-circle {
-      position: relative;
-      float: right;
-      top: 1px;
-      width: 14px;
-      height: 14px;
-      background-color: $debug_color;
-      border: 1px solid $debug_color;
-      border-radius: 10px;
+      @include switch_circle;
     }
 
     span {
-      position: relative;
-      top: 3px;
-      float: left;
-      font: 400 11px Roboto, sans-serif;
-      color: $text_color_white;
+      @include switch_name(white);
     }
   }
 }
+
+//// Styles for Inject blocks
+//
+//.inject-block {
+//  text-align: center;
+//
+//  span {
+//    padding: 0;
+//    margin: 0;
+//    color: $inject_color;
+//    font: 14px Roboto, sans-serif;
+//  }
+//}
+//
+//.inject-function {
+//  width: 80px;
+//  height: 80px;
+//  color: transparent;
+//  border: 2px solid $inject_color;
+//  border-radius: 10px;
+//  margin: 0px auto 10px;
+//  cursor: pointer;
+//
+//  .input-port {
+//    position: relative;
+//    top: 30px;
+//    left: -12px;
+//    width: 18px;
+//    height: 18px;
+//    background-color: $inject_color;
+//    border: 2px solid $inject_color;
+//    border-radius: 10px;
+//  }
+//
+//  .switch-on {
+//    position: relative;
+//    background-color: $background_white;
+//    left: 16px;
+//    top: 48px;
+//    width: 45px;
+//    height: 18px;
+//    border: 2px solid $inject_color;
+//    border-radius: 10px;
+//
+//    span {
+//      position: relative;
+//      top: -1px;
+//      font: 400 11px Roboto, sans-serif;
+//      color: steelblue;
+//    }
+//  }
+//
+//  .switch-off {
+//    display: block;
+//    position: relative;
+//    background-color: steelblue;
+//    left: 16px;
+//    top: 48px;
+//    width: 45px;
+//    height: 18px;
+//    border: 2px solid $inject_color;
+//    border-radius: 10px;
+//
+//    span {
+//      position: relative;
+//      top: -1px;
+//      font: 400 11px Roboto, sans-serif;
+//      color: $text_color_white;
+//    }
+//  }
+//
+//  .switch-circle {
+//    position: relative;
+//    float: left;
+//    top: 1px;
+//    width: 14px;
+//    height: 14px;
+//    background-color: $background_white;
+//    border: 1px solid $gray_switcher;
+//    border-radius: 10px;
+//  }
+//}
+//
+//// Styles for debug blocks
+//
+//.debug-block {
+//  text-align: center;
+//
+//  span {
+//    padding: 0;
+//    margin: 0;
+//    color: $debug_color;
+//    font: 14px Roboto, sans-serif;
+//  }
+//}
+//
+//// This debug styles with on switcher
+//.debug-function {
+//  width: 80px;
+//  height: 80px;
+//  color: transparent;
+//  border: 2px solid $debug_color;
+//  border-radius: 10px;
+//  margin: 0px auto 10px;
+//  cursor: pointer;
+//
+//  .input-port {
+//    position: relative;
+//    top: 30px;
+//    left: 70px;
+//    width: 18px;
+//    height: 18px;
+//    background-color: $debug_color;
+//    border: 2px solid $debug_color;
+//    border-radius: 10px;
+//  }
+//
+//  .switch-on {
+//    position: relative;
+//    background-color: steelblue;
+//    left: 20px;
+//    top: 48px;
+//    width: 35px;
+//    height: 18px;
+//    border: 2px solid $debug_color;
+//    border-radius: 10px;
+//
+//    .switch-circle {
+//      position: relative;
+//      float: left;
+//      top: 1px;
+//      width: 14px;
+//      height: 14px;
+//      background-color: $background_white;
+//      border: 1px solid $gray_switcher;
+//      border-radius: 10px;
+//    }
+//
+//    span {
+//      position: relative;
+//      top: -1px;
+//      font: 400 11px Roboto, sans-serif;
+//      color: $background_white;
+//    }
+//  }
+//}
+//
+//// This debug styles with off switcher
+//.debug-function-off {
+//  width: 80px;
+//  height: 80px;
+//  color: transparent;
+//  border: 2px solid $gray_switcher;
+//  border-radius: 10px;
+//  margin: 0px auto 10px;
+//  cursor: pointer;
+//
+//  .input-port {
+//    position: relative;
+//    top: 30px;
+//    left: 70px;
+//    width: 18px;
+//    height: 18px;
+//    background-color: $gray_switcher;
+//    border: 2px solid $gray_switcher;
+//    border-radius: 10px;
+//  }
+//
+//  .switch-off {
+//    display: block;
+//    position: relative;
+//    background-color: $gray_switcher;
+//    left: 20px;
+//    top: 48px;
+//    width: 40px;
+//    height: 18px;
+//    border: 2px solid $gray_switcher;
+//    border-radius: 10px;
+//
+//    .switch-circle {
+//      position: relative;
+//      float: right;
+//      top: 1px;
+//      width: 14px;
+//      height: 14px;
+//      background-color: $debug_color;
+//      border: 1px solid $debug_color;
+//      border-radius: 10px;
+//    }
+//
+//    span {
+//      position: relative;
+//      top: 3px;
+//      float: left;
+//      font: 400 11px Roboto, sans-serif;
+//      color: $text_color_white;
+//    }
+//  }
+//}

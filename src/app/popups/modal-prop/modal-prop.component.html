@@ -22,11 +22,11 @@
     </mat-tab-group>
   </div>
 
-  <div class="tabs_list" *ngIf="tabs.length > 0">
+  <div class="tabs_list" *ngIf="tabs.length > 4">
     <a mat-button [matMenuTriggerFor]="menu">
       <mat-icon>arrow_drop_down_circle</mat-icon>
     </a>
-    <mat-menu #menu="matMenu">
+    <mat-menu #menu="matMenu" xPosition="before">
       <button *ngFor="let item of tabs; let index = index" (click)="selected = index" mat-menu-item>Tab
         - {{item._id}}</button>
     </mat-menu>

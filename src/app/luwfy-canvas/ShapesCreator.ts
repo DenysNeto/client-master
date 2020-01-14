@@ -1,60 +1,80 @@
 import Konva from 'konva';
 import {theme} from './theme';
-import {ShapesSizes as sizes} from './sizes';
-import {CircleTypes, ICircleCustom, IPathCustom, IRectCustom, IStartPointPathInfo} from './shapes-interface';
+import {ShapesSizes, ShapesSizes as sizes} from './sizes';
+import {BtnEventBlock, CircleTypes, ICircleCustom, IPathCustom, IRectCustom, IStartPointPathInfo, SettingIcons} from './shapes-interface';
 
 
 const ShapeCreator = {
+  createShapeName: (shapeName: string, fillColor) => {
+    return new Konva.Text({
+      // formula for align text on center
+      x: (ShapesSizes.block_width / 2) - (shapeName.length * 14 * 0.2645833333333),
+      y: -18,
+      padding: 2,
+      text: shapeName,
+      fontSize: 14,
+      fontFamily: 'Roboto',
+      fill: fillColor
+    });
+  },
 
-  createCircleInput: (  y?: number, payload?: any,) => {
+  // createCircleInput: (y?: number, payload?: any, color?: string) => {
+  //   return new Konva.Circle({
+  //     x: 0,
+  //     y: y ? y : sizes.block_height / 2,
+  //     radius: sizes.circle_radius,
+  //     stroke: color,
+  //     fill: color,
+  //     type: CircleTypes.Input,
+  //   });
+  // },
+  //
+  // createCircleOutput: (y?: number, payload?: any, color?: string) => {
+  //   return new Konva.Circle({
+  //     x: sizes.block_width,
+  //     y: y ? y : sizes.block_height / 2,
+  //     radius: sizes.circle_radius,
+  //     fill: theme.circle_background_output,
+  //     stroke: color,
+  //     type: CircleTypes.Output,
+  //   });
+  // },
 
-
+  createPortCircle: (x, y, color, inputPort: boolean) => {
     return new Konva.Circle({
-      x: 0,
+      x,
       y: y ? y : sizes.block_height / 2,
       radius: sizes.circle_radius,
-      fill: theme.circle_background_input,
-      type: CircleTypes.Input,
+      fill: inputPort ? color : theme.circle_background,
+      stroke: color,
+      type: inputPort ? null : CircleTypes.Output
     });
-
   },
 
-  createCircleOutput: ( y?: number, payload?: any) => {
-    return new Konva.Circle({
-      x: sizes.block_width,
+  createErrorOutput: (y) => {
+    return new Konva.Text({
+      x: sizes.block_width - (sizes.error_icon_size / 2),
       y,
-      radius: sizes.circle_radius,
-      fill: theme.circle_background_output,
-      stroke: theme.rect_switch_stroke,
-      type: CircleTypes.Output,
-    });
-  },
-
-  createCircleError: (payload?:any) => {
-    return new Konva.Rect({
-      width: sizes.block_width,
-      height: sizes.block_height,
-      fill: theme.switcher_unactivated_background,
-      cornerRadius: 10,
+      text: '\uf05c',
+      fontFamily: 'FontAwesome',
+      fontSize: sizes.error_icon_size,
+      fill: 'orange',
       stroke: 'red',
-      type: CircleTypes.Error
+      strokeWidth: 2
     });
-
   },
 
-  createRect: (strokeColor: string, height?: number, payload?:any): IRectCustom => {
+  createRect: (strokeColor: string, height?: number, payload?: any): IRectCustom => {
     return new Konva.Rect({
       width: sizes.block_width,
       height: height || sizes.block_height,
-      fill: theme.switcher_unactivated_background,
+      fill: theme.rect_background,
       cornerRadius: 10,
       stroke: strokeColor,
     });
-
   },
 
-  createLine: (start_info: IStartPointPathInfo, payload?:any) => {
-
+  createLine: (start_info: IStartPointPathInfo, payload?: any) => {
     return new Konva.Path({
         data: '',
         start_info,
@@ -67,8 +87,87 @@ const ShapeCreator = {
         isLastPathInGroup: true
       }
     );
-  }
+  },
 
+  iconGroupCreator: (x, y, iconsGroup: SettingIcons) => {
+    return new Konva.Group({
+      x,
+      y,
+      type: 'iconGroup',
+      hovered: true
+    }).add(new Konva.Text({
+        x: 0,
+        padding: 2,
+        fontFamily: 'FontAwesome',
+        fontSize: 19,
+        text: iconsGroup.edit_icon,
+        fill: 'orange'
+      }),
+      new Konva.Text({
+        x: 20,
+        padding: 2,
+        fontFamily: 'FontAwesome',
+        fontSize: 19,
+        text: iconsGroup.wizard_icon,
+        fill: '#4fd0d6'
+      }),
+      new Konva.Text({
+        x: 40,
+        padding: 2,
+        fontFamily: 'FontAwesome',
+        fontSize: 19,
+        text: iconsGroup.settings_icon,
+        fill: '#133f63'
+      }));
+  },
+
+  switcherGroupCreator: (x = 0, y = 0, rectWidth, rectColor, btnValues: BtnEventBlock) => {
+    return new Konva.Group({
+      x,
+      y,
+      switched: true
+    }).add(
+      new Konva.Rect({
+        x: 0,
+        y: 0,
+        width: rectWidth,
+        height: 18,
+        fill: btnValues.color_active,
+        cornerRadius: 10,
+        stroke: rectColor,
+      }),
+      new Konva.Text({
+        x: ((rectWidth + 11) / 2) - (btnValues.label.length * 11 * 0.264),
+        y: 5,
+        text: btnValues.label,
+        fontSize: 11,
+        fontFamily: 'Roboto',
+        fill: btnValues.color_disabled
+      }),
+      new Konva.Circle({
+        radius: 10,
+        x: 9,
+        y: 9,
+        width: 14,
+        height: 14,
+        stroke: 'gray',
+        strokeWidth: 1,
+        fill: 'white'
+      }));
+  },
+
+  createFaceImage: (x, y, imgColor, icon) => {
+    return new Konva.Text({
+      x,
+      y,
+      fontSize: ShapesSizes.face_img_font_size,
+      fontFamily: 'FontAwesome',
+      text: icon,
+      fill: imgColor,
+      hovered: true,
+      type: 'headImage'
+    });
+  }
 };
 
 export default ShapeCreator;
