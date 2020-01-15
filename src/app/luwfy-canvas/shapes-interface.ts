@@ -52,10 +52,12 @@ export interface IGroupCustom extends Group {
       //input id
       group_id: number,
     }
-  number_of_ports: string
+
 
 
 }
+
+
 
 export interface IStartPointPathInfo {
   start_group_id: number,

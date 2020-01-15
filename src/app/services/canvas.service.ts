@@ -7,7 +7,8 @@ import {
   IActiveWrapperBlock,
   ICircleCustom,
   ICurrentLineToDraw,
-  IGroupCustom, IPathCustom,
+  IGroupCustom,
+  IPathCustom,
 } from '../luwfy-canvas/shapes-interface';
 import ShapeCreator from '../luwfy-canvas/ShapesCreator';
 import {ShapesSizes as sizes} from '../luwfy-canvas/sizes';
@@ -18,7 +19,8 @@ import {Shape, ShapeConfig} from 'konva/types/Shape';
 import {Stage} from 'konva/types/Stage';
 import {BehaviorSubject, Subject} from 'rxjs';
 import {Collection} from 'konva/types/Util';
-import {Path} from 'konva/types/shapes/Path';
+import {UndoRedoService} from './undo-redo.service';
+import {ActionType} from '../luwfy-canvas/undo-redo.interface';
 
 @Injectable({
   providedIn: 'root',
@@ -60,6 +62,9 @@ export class CanvasService {
 
   // chosedGroupOfLines:IPathCustom[] = [];
 
+  activePathsArr: IPathCustom[] = [];
+
+
   activeWrapperBlock: IActiveWrapperBlock = {
 
     initial_position: {
@@ -80,10 +85,14 @@ export class CanvasService {
 
   };
 
+  isElem() {
+    return this.activePathsArr.length > 0;
+  }
+
   lineToDraw: Subject<ICurrentLineToDraw> = new BehaviorSubject<ICurrentLineToDraw>(this.currentLineToDraw);
   activeBlock: Subject<IActiveWrapperBlock> = new BehaviorSubject<IActiveWrapperBlock>(this.activeWrapperBlock);
 
-  constructor() {
+  constructor(private undoRedoService: UndoRedoService) {
 
   }
 
@@ -131,10 +140,7 @@ export class CanvasService {
 
     group.on('mouseup', (event) => {
 
-      console.log('MOUSEUP_1', event);
-      console.log('MOUSEUP_1 (1)', event.target.attrs.x, event.target.attrs.y);
-      console.log('MOUSEUP_1 (2)', event.target.attrs.x, event.target.getAbsolutePosition());
-      if (this.currentLineToDraw.isLineDrawable) {
+      if (this.currentLineToDraw.isLineDrawable && event.target._id !== this.currentLineToDraw.groupId && event.target.parent._id !== this.currentLineToDraw.groupId && this.currentLineToDraw.groupId !== 0) {
         let input_circle = this.getInputCircleFromGroup(event.target as Group);
 
         let current_path_group = this.getGroupById(this.currentLineToDraw.groupId, mainLayer.getStage());
@@ -146,8 +152,7 @@ export class CanvasService {
             return elem;
           }
         });
-        console.log('MOUSEUP_2');
-        //event.target.zIndex(1);
+
 
         let start_circle = current_path_group.findOne((elem) => {
           if (current_path.attrs.start_info && elem._id === current_path.attrs.start_info.start_circle_id) {
@@ -163,7 +168,6 @@ export class CanvasService {
           event.target.parent.attrs.x - current_path_group.attrs.x,
           event.target.parent.attrs.y - current_path_group.attrs.y + input_circle.attrs.y, this.setParamForLine(deltaX, deltaY)));
 
-        console.log('MOUSEUP_3');
 
         current_path.setAttr('custom_id_output', event.target._id);
 
@@ -171,17 +175,18 @@ export class CanvasService {
           end_group_id: event.target.parent._id,
           end_circle_id: input_circle._id,
         });
-        current_path.setZIndex(0);
+        current_path.setAttr('zIndex', 0);
 
-        //console.log('[c] before removing', !current_path.attrs.end_info || current_path.attrs.start_info.start_group_id === current_path.attrs.end_info.end_group_id);
-        // if (!current_path.attrs.end_info || current_path.attrs.start_info.start_group_id === current_path.attrs.end_info.end_group_id) {
-        //   console.log('[c] removing');
-        //   current_path.remove();
-        // }
+
+        this.undoRedoService.addAction({
+          action: ActionType.Create,
+          object: current_path,
+          parent: event.target.parent as Group
+        });
+
 
         this.currentLineToDraw.isLineDrawable = false;
         this.lineToDraw.next(this.currentLineToDraw);
-        console.log('[c] CANVAS', current_path);
         // event.target.parent.draw();
         return 0;
 
@@ -190,48 +195,42 @@ export class CanvasService {
     });
 
     group.on('mouseenter', (event) => {
-      if (event.target.parent.attrs.type && event.target.parent.attrs.type.includes('output')) {
-        if (this.currentLineToDraw.isLineDrawable) {
-          let current_circle = this.getCircleFromGroup(event.target.parent as Group);
-          current_circle.setAttr('fill', theme.circle_background_output);
-        }
+      if (this.currentLineToDraw.isLineDrawable) {
+        event.target.parent.setAttr('zIndex', 60);
       }
+
+
     });
 
     group.on('mouseleave', (event) => {
       if (event.target.parent.attrs.type && event.target.parent.attrs.type.includes('output')) {
-        if (this.currentLineToDraw.isLineDrawable) {
-          let current_circle = this.getCircleFromGroup(event.target.parent as Group);
-
-        }
 
       }
     });
 
   }
 
-  setMouseDownEventForSwitchCircle(circle: ICircleCustom, mainLayer: Layer) {
+  setMouseDownEventForSwitchCircle(circle: ICircleCustom, mainLayer: Layer, currentActiveGroup: Group) {
 
     circle.on('mousedown', (event) => {
 
-      if (event.target.attrs.type === CircleTypes.Output) {
+      if (event.target.attrs.type === CircleTypes.Output && !currentActiveGroup.hasChildren()) {
 
         let line_temp: IPathCustom = ShapeCreator.createLine({
           start_circle_id: event.target._id,
           start_group_id: event.target.parent._id,
         });
 
-        this.setClickEventForPath(line_temp, mainLayer);
-        line_temp.zIndex(0);
-        event.target.parent.add(line_temp);
 
+        this.setClickEventForPath(line_temp, mainLayer, currentActiveGroup);
+
+        event.target.parent.add(line_temp);
         event.target.parent.setAttr('draggable', false);
 
         this.currentLineToDraw.isLineDrawable = true;
         this.currentLineToDraw.lineId = line_temp._id;
         this.currentLineToDraw.groupId = event.target.parent._id;
 
-        console.log('[c] circle inside', event);
 
         this.currentLineToDraw.prevX = event.target.parent.attrs.x + event.target.attrs.x + 20;
         this.currentLineToDraw.prevY = event.target.parent.attrs.y + event.target.attrs.y;
@@ -242,15 +241,8 @@ export class CanvasService {
     });
   }
 
-  setClickEventForPath(path: IPathCustom, mainLayer: Layer) {
+  setClickEventForPath(path: IPathCustom, mainLayer: Layer, currentActiveGroup: Group) {
     path.on('mousedown', (event) => {
-      console.log('[c] mousedown path', event);
-      // let start_group = this.getGroupById(event.target.attrs.start_info.start_group_id, mainLayer.getStage());
-      // let end_group = this.getGroupById(event.target.attrs.end_info.end_group_id, mainLayer.getStage());
-      // start_group.setAttr('draggable', false);
-      // end_group.setAttr('draggable', false);
-      event.cancelBubble = true;
-
 
       if (event.evt.ctrlKey) {
 
@@ -263,24 +255,68 @@ export class CanvasService {
     });
 
     path.on('mouseup', (event) => {
+      if (this.currentLineToDraw.isLineDrawable) {
+        event.cancelBubble = true;
+      }
+
 
       // let start_group = this.getGroupById(event.target.attrs.start_info.start_group_id, mainLayer.getStage());
       // let end_group = this.getGroupById(event.target.attrs.end_info.end_group_id, mainLayer.getStage());
       // start_group.setAttr('draggable', true);
       // end_group.setAttr('draggable', true);
 
-      // event.cancelBubble = true;
+
+    });
+
+    path.on('mouseenter', (event) => {
+      console.log('[c] mouse enter path');
 
 
     });
 
     path.on('click', (event) => {
+      if (event.evt.ctrlKey) {
+        if (currentActiveGroup.hasChildren()) {
+          event.cancelBubble = true;
+          return 0;
+        }
 
+        this.activePathsArr.push(event.target as IPathCustom);
+        event.cancelBubble = true;
+        this.activeWrapperBlock.isDraw = false;
+
+
+        this.undoRedoService.addAction({
+          action: ActionType.Select,
+          object: event.target as IPathCustom,
+          parent: event.target.parent as IGroupCustom
+        });
+
+
+        event.target.setAttr('stroke', theme.choose_group_color);
+      }
 
     });
 
   }
 
+
+  resetActivePathArr() {
+    this.activePathsArr = [];
+  }
+
+  addElemToActivePathArr(elem: IPathCustom) {
+    this.activePathsArr.push(elem);
+  }
+
+  removeLastElementFromPathArr() {
+    this.activePathsArr.pop();
+    console.log('[c] rrr', this.activePathsArr);
+  }
+
+  handleOnCancelEvent(event) {
+    console.log('[c] ON_CANCEL_EVENT', event);
+  }
 
   getInputCircleFromGroup(component: Group | IGroupCustom) {
     if (component) {
@@ -300,7 +336,7 @@ export class CanvasService {
   setClickEvent(group: IGroupCustom, mainLayer: Layer, activeWrapperBlock: IActiveWrapperBlock, currentActiveGroup: Group) {
 
     group.on('click', (event) => {
-
+      console.log('[c] group click');
       event.cancelBubble = true;
 
       if (event.evt.ctrlKey) {
@@ -347,6 +383,13 @@ export class CanvasService {
       if (this.currentLineToDraw.isLineDrawable) {
         return 0;
       }
+
+      this.undoRedoService.addAction({
+        action: ActionType.Move,
+        object: event.target,
+        coordinates: {x: event.target.attrs.x, y: event.target.attrs.y},
+        parent: event.target.parent as Layer
+      });
 
       if (currentActiveGroup.isDraw) {
         this.deleteShapesFromGroup(mainLayer, currentActiveGroup);
@@ -431,6 +474,10 @@ export class CanvasService {
 
     });
 
+    group.on('dragend', (event) => {
+      console.log('[c] dragend', event);
+    });
+
   }
 
   setRegularGroupEvents(group: IGroupCustom) {
@@ -494,7 +541,7 @@ export class CanvasService {
       });
 
     });
-    console.log('[c] ppp', collection_ports);
+
     return collection_ports;
 
   }
@@ -549,7 +596,7 @@ export class CanvasService {
     circles_collection && circles_collection.each((elem: ICircleCustom) => {
 
       elem.setAttr('zIndex', 1000);
-      this.setMouseDownEventForSwitchCircle(elem, mainLayer);
+      this.setMouseDownEventForSwitchCircle(elem, mainLayer, currentActiveGroup);
     });
 
     this.setRegularGroupHandlers(temp_group, mainLayer, activeWrapperBlock, currentActiveGroup);
@@ -648,6 +695,21 @@ export class CanvasService {
       return null;
     }
 
+  }
+
+  isGroupInGroup(group_id: number, search_group: IGroupCustom) {
+    if (search_group) {
+
+      return search_group.findOne((elem) => {
+        if (elem._id === group_id) {
+          return elem;
+        }
+      });
+    }
+
+    else {
+      return null;
+    }
   }
 
   getCircleFromGroup(component: Group) {

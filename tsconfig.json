@@ -4,6 +4,7 @@
     "baseUrl": "./",
     "outDir": "./dist/out-tsc",
     "sourceMap": true,
+    "emitDecoratorMetadata": false,
     "declaration": false,
     "downlevelIteration": true,
     "experimentalDecorators": true,

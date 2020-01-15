@@ -1,27 +1,22 @@
-import {Component, OnInit, ViewChild} from '@angular/core';
+import {Component, HostListener, OnInit, ViewChild} from '@angular/core';
 import {RegistryService} from '../services/registry.service';
 import KonvaUtil from './konva-util';
 import {theme} from './theme';
 
 import Konva from 'konva';
 import {CanvasService} from '../services/canvas.service';
-import {
-  CircleTypes,
-  IActiveWrapperBlock,
-  ICurrentLineToDraw,
-  IGroupCustom,
-  IPathCustom,
-  IRectCustom,
-} from './shapes-interface';
+import {CircleTypes, IActiveWrapperBlock, ICurrentLineToDraw, IGroupCustom, IPathCustom, IRectCustom,} from './shapes-interface';
 import {Collection} from 'konva/types/Util';
-
 // import * as d3 from 'd3';
-import {Observable, of} from 'rxjs';
 import {debugGroup1, injectGroup1, switchGroup1} from './conva-tag-blocks';
 import {MatDialog, MatDialogRef} from '@angular/material';
 import {ModalPropComponent} from '../popups/modal-prop/modal-prop.component';
 import {BlocksRedactorService} from '../popups/blocks-redactor.service';
 import {Group} from 'konva/types/Group';
+import {UndoRedoService} from '../services/undo-redo.service';
+import {ActionType} from './undo-redo.interface';
+import {Layer} from 'konva/types/Layer';
+import {UndoRedoCanvasService} from '../services/undo-redo-canvas.service';
 
 @Component({
   selector: 'luwfy-canvas',
@@ -31,7 +26,7 @@ import {Group} from 'konva/types/Group';
 
 export class CanvasComponent implements OnInit {
   constructor(private RegistryService: RegistryService, private canvasService: CanvasService, private dialog: MatDialog,
-              private blocksRedactorService: BlocksRedactorService) {
+              private blocksRedactorService: BlocksRedactorService, private undoRedoService: UndoRedoService, private tempService: UndoRedoCanvasService) {
   }
 
   temp = 'hello';
@@ -42,6 +37,7 @@ export class CanvasComponent implements OnInit {
   KonvaUtil = KonvaUtil;
   fileNameDialogRef: MatDialogRef<ModalPropComponent>;
 
+
   rectangle: IRectCustom = new Konva.Rect({
     x: null,
     y: null,
@@ -51,6 +47,9 @@ export class CanvasComponent implements OnInit {
     stroke: 'black',
     draggable: true,
   });
+
+
+  activePaths: IPathCustom[] = [];
 
   // createdGroup: IGroupCustom | Group = new Konva.Group({
   //   draggable: true,
@@ -94,17 +93,20 @@ export class CanvasComponent implements OnInit {
     draggable: true,
     visible: true,
   }).on('dragstart', (event) => {
-    console.log('[c] 777');
-
     this.activeWrapperBlock.isDraw = false;
     this.activeWrapperBlock.rectangle.setAttr('visible', false);
+    this.undoRedoService.addAction({
+      action: ActionType.Move,
+      object: event.target,
+      coordinates: {x: event.target.attrs.x, y: event.target.attrs.y},
+      parent: event.target.parent as Layer
+    });
   }).on('dragmove', (event) => {
 
     if (!event) {
       return 0;
     }
-    console.log('[c] event VVV', event.target);
-    console.log('[c] event VVV [event]', event);
+
     event.target.children.each((elem) => {
 
       let isPathInGroup = this.canvasService.isPathInGroup(elem.getStage());
@@ -121,8 +123,6 @@ export class CanvasComponent implements OnInit {
             let temp_start_point_group = this.canvasService.getGroupById(elem.attrs.end_info.end_group_id, this.mainLayer.getStage());
             let temp_end_point_group = this.canvasService.getGroupById(elem.attrs.start_info.start_group_id, this.mainLayer.getStage());
             let temp_end_point_circle = this.canvasService.getCircleFromGroupById(elem.getStage(), elem.attrs.start_info.start_circle_id);
-            console.log('[c] output path [group]', temp_start_point_group);
-            console.log('[c] output path [circle]', temp_end_point_circle);
             let temp_start_circle = this.canvasService.getCircleFromGroupById(temp_start_point_group, elem.attrs.end_info.end_circle_id);
 
             let temp_input_circle = elem.getStage().findOne((elem) => {
@@ -153,8 +153,8 @@ export class CanvasComponent implements OnInit {
             let temp_end_point_circle = this.canvasService.getCircleFromGroupById(elem.getStage(), elem.attrs.end_info.end_circle_id);
             let temp_start_point_circle = this.canvasService.getCircleFromGroupById(elem.getStage(), elem.attrs.start_info.start_circle_id);
             let temp_start_circle = this.canvasService.getCircleFromGroupById(temp_start_point_group, elem.attrs.start_info.start_circle_id);
-            let temp_input_circle = elem.getStage().findOne((elem) => {
-              if (elem.className === 'Circle' && elem.attrs.type === CircleTypes.Input) {
+            let temp_input_circle = elem.parent.findOne((elem) => {
+              if (elem && elem.className === 'Circle' && elem.attrs && elem.attrs.type === CircleTypes.Input) {
                 return elem;
               }
             });
@@ -169,6 +169,7 @@ export class CanvasComponent implements OnInit {
         }
 
       }
+
 
     });
 
@@ -251,7 +252,7 @@ export class CanvasComponent implements OnInit {
       }
 
       this.currentActiveGroup.removeChildren();
-      this.mainLayer.getStage().draw();
+      //  this.mainLayer.getStage().draw();
 
     }
 
@@ -260,17 +261,44 @@ export class CanvasComponent implements OnInit {
   setClickEventForGroup = (group: Group) => {
     group.on('click', (event) => {
 
+      console.log('[c] click target', event.target);
+
       event.cancelBubble = true;
 
+
       if (event.evt.ctrlKey) {
+        if (event.target.className === 'Path') {
+          return 0;
+        }
+
+        if (this.canvasService.activePathsArr.length > 0) {
+          return 0;
+        }
+
+
+        if (this.currentActiveGroup.hasChildren() && this.canvasService.isGroupInGroup(event.target.parent._id, this.currentActiveGroup)) {
+          return 0;
+        }
+
+
+        if (event.target.className && event.target.className === 'Path') {
+          return 0;
+        }
 
         event.target.parent.setAttr('x', event.target.parent.position().x - this.currentActiveGroup.position().x);
         event.target.parent.setAttr('y', event.target.parent.position().y - this.currentActiveGroup.position().y);
 
+
         this.currentActiveGroup.add(event.target.parent as Group);
+
+        this.undoRedoService.addAction({
+          action: ActionType.Select,
+          object: this.currentActiveGroup
+        });
+
         event.target.parent.children.each((elem) => {
           if (elem.className !== 'Path') {
-            elem.setAttr('stroke', 'yellow');
+            elem.setAttr('stroke', theme.choose_group_color);
             //  elem.setAttr ( 'draggable', false );
           }
           elem.setAttr('draggable', false);
@@ -279,53 +307,58 @@ export class CanvasComponent implements OnInit {
 
       }
 
+
     });
 
-    //todo add switches for different group types
 
   };
 
   handleClickEvent = (event) => {
 
-    // if (this.currentLineToDraw.isLineDrawable) {
-    //   this.currentLineToDraw.isLineDrawable = false;
+
+    // if (this.canvasService.activePathsArr.length > 0 && this.undoRedoService.undoRedoArr[this.undoRedoService.undoRedoArr.length - 1].action === ActionType.Select) {
+    //   this.canvasService.activePathsArr.forEach((elem) => {
+    //     elem.setAttr('stroke', theme.line_color);
     //
-    //   let current_group = this.mainLayer.getStage().findOne((elem) => {
-    //     if (elem._id === this.currentLineToDraw.groupId) {
-    //       return elem;
-    //     }
-    //
+    //     // elem.
     //   });
     //
-    //   let current_path = current_group.findOne((elem) => {
-    //     if (elem.attrs.custom_id && elem.attrs.custom_id.includes('line')) {
-    //       return elem;
-    //     }
     //
-    //   });
+    //   this.tempService.performUndo(this.mainLayer, this.currentActiveGroup);
+    //   this.canvasService.resetActivePathArr();
     //
-    //   if (current_path) {
-    //     current_path.hide();
-    //   } else {
-    //     console.log('[c] case 2');
-    //     this.currentLineToDraw.line.hide();
-    //   }
-    //   current_group.draw();
-    //
-    //   return 0;
     //
     // }
-    this.deleteShapesFromGroup();
+    // else
+
+
+    if (this.canvasService.activePathsArr.length > 0) {
+      this.canvasService.activePathsArr.forEach((elem) => {
+        elem.setAttr('stroke', theme.line_color);
+
+        // elem.
+        this.undoRedoService.deleteAction(ActionType.Select, elem._id);
+      });
+
+      this.canvasService.resetActivePathArr();
+      return 0;
+    }
+
+
   };
 
   handleDragOver = (e) => {
 
     if (this.idChangedTrigger) {
-
       let current_group = this.canvasService.createDefaultGroup(4, this.mainLayer, this.activeWrapperBlock, this.currentActiveGroup);
       this.idChangedTrigger = false;
       this.setClickEventForGroup(current_group);
       this.mainLayer.getStage().add(current_group);
+
+
+      this.undoRedoService.addAction({
+        action: ActionType.Create, object: current_group, parent: this.mainLayer
+      });
 
     } else {
 
@@ -341,15 +374,15 @@ export class CanvasComponent implements OnInit {
   //todo uncomment
 
   handleMouseUp = (e) => {
-
-
     if (this.currentLineToDraw.isLineDrawable) {
-      console.log('[c] mouse up qqq 2');
       let current_group = this.canvasService.getGroupById(this.currentLineToDraw.groupId, this.mainLayer);
       let temp_path = this.canvasService.getPathFromGroupById(this.currentLineToDraw.lineId, current_group);
 
+      if (!temp_path) {
+        return 0;
+      }
+
       if (!temp_path.start_info || !temp_path.end_info) {
-        console.log('[c] mouse up qqq 2');
         temp_path.remove();
       }
       return 0;
@@ -361,6 +394,7 @@ export class CanvasComponent implements OnInit {
     let i = this.mainLayer.getStage().children.length;
 
     let temp = this.mainLayer.getStage().children.length;
+    let temp_arr: any = [];
     for (let i = 0; i < temp; i++) {
       if (this.mainLayer.getStage().children[i] && this.mainLayer.getStage().children[i]._id > 100) {
         if (this.checkValueBetween(this.mainLayer.getStage().children[i].position(), this.mainLayer.getStage().children[i].attrs.width, this.mainLayer.getStage().children[i].attrs.height)) {
@@ -371,19 +405,30 @@ export class CanvasComponent implements OnInit {
           if (this.mainLayer.getStage().children[i].nodeType === 'Group') {
             this.mainLayer.getStage().children[i].children.each((elem) => {
               if (elem.className !== 'Path') {
-                elem.setAttr('stroke', 'yellow');
+                elem.setAttr('stroke', theme.choose_group_color);
               }
 
             });
           }
 
           this.mainLayer.getStage().children[i].setAttr('draggable', false);
+          temp_arr.push(this.mainLayer.getStage().children[i]);
+
           this.mainLayer.getStage().children[i].moveTo(this.currentActiveGroup);
+
+
           i--;
 
         }
       }
     }
+    if (temp_arr.length > 0) {
+      this.undoRedoService.addAction({
+        action: ActionType.Select,
+        object: this.currentActiveGroup,
+      });
+    }
+
 
     //
 
@@ -505,7 +550,68 @@ export class CanvasComponent implements OnInit {
 
   };
 
+
+  handleCancelEvent(event) {
+    console.log('[c] cancel');
+  }
+
+  @HostListener('document:keydown.backspace') undoBackspace(event: KeyboardEvent) {
+
+    if (this.currentActiveGroup.hasChildren()) {
+      this.undoRedoService.addAction({
+        action: ActionType.Delete,
+        object: this.currentActiveGroup.children,
+        parent: this.currentActiveGroup
+      });
+
+
+      this.currentActiveGroup.removeChildren();
+    }
+
+
+    if (this.canvasService.activePathsArr.length > 0) {
+
+
+      console.log('[c] this.canvasService.activePathsArr', this.canvasService);
+      this.canvasService.activePathsArr.forEach((elem) => {
+        elem.remove();
+      });
+
+
+      this.undoRedoService.addAction({
+        action: ActionType.Delete,
+        object: this.canvasService.activePathsArr,
+      });
+
+      this.canvasService.resetActivePathArr();
+
+    }
+
+
+  }
+
+
+  @HostListener('document:keydown.control.z') undoCtrlZ(event: KeyboardEvent) {
+
+    if (this.currentActiveGroup.hasChildren
+      // &&
+      // this.undoRedoService.undoRedoArr[this.undoRedoService.undoRedoArr.length - 1].action === ActionType.Select &&
+      // (this.undoRedoService.undoRedoArr[this.undoRedoService.undoRedoArr.length - 1].object as IGroupCustom | IPathCustom)._id === this.currentActiveGroup._id)
+    ) {
+
+      this.deleteShapesFromGroup();
+      this.tempService.performUndo(this.mainLayer, this.currentActiveGroup);
+    } else {
+      this.tempService.performUndo(this.mainLayer, this.currentActiveGroup);
+    }
+
+
+    // responds to control+z
+  }
+
+
   //todo uncomment
+
 
   handleMouseMove = (e) => {
 
@@ -538,11 +644,14 @@ export class CanvasComponent implements OnInit {
 
           current_path.setAttr('data', KonvaUtil.generateLinkPath(this.currentLineToDraw.prevX - current_group.getPosition().x - 20, this.currentLineToDraw.prevY - current_group.getPosition().y, Math.ceil((pos.x - current_group.getPosition().x) / 5) * 5, Math.ceil((pos.y - current_group.getPosition().y) / 5) * 5, 1));
 
-         // current_path.zIndex(100);
+          // current_path.zIndex(100);
           //current_path.show();
 
         }
       }
+    }
+    if (this.canvasService.activePathsArr.length > 0) {
+      return 0;
     }
 
     if (this.activeWrapperBlock.isDraw) {
@@ -559,7 +668,19 @@ export class CanvasComponent implements OnInit {
     }
 
     if (this.activeWrapperBlock.isActive) {
+
+      if (this.currentActiveGroup.hasChildren()) {
+        let temp_arr = [] ;
+        this.currentActiveGroup.children.each((elem) => {
+          temp_arr.push(elem);
+        });
+
+        console.log('[c] temp_arr', temp_arr);
+        this.undoRedoService.addAction({action: ActionType.Unselect, object: temp_arr, parent: this.currentActiveGroup});
+      }
       this.deleteShapesFromGroup();
+
+
     }
 
     this.activeWrapperBlock.initial_position.x = e.layerX;
@@ -588,6 +709,7 @@ export class CanvasComponent implements OnInit {
     this.canvasService.activeBlock.subscribe((data) => {
       this.activeWrapperBlock = data;
     });
+
 
     setInterval(() => {
       // this.lineLayer.getStage().draw();

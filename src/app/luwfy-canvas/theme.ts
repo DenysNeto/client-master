@@ -5,6 +5,7 @@ type Theme = {
   circle_background_output: string;
   circle_background_default: string
   circle_border: string;
+  choose_group_color: string
   rect_background: string;
   rect_border: string;
   rect_selection_border: string;
@@ -17,7 +18,7 @@ type Theme = {
   switcher_unactivated_text: string;
   switcher_debug_on_text: string;
   fontSize: number,
-  fontFamily: string ,
+  fontFamily: string,
 }
 
 export const theme: Theme = {
@@ -31,6 +32,7 @@ export const theme: Theme = {
   rect_background: 'transparent',
   rect_border: 'black',
   rect_selection_border: 'blue',
+  choose_group_color: 'yellow',
   // rect_stroke: '#802a6e', // After change background on white
   rect_switch_stroke: '#802A6E',
   rect_inject_stroke: '#4fd0d6',
