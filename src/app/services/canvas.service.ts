@@ -384,6 +384,9 @@ export class CanvasService {
         return 0;
       }
 
+      console.log('[C] DD',event.target.attrs.x);
+      console.log('[C] DD',event.target.attrs.y);
+
       this.undoRedoService.addAction({
         action: ActionType.Move,
         object: event.target,
@@ -391,7 +394,7 @@ export class CanvasService {
         parent: event.target.parent as Layer
       });
 
-      if (currentActiveGroup.isDraw) {
+      if (this.activeWrapperBlock.isDraw) {
         this.deleteShapesFromGroup(mainLayer, currentActiveGroup);
       }
       this.activeWrapperBlock.isDraw = false;

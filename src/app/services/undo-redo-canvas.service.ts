@@ -35,10 +35,15 @@ export class UndoRedoCanvasService {
           //
           // }
 
+          console.log('[c] X ', last_action_obj.coordinates.x);
+          console.log('[c] Y ', last_action_obj.coordinates.y);
 
+          console.log('[c] cccc', last_action_obj.object);
 
           (last_action_obj.object as IGroupCustom).x(last_action_obj.coordinates.x);
           (last_action_obj.object as IGroupCustom).y(last_action_obj.coordinates.y);
+
+
           (last_action_obj.object as IGroupCustom).fire('dragmove', () => {
           });
           console.log('action move');
@@ -103,15 +108,23 @@ export class UndoRedoCanvasService {
                 console.log('unselect 4');
 
 
-                elem.setAttr('x', elem.position().x - activeGroup.position().x);
-                elem.setAttr('y', elem.position().y - activeGroup.position().y);
-                elem.moveTo(last_action_obj.parent);
+                elem.parent.setAttr('x', elem.position().x - activeGroup.position().x);
+                elem.parent.setAttr('y', elem.position().y - activeGroup.position().y);
+                elem.add(last_action_obj.parent);
+
                 elem.setAttr('draggable', false);
-                activeGroup.setAttr('visible', true);
+                // activeGroup.setAttr('visible', true);
                 elem.children.each((elem) => {
-                  elem.setAttr('stroke', theme.choose_group_color);
+                  if (elem.className && elem.className === 'Path') {
+                    elem.setAttr('stroke', theme.line_color);
+                  } else {
+                    elem.setAttr('stroke', theme.choose_group_color);
+                  }
+
                 });
 
+
+                last_action_obj.parent.setAttr('draggable', true);
 
               });
             } else if ((last_action_obj.object as IPathCustom[]).length && (last_action_obj.object as IPathCustom[]).length > 0 && last_action_obj.object[0].className) {
@@ -122,7 +135,7 @@ export class UndoRedoCanvasService {
 
           } else {
 
-            (last_action_obj.object as IGroupCustom).moveTo(last_action_obj.parent);
+            (last_action_obj.object as IGroupCustom).add(last_action_obj.parent);
 
           }
 

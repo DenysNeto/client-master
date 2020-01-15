@@ -95,10 +95,13 @@ export class CanvasComponent implements OnInit {
   }).on('dragstart', (event) => {
     this.activeWrapperBlock.isDraw = false;
     this.activeWrapperBlock.rectangle.setAttr('visible', false);
+
+    console.log('[c] event.target', event.target.getPosition().x, event.target.getPosition().y);
+    console.log('[c] event.target', event.target._lastPos);
     this.undoRedoService.addAction({
       action: ActionType.Move,
       object: event.target,
-      coordinates: {x: event.target.attrs.x, y: event.target.attrs.y},
+      coordinates: {x: event.target.getPosition().x, y: event.target.getPosition().y},
       parent: event.target.parent as Layer
     });
   }).on('dragmove', (event) => {
@@ -106,6 +109,7 @@ export class CanvasComponent implements OnInit {
     if (!event) {
       return 0;
     }
+
 
     event.target.children.each((elem) => {
 
@@ -593,13 +597,16 @@ export class CanvasComponent implements OnInit {
 
   @HostListener('document:keydown.control.z') undoCtrlZ(event: KeyboardEvent) {
 
-    if (this.currentActiveGroup.hasChildren
+    if (this.currentActiveGroup.hasChildren()
       // &&
       // this.undoRedoService.undoRedoArr[this.undoRedoService.undoRedoArr.length - 1].action === ActionType.Select &&
       // (this.undoRedoService.undoRedoArr[this.undoRedoService.undoRedoArr.length - 1].object as IGroupCustom | IPathCustom)._id === this.currentActiveGroup._id)
     ) {
 
-      this.deleteShapesFromGroup();
+
+
+      //this.deleteShapesFromGroup();
+
       this.tempService.performUndo(this.mainLayer, this.currentActiveGroup);
     } else {
       this.tempService.performUndo(this.mainLayer, this.currentActiveGroup);
@@ -670,7 +677,7 @@ export class CanvasComponent implements OnInit {
     if (this.activeWrapperBlock.isActive) {
 
       if (this.currentActiveGroup.hasChildren()) {
-        let temp_arr = [] ;
+        let temp_arr = [];
         this.currentActiveGroup.children.each((elem) => {
           temp_arr.push(elem);
         });
