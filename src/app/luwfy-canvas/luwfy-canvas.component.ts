@@ -564,14 +564,6 @@ export class CanvasComponent implements OnInit {
     setTimeout(() => {
       this.mainLayer.getStage().add(this.currentActiveGroup);
       this.mainLayer.getStage().add(this.currentLineToDraw.line);
-      this.mainLayer.getStage().add(new Konva.Path({
-        x: 240,
-        y: 40,
-        data: "50,50,100,100",
-        fill: 'green',
-        scaleX: 2,
-        scaleY: 2
-      }));
     }, 0);
 
   }

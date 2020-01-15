@@ -175,7 +175,7 @@ export default {
   getHorizontalLineInfo: (i) => {
     return of({
       points: [0, 20*i, 5000, 20*i], //  [x1, y1, x2, y2, x3, y3]
-      stroke: '#eee',
+      stroke: '#eef6fa',
       strokeWidth: 1,
       // lineCap: 'round',
       // lineJoin: 'round',
@@ -185,13 +185,11 @@ export default {
     return of({
       points: [20*i, 0, 20*i, 5000], //  [x1, y1, x2, y2, x3, y3]
       // y1="0" y2="5000" [attr.x1]="20*i" [attr.x2]="20*i"
-      stroke: '#eee',
+      stroke: '#eef6fa',
       strokeWidth: 1,
       // lineCap: 'round',
       // lineJoin: 'round',
     })
-  },
-
-
+  }
 }
 
