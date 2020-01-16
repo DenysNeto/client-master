@@ -197,7 +197,7 @@ const ShapeCreator = {
       fontSize: 20,
       fontFamily: 'FontAwesome',
       text: '\uf047',
-      fill: 'black',
+      fill: '#115770',
       type: 'dragPoint'
     });
   },
@@ -208,11 +208,11 @@ const ShapeCreator = {
       fontSize: 25,
       fontFamily: 'FontAwesome',
       text: '\uf196',
-      fill: 'black',
+      fill: '#115770',
       type: 'dragPoint'
     }).on('click', (event) => {
       event.target.attrs.fill = 'silver';
-      setTimeout(() => event.target.attrs.fill = 'black', 50);
+      setTimeout(() => event.target.attrs.fill = '#115770', 50);
     });
   }
 };
