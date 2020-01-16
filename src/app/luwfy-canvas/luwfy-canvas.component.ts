@@ -24,6 +24,7 @@ import {UndoRedoService} from '../services/undo-redo.service';
 import {ActionType} from './undo-redo.interface';
 import {Layer} from 'konva/types/Layer';
 import {UndoRedoCanvasService} from '../services/undo-redo-canvas.service';
+import {StageComponent} from 'ng2-konva';
 
 @Component({
   selector: 'luwfy-canvas',
@@ -36,8 +37,8 @@ export class CanvasComponent implements OnInit {
               private blocksRedactorService: BlocksRedactorService, private undoRedoService: UndoRedoService, private tempService: UndoRedoCanvasService) {
   }
 
-  newFlowWidth = 200;
-  newFlowHeight = 100;
+  newFlowWidth = 500;
+  newFlowHeight = 580;
   sizeBetweenFlowblocks = 50;
   temp = 'hello';
   data = [];
@@ -375,6 +376,20 @@ export class CanvasComponent implements OnInit {
   };
 
   //todo uncomment
+
+  getPathFromGroupById(id: number, component: StageComponent | any) {
+    if (component) {
+      return component.findOne((elem) => {
+        if (elem.className === 'Path' && elem._id === id) {
+          return elem;
+        }
+      });
+    } else {
+      return null;
+    }
+  }
+
+
 
   handleMouseUp = (e) => {
     if (this.currentLineToDraw.isLineDrawable) {

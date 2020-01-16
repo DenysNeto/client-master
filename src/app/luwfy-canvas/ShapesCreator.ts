@@ -62,7 +62,7 @@ const ShapeCreator = {
     });
   },
 
-  createLine: (start_info: IStartPointPathInfo, strokeLine) => {
+  createLine: (start_info: IStartPointPathInfo, strokeLine?) => {
     return new Konva.Path({
       data: '',
       start_info,

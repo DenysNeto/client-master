@@ -7,11 +7,11 @@ import {
   IActiveWrapperBlock,
   ICircleCustom,
   ICurrentLineToDraw,
-  IGroupCustom,
+  IGroupCustom, InputBlocksInterface,
   IPathCustom,
 } from '../luwfy-canvas/shapes-interface';
 import ShapeCreator from '../luwfy-canvas/ShapesCreator';
-import { ShapesSizes as sizes } from '../luwfy-canvas/sizes';
+import {ShapesSizes, ShapesSizes as sizes, SwitcherSizes} from '../luwfy-canvas/sizes';
 import { theme } from '../luwfy-canvas/theme';
 import KonvaUtil from '../luwfy-canvas/konva-util';
 import { Layer } from 'konva/types/Layer';
@@ -21,6 +21,11 @@ import { BehaviorSubject, Subject } from 'rxjs';
 import { Collection } from 'konva/types/Util';
 import { Path } from 'konva/types/shapes/Path';
 import {ActionType} from '../luwfy-canvas/undo-redo.interface';
+import {MatDialog, MatDialogRef} from '@angular/material';
+import {ModalPropComponent} from '../popups/modal-prop/modal-prop.component';
+import {UndoRedoService} from './undo-redo.service';
+import {BlocksRedactorService} from '../popups/blocks-redactor.service';
+import {BlocksService} from './blocks.service';
 @Injectable ( {
     providedIn: 'root',
 } )
@@ -93,7 +98,7 @@ export class CanvasService {
   }
 
 
-  constructor(private dialog: MatDialog, private undoRedoService: UndoRedoService private blocksRedactorService: BlocksRedactorService, private blocksService: BlocksService) {
+  constructor(private dialog: MatDialog, private undoRedoService: UndoRedoService, private blocksRedactorService: BlocksRedactorService, private blocksService: BlocksService) {
     this.blocksArr = this.blocksService.getBlocks() as InputBlocksInterface[];
   }
 
@@ -124,7 +129,7 @@ export class CanvasService {
 
     };
 
-    setRegularGroupHandlers ( group: IGroupCustom, mainLayer: Layer, activeWrapperBlock: IActiveWrapperBlock, currentActiveGroup: Group ) {
+    setRegularGroupHandlers (group: IGroupCustom, mainLayer: Layer, activeWrapperBlock: IActiveWrapperBlock, currentActiveGroup: Group ) {
         this.setDragGroupEvents ( group, mainLayer, currentActiveGroup );
         this.setMouseMoveEvents ( group, mainLayer, activeWrapperBlock );
         //  this.setClickEvent(group, mainLayer, activeWrapperBlock, this.currentActiveGroup)
@@ -241,7 +246,8 @@ export class CanvasService {
         let line_temp: IPathCustom = ShapeCreator.createLine({
           start_circle_id: event.target._id,
           start_group_id: event.target.parent._id,
-        });
+
+        })as IPathCustom;
 
 
         this.setClickEventForPath(line_temp, mainLayer, currentActiveGroup);
@@ -424,7 +430,7 @@ handleOnCancelEvent(event) {
                 return 0;
             }
 
-            let isPathInGroup = this.isPathInGroup ( event.target );
+            let isPathInGroup = this.isPathInGroup ( event.target as Group);
 
             let input_paths: Array<IPathCustom> = this.getAllInputLinesFromGroup ( mainLayer, event.target as Group | IGroupCustom );
             if ( isPathInGroup || input_paths ) {
@@ -717,7 +723,7 @@ switcherAnimation(event, colorActive, colorDisabled, blockColor) {
   let circles_collection = this.getAllCirclesFromGroup(temp_group);
   circles_collection && circles_collection.each((elem: ICircleCustom) => {
     elem.setAttr('zIndex', 1000);
-    this.setMouseDownEventForSwitchCircle(elem, mainLayer);
+    this.setMouseDownEventForSwitchCircle(elem, mainLayer, currentActiveGroup);
   });
   this.setRegularGroupHandlers(temp_group, mainLayer, activeWrapperBlock, currentActiveGroup);
   return temp_group;
@@ -756,6 +762,18 @@ switcherAnimation(event, colorActive, colorDisabled, blockColor) {
         }
 
     }
+
+  getPathFromGroupById(id: number, component: StageComponent | any) {
+    if (component) {
+      return component.findOne((elem) => {
+        if (elem.className === 'Path' && elem._id === id) {
+          return elem;
+        }
+      });
+    } else {
+      return null;
+    }
+  }
 
     getLastPathFromGroup = ( component: Group ) => {
 

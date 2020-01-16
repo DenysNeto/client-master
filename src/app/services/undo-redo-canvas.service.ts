@@ -36,7 +36,6 @@ export class UndoRedoCanvasService {
           // }
 
 
-
           (last_action_obj.object as IGroupCustom).x(last_action_obj.coordinates.x);
           (last_action_obj.object as IGroupCustom).y(last_action_obj.coordinates.y);
           (last_action_obj.object as IGroupCustom).fire('dragmove', () => {
@@ -97,9 +96,9 @@ export class UndoRedoCanvasService {
         case ActionType.Unselect : {
 
           if ((last_action_obj.parent as Group)._id === activeGroup._id) {
-            if ((last_action_obj.object as IGroupCustom[]).length && (last_action_obj.object as IGroupCustom[]).length > 0) {
+            if ((last_action_obj.object as undefined as IGroupCustom[]).length && (last_action_obj.object as undefined as IGroupCustom[]).length > 0) {
               console.log('unselect 3');
-              (last_action_obj.object as IGroupCustom[]).forEach((elem) => {
+              (last_action_obj.object as undefined as IGroupCustom[]).forEach((elem) => {
                 console.log('unselect 4');
 
 
