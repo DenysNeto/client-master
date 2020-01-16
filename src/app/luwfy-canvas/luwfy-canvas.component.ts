@@ -26,12 +26,26 @@ export class CanvasComponent implements OnInit {
   constructor(private RegistryService: RegistryService, private canvasService: CanvasService) {
   }
 
+  newFlowWidth = 500;
+  newFlowHeight = 500;
+  sizeBetweenFlowblocks = 50;
   temp = 'hello';
   data = [];
   selected_items = [];
   lines = [];
   drawningLine = false;
   KonvaUtil = KonvaUtil;
+  konvaSize = {width: 1920, height: 1080};
+  flowboards: Group[] = [
+    new Konva.Group({
+      x: this.sizeBetweenFlowblocks,
+      y: this.sizeBetweenFlowblocks,
+      width: this.newFlowWidth,
+      height: this.newFlowHeight,
+      draggable: true
+    })
+  ];
+
 
   rectangle: IRectCustom = new Konva.Rect({
     x: null,
@@ -515,6 +529,42 @@ export class CanvasComponent implements OnInit {
 
   };
 
+  createGrid = (flow) => {
+    let distBeetwenLines = 20;
+    let vertLines = flow.attrs.height / distBeetwenLines;
+    let horLines = flow.attrs.width / distBeetwenLines;
+    for (let i = 0; i <= horLines; i++) {
+      let line = new Konva.Line({
+        points: [distBeetwenLines * i, 0, distBeetwenLines * i, flow.attrs.height],
+        stroke: '#eef6fa',
+        strokeWidth: 1
+      });
+      flow.add(line);
+    }
+    for (let i = 0; i <= vertLines; i++) {
+      let line = new Konva.Line({
+        points: [0, distBeetwenLines * i, flow.attrs.width, distBeetwenLines * i],
+        stroke: '#eef6fa',
+        strokeWidth: 1
+      });
+      flow.add(line);
+    }
+    flow.add(new Konva.Rect({
+        width: flow.attrs.width,
+        height: flow.attrs.height,
+        cornerRadius: 10,
+        stroke: 'silver',
+        strokeWidth: 1,
+        shadowColor: 'silver',
+        shadowBlur: 4
+      }),
+      new Konva.Text({
+        text: `new flow${this.flowboards.length}`,
+        y: -20,
+        color: 'black'
+      }));
+  };
+
   ngOnInit() {
     this.RegistryService.currentDraggableItem.subscribe((data) => {
       console.log('[c] yyy', data);
@@ -561,10 +611,38 @@ export class CanvasComponent implements OnInit {
     // }, 0);
     // todo draw
 
+
     setTimeout(() => {
+      this.flowboards.forEach(flow => {
+        this.createGrid(flow);
+        this.mainLayer.getStage().add(flow);
+      });
       this.mainLayer.getStage().add(this.currentActiveGroup);
       this.mainLayer.getStage().add(this.currentLineToDraw.line);
     }, 0);
+  }
 
+  addFlowToLayer() {
+    let newX, newY;
+    let lastFlowboard = this.flowboards[this.flowboards.length - 1];
+    if (lastFlowboard.attrs.x + lastFlowboard.attrs.width + this.newFlowWidth < this.konvaSize.width) {
+      newX = lastFlowboard.attrs.x + lastFlowboard.attrs.width + this.sizeBetweenFlowblocks;
+      newY = lastFlowboard.attrs.y;
+    } else {
+      newX = this.sizeBetweenFlowblocks;
+      newY = lastFlowboard.attrs.y + lastFlowboard.attrs.height + this.sizeBetweenFlowblocks;
+    }
+    let newFlow = new Konva.Group({
+      x: newX,
+      y: newY,
+      width: this.newFlowWidth,
+      height: this.newFlowHeight,
+      draggable: true
+    });
+    this.flowboards.push(newFlow);
+    this.createGrid(newFlow);
+    this.mainLayer.getStage().add(newFlow);
   }
 }
+
+

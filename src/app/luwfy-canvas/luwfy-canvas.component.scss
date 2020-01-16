@@ -1,31 +1,39 @@
 .red-ui-workspace-chart-grid line {
-    fill: none;
-    shape-rendering: crispEdges;
-    stroke: #eee;
-    stroke-width: 1px;
+  fill: none;
+  shape-rendering: crispEdges;
+  stroke: #eee;
+  stroke-width: 1px;
 }
+
 .red-ui-flow-link-background {
-    stroke: #fff;
-    opacity: 0;
-    stroke-width: 20;
-    cursor: crosshair;
-    fill: none;
+  stroke: #fff;
+  opacity: 0;
+  stroke-width: 20;
+  cursor: crosshair;
+  fill: none;
 }
+
 .red-ui-flow-link-outline {
-    stroke: #fff;
-    stroke-width: 5;
-    cursor: crosshair;
-    fill: none;
-    pointer-events: none;
+  stroke: #fff;
+  stroke-width: 5;
+  cursor: crosshair;
+  fill: none;
+  pointer-events: none;
 }
+
 .red-ui-flow-link-line {
-    stroke: #999;
-    stroke-width: 3;
-    fill: none;
-    pointer-events: none;
+  stroke: #999;
+  stroke-width: 3;
+  fill: none;
+  pointer-events: none;
 }
 
 .stage {
-    background: #fff;
+  background: #fff;
+}
 
+#add_flow {
+  position: fixed;
+  bottom: 50px;
+  right: 50px;
 }

@@ -8,6 +8,7 @@ import {LufyTabsComponent} from './luwfy-tabs/luwfy-tabs.component';
 import {LuwfyVerticalTabComponent} from './luwfy-vertical-tab/luwfy-vertical-tab.component';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {PopupsModule} from './popups/popups.module';
+import {MatButtonModule} from '@angular/material';
 
 @NgModule({
   declarations: [
@@ -21,7 +22,8 @@ import {PopupsModule} from './popups/popups.module';
     AppRoutingModule,
     KonvaModule,
     BrowserAnimationsModule,
-    PopupsModule
+    PopupsModule,
+    MatButtonModule
   ],
   providers: [],
   bootstrap: [AppComponent]

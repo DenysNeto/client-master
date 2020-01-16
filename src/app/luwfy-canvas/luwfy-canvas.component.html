@@ -4,19 +4,19 @@
 <!--<button (click)="openAddFileDialog()">Add file</button>-->
 <!-- <ng-template #content> -->
 <div class="stage">
-  <ko-stage #stage [config]="KonvaUtil.createStage({width: 1920, height: 1080})"
+  <ko-stage #stage [config]="KonvaUtil.createStage({width: konvaSize.width, height: konvaSize.height})"
             (dragover)="handleDragOver($event)"
             (click)="handleClickEvent($event)"
             (mouseup)="handleMouseUp($event)"
             (mousedown)="handleMouseDown($event)"
             (mousemove)="handleMouseMove($event)">
 
-    <ko-layer>
-      <ko-line *ngFor="let item of [].constructor(1100/20); let i = index"
-               [config]="KonvaUtil.getHorizontalLineInfo(i)"></ko-line>
-      <ko-line *ngFor="let item of [].constructor(1940/20); let i = index"
-               [config]="KonvaUtil.getVerticallLineInfo(i)"></ko-line>
-    </ko-layer>
+<!--    <ko-layer>-->
+<!--      <ko-line *ngFor="let item of [].constructor(1100/20); let i = index"-->
+<!--               [config]="KonvaUtil.getHorizontalLineInfo(i)"></ko-line>-->
+<!--      <ko-line *ngFor="let item of [].constructor(1940/20); let i = index"-->
+<!--               [config]="KonvaUtil.getVerticallLineInfo(i)"></ko-line>-->
+<!--    </ko-layer>-->
 
 
     <!-- LINE -->
@@ -33,9 +33,9 @@
     <!--    </ko-layer>-->
 
 
-    <ko-layer #lineLayer>
-      <!-- <ko-line [config]="KonvaUtil.createLine({x1: 800, y1:365, x2: 100, y2: 1000})"></ko-line> -->
-    </ko-layer>
+<!--    <ko-layer #lineLayer>-->
+<!--      &lt;!&ndash; <ko-line [config]="KonvaUtil.createLine({x1: 800, y1:365, x2: 100, y2: 1000})"></ko-line> &ndash;&gt;-->
+<!--    </ko-layer>-->
 
     <ko-layer #mainLayer>
     </ko-layer>
@@ -103,5 +103,13 @@
     <!--      </ko-group>-->
     <!--    </ko-layer>-->
   </ko-stage>
+  <button
+    id="add_flow"
+    mat-mini-fab
+    color="primary"
+    (click)="addFlowToLayer()"
+  >
+    <span style="font-size:xx-large">+</span>
+  </button>
 </div>
 <!-- </ng-template> -->
