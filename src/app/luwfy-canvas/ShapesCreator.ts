@@ -29,6 +29,7 @@ const ShapeCreator = {
     });
   },
 
+
   createErrorOutput: (y) => {
     return new Konva.Text({
       x: sizes.block_width - (sizes.error_icon_size / 2.5),
@@ -37,6 +38,17 @@ const ShapeCreator = {
       fontFamily: 'FontAwesome',
       fontSize: sizes.error_icon_size,
       fill: 'red'
+    });
+  },
+
+  createCircleOutput: ( y?: number, payload?: any) => {
+    return new Konva.Circle({
+      x: sizes.block_width,
+      y,
+      radius: sizes.circle_radius,
+      fill: theme.circle_background_output,
+      stroke: theme.rect_switch_stroke,
+      type: CircleTypes.Output,
     });
   },
 

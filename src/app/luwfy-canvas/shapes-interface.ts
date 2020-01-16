@@ -2,6 +2,9 @@ import {Group} from 'konva/types/Group';
 import {Path} from 'konva/types/shapes/Path';
 import {Circle} from 'konva/types/shapes/Circle';
 import {Rect} from 'konva/types/shapes/Rect';
+import Konva from 'konva';
+
+
 
 
 export enum CircleTypes {
@@ -18,7 +21,7 @@ export interface ICoordinates {
 
 export interface ICurrentLineToDraw {
   isLineDrawable: boolean,
-  lineId: number
+  lineId:number
   groupId: number,
   line: Path | IPathCustom,
   prevX: number,
@@ -31,7 +34,10 @@ export interface ICurrentLineToDraw {
 
 }
 
+
 export interface IActiveWrapperBlock {
+
+
   initial_position: { x: number, y: number },
   now_position: { x: number, y: number },
   isActive: boolean,
@@ -48,8 +54,12 @@ export interface IGroupCustom extends Group {
       //input id
       group_id: number,
     }
-  number_of_ports: string
+
+
+
 }
+
+
 
 export interface IStartPointPathInfo {
   start_group_id: number,
