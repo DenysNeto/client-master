@@ -44,6 +44,7 @@ export class CanvasComponent implements OnInit {
       draggable: true
     })
   ];
+  subTabs: [];
 
 
   rectangle: IRectCustom = new Konva.Rect({
@@ -644,6 +645,8 @@ export class CanvasComponent implements OnInit {
   }
 
   onMainClick(event) {
+    this.mainLayer;
+    console.log();
     console.log(event);
   }
 }
