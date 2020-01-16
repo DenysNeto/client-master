@@ -2,7 +2,6 @@ import {Component, OnInit, ViewChild} from '@angular/core';
 import {RegistryService} from '../services/registry.service';
 import KonvaUtil from './konva-util';
 import {theme} from './theme';
-
 import Konva from 'konva';
 import {CanvasService} from '../services/canvas.service';
 import {
@@ -26,8 +25,8 @@ export class CanvasComponent implements OnInit {
   constructor(private RegistryService: RegistryService, private canvasService: CanvasService) {
   }
 
-  newFlowWidth = 500;
-  newFlowHeight = 500;
+  newFlowWidth = 200;
+  newFlowHeight = 100;
   sizeBetweenFlowblocks = 50;
   temp = 'hello';
   data = [];
@@ -35,7 +34,7 @@ export class CanvasComponent implements OnInit {
   lines = [];
   drawningLine = false;
   KonvaUtil = KonvaUtil;
-  konvaSize = {width: 1920, height: 1080};
+  konvaSize = {width: 1800, height: 1200};
   flowboards: Group[] = [
     new Konva.Group({
       x: this.sizeBetweenFlowblocks,
@@ -642,6 +641,10 @@ export class CanvasComponent implements OnInit {
     this.flowboards.push(newFlow);
     this.createGrid(newFlow);
     this.mainLayer.getStage().add(newFlow);
+  }
+
+  onMainClick(event) {
+    console.log(event);
   }
 }
 
