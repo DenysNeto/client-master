@@ -66,7 +66,7 @@ const ShapeCreator = {
 
   iconGroupCreator: (x, y, iconsGroup: SettingIcons) => {
     return new Konva.Group({
-      x,
+      x ,
       y,
       type: 'iconGroup',
       hovered: true
