@@ -1,6 +1,6 @@
 <div class="stage">
   <mat-tab-group (selectedTabChange)="onMainClick($event)">
-    <mat-tab label="Main Project"></mat-tab>
+    <mat-tab *ngFor="let tab of subTabs" [label]=tab.label></mat-tab>
   </mat-tab-group>
   <ko-stage #stage [config]="KonvaUtil.createStage({width: konvaSize.width, height: konvaSize.height})"
             (dragover)="handleDragOver($event)"

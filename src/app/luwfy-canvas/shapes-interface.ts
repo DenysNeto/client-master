@@ -121,3 +121,8 @@ export interface InputBlocksInterface {
   setting_icons: SettingIcons,
   btn_event_block: BtnEventBlock
 }
+
+export interface dataInTabLayer {
+  label: string,
+  layerData: any
+}

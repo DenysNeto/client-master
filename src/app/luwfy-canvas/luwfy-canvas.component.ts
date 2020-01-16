@@ -6,7 +6,7 @@ import {theme} from './theme';
 import Konva from 'konva';
 import {CanvasService} from '../services/canvas.service';
 import {
-  CircleTypes,
+  CircleTypes, dataInTabLayer,
   IActiveWrapperBlock,
   ICurrentLineToDraw,
   IGroupCustom,
@@ -38,7 +38,7 @@ export class CanvasComponent implements OnInit {
   }
 
   newFlowWidth = 500;
-  newFlowHeight = 580;
+  newFlowHeight = 500;
   sizeBetweenFlowblocks = 50;
   temp = 'hello';
   data = [];
@@ -46,7 +46,7 @@ export class CanvasComponent implements OnInit {
   lines = [];
   drawningLine = false;
   KonvaUtil = KonvaUtil;
-  konvaSize = {width: 1800, height: 1200};
+  konvaSize = {width: window.screen.width, height: window.screen.height};
   flowboards: Group[] = [
     new Konva.Group({
       x: this.sizeBetweenFlowblocks,
@@ -56,7 +56,7 @@ export class CanvasComponent implements OnInit {
       draggable: true
     })
   ];
-  subTabs: [];
+  subTabs: dataInTabLayer[]  = [{label: 'Main Project', layerData:[]}, {label: 'Sub Menu', layerData:[]}];
 
 
 
@@ -801,6 +801,7 @@ export class CanvasComponent implements OnInit {
       });
       this.mainLayer.getStage().add(this.currentActiveGroup);
       this.mainLayer.getStage().add(this.currentLineToDraw.line);
+      console.log(this.mainLayer);
     }, 0);
   }
 
@@ -827,9 +828,13 @@ export class CanvasComponent implements OnInit {
   }
 
   onMainClick(event) {
-    this.mainLayer;
-    console.log();
-    console.log(event);
+    if(event){
+      console.log(event);
+    }
+    console.log(this.mainLayer.getStage().children);
+
+
+
   }
 }
 
