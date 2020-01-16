@@ -41,7 +41,7 @@ const ShapeCreator = {
     });
   },
 
-  createCircleOutput: ( y?: number, payload?: any) => {
+  createCircleOutput: (y?: number, payload?: any) => {
     return new Konva.Circle({
       x: sizes.block_width,
       y,
@@ -78,7 +78,7 @@ const ShapeCreator = {
 
   iconGroupCreator: (x, y, iconsGroup: SettingIcons) => {
     return new Konva.Group({
-      x ,
+      x,
       y,
       type: 'iconGroup',
       hovered: true
@@ -154,6 +154,65 @@ const ShapeCreator = {
       fill: imgColor,
       hovered: true,
       type: 'headImage'
+    });
+  },
+  createFlowboard: (x, y, width, height) => {
+    return new Konva.Group({
+      x,
+      y,
+      width,
+      height,
+      draggable: true
+    });
+  },
+  createLineForGrid: (points) => {
+    return new Konva.Line({
+      points,
+      stroke: '#eef6fa',
+      strokeWidth: 1
+    });
+  },
+  createShadowForGrid: (width, height) => {
+    return new Konva.Rect({
+      width,
+      height,
+      cornerRadius: 10,
+      stroke: 'silver',
+      strokeWidth: 1,
+      shadowColor: 'silver',
+      shadowBlur: 4
+    });
+  },
+  createNameOfFlowboard: (num) => {
+    return new Konva.Text({
+      text: `new flow${num}`,
+      y: -20,
+      color: 'black'
+    });
+  },
+  createDrugPoint: () => {
+    return new Konva.Text({
+      x: 505,
+      y: 10,
+      fontSize: 20,
+      fontFamily: 'FontAwesome',
+      text: '\uf047',
+      fill: 'black',
+      type: 'dragPoint'
+    });
+  },
+  createMenuButton: () => {
+    return new Konva.Text({
+      x: 505,
+      y: 40,
+      fontSize: 25,
+      fontFamily: 'FontAwesome',
+      text: '\uf196',
+      fill: 'black',
+      type: 'dragPoint'
+    }).on('click', (event) => {
+      event.target.attrs.fill = 'silver';
+      setTimeout(() => event.target.attrs.fill = 'black', 50);
     });
   }
 };

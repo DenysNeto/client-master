@@ -2,15 +2,19 @@ import {Group} from 'konva/types/Group';
 import {Path} from 'konva/types/shapes/Path';
 import {Circle} from 'konva/types/shapes/Circle';
 import {Rect} from 'konva/types/shapes/Rect';
-import Konva from 'konva';
-
-
 
 
 export enum CircleTypes {
   Input = 'input',
   Output = 'output',
   Error = 'error'
+}
+
+export enum GroupTypes {
+  Flowboard = 'flowboard',
+  Block = 'block',
+  Switcher = 'switcher',
+  IconsGroup = 'iconsGroup'
 }
 
 
@@ -21,7 +25,7 @@ export interface ICoordinates {
 
 export interface ICurrentLineToDraw {
   isLineDrawable: boolean,
-  lineId:number
+  lineId: number
   groupId: number,
   line: Path | IPathCustom,
   prevX: number,
@@ -56,9 +60,7 @@ export interface IGroupCustom extends Group {
     }
 
 
-
 }
-
 
 
 export interface IStartPointPathInfo {

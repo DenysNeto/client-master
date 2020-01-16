@@ -18,3 +18,9 @@ export const SwitcherSizes = {
   iconsFontSize: 19,
   margin_left: 10,
 };
+
+export const FlowboardSizes = {
+  newFlowWidth: 500,
+  newFlowHeight: 500,
+  sizeBetweenFlowblock: 50
+};
