@@ -1,4 +1,4 @@
-import {Component, HostListener, OnInit, ViewChild} from '@angular/core';
+import {Component, ElementRef, HostListener, OnInit, ViewChild} from '@angular/core';
 import {RegistryService} from '../services/registry.service';
 import KonvaUtil from './konva-util';
 import {theme} from './theme';
@@ -24,6 +24,7 @@ import {UndoRedoCanvasService} from '../services/undo-redo-canvas.service';
 import {StageComponent} from 'ng2-konva';
 import ShapeCreator from './ShapesCreator';
 import {FlowboardSizes} from './sizes';
+import {log} from 'util';
 
 @Component({
   selector: 'luwfy-canvas',
@@ -36,6 +37,11 @@ export class CanvasComponent implements OnInit {
               private blocksRedactorService: BlocksRedactorService, private undoRedoService: UndoRedoService, private tempService: UndoRedoCanvasService) {
   }
 
+  @ViewChild('stage', null) stage: any;
+  @ViewChild('menu', null) menu: ElementRef;
+  @ViewChild('lineLayer', null) lineLayer: any;
+  @ViewChild('mainLayer', null) mainLayer: any = new Konva.Layer({});
+
   data = [];
   lines = [];
   currentId: string;
@@ -44,6 +50,8 @@ export class CanvasComponent implements OnInit {
   konvaSize = {width: window.screen.width, height: window.screen.height};
   flowboards: Group[];
   subTabs: dataInTabLayer[] = [{label: 'Main Project', layerData: []}, {label: 'Sub Menu', layerData: []}];
+  top: any;
+  left: any;
 
 
   currentLineToDraw: ICurrentLineToDraw = {
@@ -208,10 +216,6 @@ export class CanvasComponent implements OnInit {
       y: posRect.y1,
     });
   }
-
-  @ViewChild('stage', null) stage: any;
-  @ViewChild('lineLayer', null) lineLayer: any;
-  @ViewChild('mainLayer', null) mainLayer: any = new Konva.Layer({});
 
   //delete all objects from the selection rectangle
   deleteShapesFromGroup = () => {
@@ -684,9 +688,25 @@ export class CanvasComponent implements OnInit {
         flow.add(ShapeCreator.createLineForGrid([0, distBetweenLines * i, flow.attrs.width, distBetweenLines * i]));
       }
     }
+
+    let menuButton = ShapeCreator.createMenuButton();
+
+    menuButton.on('click', event => {
+      console.log(event.evt.screenY);
+      this.top = event.evt.screenX;
+      this.left = event.evt.screenY;
+      this.menu.nativeElement.style.display = 'initial';
+    });
+
+
     flow.add(ShapeCreator.createShadowForGrid(flow.attrs.width, flow.attrs.height), ShapeCreator.createDrugPoint(),
-      ShapeCreator.createNameOfFlowboard(this.flowboards.length), ShapeCreator.createMenuButton());
+      ShapeCreator.createNameOfFlowboard(this.flowboards.length), menuButton);
   };
+
+  onClickMenu() {
+    this.menu.nativeElement.style.display = 'none';
+  }
+
 
   ngOnInit() {
 
@@ -772,6 +792,7 @@ export class CanvasComponent implements OnInit {
     this.mainLayer.getStage().children = activeTab.layerData;
 
   }
+
 }
 
 

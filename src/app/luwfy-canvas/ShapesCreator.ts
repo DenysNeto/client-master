@@ -210,10 +210,9 @@ const ShapeCreator = {
       text: '\uf196',
       fill: '#115770',
       type: 'dragPoint'
-    }).on('click', (event) => {
-      event.target.attrs.fill = 'silver';
-      setTimeout(() => event.target.attrs.fill = '#115770', 50);
-    });
+    })
+      .on('mousedown', event => event.target.attrs.fill = 'silver')
+      .on('mouseup', event => event.target.attrs.fill = '#115770');
   }
 };
 
