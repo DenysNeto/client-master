@@ -13,6 +13,12 @@ export enum CircleTypes {
   Error = 'error'
 }
 
+export enum GroupTypes {
+    Flowboard = 'flowboard',
+    Block = 'block',
+    
+}
+
 
 export interface ICoordinates {
   x: number,

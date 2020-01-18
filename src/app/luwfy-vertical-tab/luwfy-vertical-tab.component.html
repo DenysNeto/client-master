@@ -5,6 +5,7 @@
       <div id="{{block.name}}"
            [ngStyle]="{borderColor: block.color}"
            class="function"
+           (dragend) = "dragFinish($event)"
            (dragstart)="dragEvent($event)"
            draggable="true">
         <svg xmlns="http://www.w3.org/2000/svg" width="51" height="52" viewBox="0 0 51 52">
