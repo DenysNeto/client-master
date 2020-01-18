@@ -22,6 +22,7 @@ import { ActionType } from './undo-redo.interface';
 import { Layer } from 'konva/types/Layer';
 import { UndoRedoCanvasService } from '../services/undo-redo-canvas.service';
 import { StageComponent } from 'ng2-konva';
+import { ShapesSizes } from './sizes';
 
 @Component ( {
     selector   : 'luwfy-canvas',
@@ -355,10 +356,43 @@ export class CanvasComponent implements OnInit {
             } );
             
         } else {
+            
+            let temp;
+            this.canvasService.getAllFlowsFromLayer ( this.mainLayer ).each ( ( flowGroup ) => {
+                console.log ( '[c] vvveee', flowGroup );
+                
+                if ( this.checkIsGroupInFlow ( flowGroup ) ) {
+                    temp = this.checkIsGroupInFlow ( flowGroup, true );
+                    console.log ( '[c] temp_ooo', temp );
+                    return 0;
+                }
+                
+            } );
+            
             this.mainLayer.getStage ().children[ this.mainLayer.getStage ().children.length - 1 ].position ( {
                 x: e.layerX,
                 y: e.layerY,
             } );
+            
+            if ( temp ) {
+                console.log ( '[c] temp_ooo2' );
+                temp.children.each ( elem => {
+                    if ( elem.className === 'Rect' ) {
+                        elem.setAttr ( 'stroke', 'green' );
+                    }
+                    
+                } );
+            } else {
+                this.canvasService.getAllFlowsFromLayer ( this.mainLayer ).each ( elem => {
+                    
+                    elem.children.each ( elem => {
+                        if ( elem.className === 'Rect' ) {
+                            elem.setAttr ( 'stroke', theme.line_color );
+                        }
+                    } );
+                    
+                } );
+            }
             
         }
         
@@ -722,18 +756,12 @@ export class CanvasComponent implements OnInit {
             } ) );
     };
     
-    checkIsGroupInFlow ( flowGroup ) {
-        console.log ( '[c] each2 currentDraggedGroup', this.currentDraggedGroup );
-        console.log ( '[c] each2 flowgroup', flowGroup );
-        console.log ( '[c] each2[3]', flowGroup && flowGroup.attrs.x < this.currentDraggedGroup.attrs.x && flowGroup.attrs.x + flowGroup.attrs.width > this.currentDraggedGroup.attrs.x + this.currentDraggedGroup.width () );
-        console.log ( '[c] each2[4]', flowGroup.attrs.y < this.currentDraggedGroup.attrs.y && flowGroup.attrs.y + flowGroup.attrs.height > this.currentDraggedGroup.attrs.y + this.currentDraggedGroup.height () );
-        
-        if ( flowGroup && flowGroup.attrs.x < this.currentDraggedGroup.attrs.x - 10 && flowGroup.attrs.x + flowGroup.attrs.width > this.currentDraggedGroup.attrs.x + this.currentDraggedGroup.width ()
+    checkIsGroupInFlow ( flowGroup, returnFlow?: boolean ) {
+        if ( flowGroup && flowGroup.attrs.x < this.currentDraggedGroup.attrs.x - ShapesSizes.circle_radius && flowGroup.attrs.x + flowGroup.attrs.width > this.currentDraggedGroup.attrs.x + this.currentDraggedGroup.width () - ShapesSizes.circle_radius
             &&
             flowGroup.attrs.y < this.currentDraggedGroup.attrs.y && flowGroup.attrs.y + flowGroup.attrs.height > this.currentDraggedGroup.attrs.y + this.currentDraggedGroup.height () ) {
             console.log ( '[c] each2[5]' );
-            return true;
-            
+            return returnFlow ? flowGroup : true;
         }
     }
     
@@ -804,6 +832,13 @@ export class CanvasComponent implements OnInit {
                 console.log ( '[c] each' );
                 if ( this.checkIsGroupInFlow ( flowGroup ) ) {
                     temp = true;
+                    flowGroup.children.each ( elem => {
+                     
+                        if ( elem.className === 'Rect' ) {
+                            console.log('[c] rrrrr', elem);
+                            elem.setAttr ( 'stroke', theme.line_color );
+                        }
+                    } );
                     return 0;
                 }
                 
