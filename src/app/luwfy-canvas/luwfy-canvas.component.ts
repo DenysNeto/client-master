@@ -57,6 +57,16 @@ export class CanvasComponent implements OnInit {
   ];
   subTabs: dataInTabLayer[] = [{label: 'Main Project', layerData: []}, {label: 'Sub Menu', layerData: []}];
 
+
+  currentCopiedGroup:IGroupCustom =    new Konva.Group({
+    x: 0,
+    y: 0,
+    type: GroupTypes.CopiedGroup,
+    draggable: true,
+    opacity:.5,
+    zIndex: 1000
+  });
+
   rectangle: IRectCustom = new Konva.Rect({
     x: null,
     y: null,
@@ -632,6 +642,29 @@ export class CanvasComponent implements OnInit {
 
     // responds to control+z
   }
+
+  @HostListener('document:keydown.control.c') undoCtrlC(event: KeyboardEvent) {
+
+    if (this.currentActiveGroup.hasChildren) {
+     // this.currentCopiedGroup
+    }
+
+    // responds to control+z
+  }
+
+  @HostListener('document:keydown.control.v') undoCtrlV(event: KeyboardEvent) {
+
+    if (this.currentActiveGroup.hasChildren) {
+
+      this.deleteShapesFromGroup();
+      this.tempService.performUndo(this.mainLayer, this.currentActiveGroup);
+    } else {
+      this.tempService.performUndo(this.mainLayer, this.currentActiveGroup);
+    }
+
+    // responds to control+z
+  }
+
 
   //todo uncomment
 
