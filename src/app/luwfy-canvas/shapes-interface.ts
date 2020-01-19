@@ -2,7 +2,6 @@ import {Group} from 'konva/types/Group';
 import {Path} from 'konva/types/shapes/Path';
 import {Circle} from 'konva/types/shapes/Circle';
 import {Rect} from 'konva/types/shapes/Rect';
-import Konva from 'konva';
 
 
 export enum CircleTypes {
@@ -13,10 +12,13 @@ export enum CircleTypes {
 
 export enum GroupTypes {
   Flowboard = 'flowboard',
-  Block = 'block',
-  CopiedGroup = 'copied_group'
+  Switcher = 'switcher',
+  CopiedGroup = 'copied_group',
+IconsGroup = 'iconsGroup',
 
 }
+
+
 
 
 export interface ICoordinates {

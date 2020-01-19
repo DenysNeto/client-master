@@ -1,4 +1,4 @@
-import {Component, HostListener, OnInit, ViewChild} from '@angular/core';
+import {Component, ElementRef, HostListener, OnInit, ViewChild} from '@angular/core';
 import {RegistryService} from '../services/registry.service';
 import KonvaUtil from './konva-util';
 import {theme} from './theme';
@@ -14,7 +14,7 @@ import {
   IRectCustom,
 } from './shapes-interface';
 import {Collection} from 'konva/types/Util';
-import {MatDialog, MatDialogRef} from '@angular/material';
+import {MatDialog} from '@angular/material';
 import {BlocksRedactorService} from '../popups/blocks-redactor.service';
 import {Group} from 'konva/types/Group';
 import {UndoRedoService} from '../services/undo-redo.service';
@@ -23,6 +23,9 @@ import {Layer} from 'konva/types/Layer';
 import {UndoRedoCanvasService} from '../services/undo-redo-canvas.service';
 import {StageComponent} from 'ng2-konva';
 import {ShapesSizes} from './sizes';
+import ShapeCreator from './ShapesCreator';
+import {FlowboardSizes} from './sizes';
+import {log} from 'util';
 
 @Component({
   selector: 'luwfy-canvas',
@@ -35,37 +38,21 @@ export class CanvasComponent implements OnInit {
               private blocksRedactorService: BlocksRedactorService, private undoRedoService: UndoRedoService, private tempService: UndoRedoCanvasService) {
   }
 
-  newFlowWidth = 500;
-  newFlowHeight = 500;
-  sizeBetweenFlowblocks = 50;
-  temp = 'hello';
+  @ViewChild('stage', null) stage: any;
+  @ViewChild('menu', null) menu: ElementRef;
+  @ViewChild('lineLayer', null) lineLayer: any;
+  @ViewChild('mainLayer', null) mainLayer: any = new Konva.Layer({});
+
   data = [];
-  selected_items = [];
   lines = [];
-  drawningLine = false;
+  currentId: string;
+  idChangedTrigger: boolean = false;
   KonvaUtil = KonvaUtil;
   konvaSize = {width: window.screen.width, height: window.screen.height};
-  flowboards: Group[] = [
-    new Konva.Group({
-      x: this.sizeBetweenFlowblocks,
-      y: this.sizeBetweenFlowblocks,
-      width: this.newFlowWidth,
-      height: this.newFlowHeight,
-      type: GroupTypes.Flowboard,
-      draggable: true,
-    }),
-  ];
-  subTabs: dataInTabLayer[] = [{label: 'Main Project', layerData: []}, {label: 'Sub Menu', layerData: []}];
 
+  subTabs: dataInTabLayer[]  = [{label: 'Main Project', layerData:[]}, {label: 'Sub Menu', layerData:[]}];
+  flowboards: Group[];
 
-  currentCopiedGroup:IGroupCustom =    new Konva.Group({
-    x: 0,
-    y: 0,
-    type: GroupTypes.CopiedGroup,
-    draggable: true,
-    opacity:.5,
-    zIndex: 1000
-  });
 
   rectangle: IRectCustom = new Konva.Rect({
     x: null,
@@ -75,6 +62,14 @@ export class CanvasComponent implements OnInit {
     fill: theme.rect_background,
     stroke: 'black',
     draggable: true,
+  });
+  currentCopiedGroup:IGroupCustom =    new Konva.Group({
+    x: 0,
+    y: 0,
+    type: GroupTypes.CopiedGroup,
+    draggable: true,
+    opacity:.5,
+    zIndex: 1000
   });
 
   activePaths: IPathCustom[] = [];
@@ -252,10 +247,6 @@ export class CanvasComponent implements OnInit {
     });
   }
 
-  @ViewChild('stage', null) stage: any;
-  @ViewChild('lineLayer', null) lineLayer: any;
-  @ViewChild('mainLayer', null) mainLayer: any = new Konva.Layer({});
-
   //delete all objects from the selection rectangle
   deleteShapesFromGroup = () => {
 
@@ -421,6 +412,8 @@ export class CanvasComponent implements OnInit {
       return null;
     }
   }
+
+
 
   handleMouseUp = (e) => {
     if (this.currentLineToDraw.isLineDrawable) {
@@ -752,40 +745,37 @@ export class CanvasComponent implements OnInit {
   };
 
   createGrid = (flow) => {
-    let distBeetwenLines = 20;
-    let vertLines = flow.attrs.height / distBeetwenLines;
-    let horLines = flow.attrs.width / distBeetwenLines;
-    for (let i = 0; i <= horLines; i++) {
-      let line = new Konva.Line({
-        points: [distBeetwenLines * i, 0, distBeetwenLines * i, flow.attrs.height],
-        stroke: '#eef6fa',
-        strokeWidth: 1,
-      });
-      flow.add(line);
+    let distBetweenLines = 20;
+    let vertLines = flow.attrs.height / distBetweenLines;
+    let horLines = flow.attrs.width / distBetweenLines;
+    let maxLines = vertLines > horLines ? vertLines : horLines;
+    for (let i = 1; i <= maxLines; i++) {
+      if (vertLines > i) {
+        flow.add(ShapeCreator.createLineForGrid([distBetweenLines * i, 0, distBetweenLines * i, flow.attrs.height]));
+      }
+      if (horLines > i) {
+        flow.add(ShapeCreator.createLineForGrid([0, distBetweenLines * i, flow.attrs.width, distBetweenLines * i]));
+      }
     }
-    for (let i = 0; i <= vertLines; i++) {
-      let line = new Konva.Line({
-        points: [0, distBeetwenLines * i, flow.attrs.width, distBeetwenLines * i],
-        stroke: '#eef6fa',
-        strokeWidth: 1,
-      });
-      flow.add(line);
-    }
-    flow.add(new Konva.Rect({
-        width: flow.attrs.width,
-        height: flow.attrs.height,
-        cornerRadius: 10,
-        stroke: 'silver',
-        strokeWidth: 1,
-        shadowColor: 'silver',
-        shadowBlur: 4,
-      }),
-      new Konva.Text({
-        text: `new flow${this.flowboards.length}`,
-        y: -20,
-        color: 'black',
-      }));
+
+    let menuButton = ShapeCreator.createMenuButton();
+
+    menuButton.on('click', event => {
+      console.log(event.evt.screenY);
+      this.top = event.evt.screenX;
+      this.left = event.evt.screenY;
+      this.menu.nativeElement.style.display = 'initial';
+    });
+
+
+    flow.add(ShapeCreator.createShadowForGrid(flow.attrs.width, flow.attrs.height), ShapeCreator.createDrugPoint(),
+      ShapeCreator.createNameOfFlowboard(this.flowboards.length), menuButton);
   };
+
+  onClickMenu() {
+    this.menu.nativeElement.style.display = 'none';
+  }
+
 
   checkIsGroupInFlow(flowGroup, returnFlow?: boolean) {
     if (flowGroup && flowGroup.attrs.x < this.currentDraggedGroup.attrs.x - ShapesSizes.circle_radius && flowGroup.attrs.x + flowGroup.attrs.width > this.currentDraggedGroup.attrs.x + this.currentDraggedGroup.width() - ShapesSizes.circle_radius
@@ -797,6 +787,9 @@ export class CanvasComponent implements OnInit {
   }
 
   ngOnInit() {
+
+    this.flowboards = [ShapeCreator.createFlowboard(FlowboardSizes.sizeBetweenFlowblock, FlowboardSizes.sizeBetweenFlowblock,
+      FlowboardSizes.newFlowWidth, FlowboardSizes.newFlowHeight)];
 
     this.RegistryService.currentDraggableItem.subscribe((data) => {
       this.currentId = data;
@@ -856,12 +849,12 @@ export class CanvasComponent implements OnInit {
   addFlowToLayer() {
     let newX, newY;
     let lastFlowboard = this.flowboards[this.flowboards.length - 1];
-    if (lastFlowboard.attrs.x + lastFlowboard.attrs.width + this.newFlowWidth < this.konvaSize.width) {
-      newX = lastFlowboard.attrs.x + lastFlowboard.attrs.width + this.sizeBetweenFlowblocks;
+    if (lastFlowboard.attrs.x + lastFlowboard.attrs.width + FlowboardSizes.newFlowWidth < this.konvaSize.width) {
+      newX = lastFlowboard.attrs.x + lastFlowboard.attrs.width + FlowboardSizes.sizeBetweenFlowblock;
       newY = lastFlowboard.attrs.y;
     } else {
-      newX = this.sizeBetweenFlowblocks;
-      newY = lastFlowboard.attrs.y + lastFlowboard.attrs.height + this.sizeBetweenFlowblocks;
+      newX = FlowboardSizes.sizeBetweenFlowblock;
+      newY = lastFlowboard.attrs.y + lastFlowboard.attrs.height + FlowboardSizes.sizeBetweenFlowblock;
     }
     let newFlow = new Konva.Group({
       x: newX,
@@ -877,12 +870,11 @@ export class CanvasComponent implements OnInit {
   }
 
   onMainClick(event) {
-    if (event) {
-      console.log(event);
-    }
-    console.log(this.mainLayer.getStage().children);
+    let activeTab = this.subTabs.find(tab => tab.label === event.tab.textLabel);
+    this.mainLayer.getStage().children = activeTab.layerData;
 
   }
+
 }
 
 
