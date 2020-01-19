@@ -69,7 +69,8 @@ export class CanvasComponent implements OnInit {
     y: 0,
     type: GroupTypes.CopiedGroup,
     draggable: true,
-    opacity: .5,
+    visible: false,
+    //opacity: .5,
     zIndex: 1000
   });
 
@@ -370,11 +371,11 @@ export class CanvasComponent implements OnInit {
       //
       // });
 
-      this.flowboards.forEach((elem)=> {
-          if (this.checkIsGroupInFlow(elem)) {
-            temp = this.checkIsGroupInFlow(elem, true);
-            return 0;
-          }
+      this.flowboards.forEach((elem) => {
+        if (this.checkIsGroupInFlow(elem)) {
+          temp = this.checkIsGroupInFlow(elem, true);
+          return 0;
+        }
       });
 
       this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].position({
@@ -643,21 +644,29 @@ export class CanvasComponent implements OnInit {
   @HostListener('document:keydown.control.c') undoCtrlC(event: KeyboardEvent) {
 
     if (this.currentActiveGroup.hasChildren) {
-      // this.currentCopiedGroup
+      console.log('[c] ooo', this.currentActiveGroup.getAbsolutePosition());
+
+      this.currentCopiedGroup.add(this.currentActiveGroup.clone());
+
+      console.log('[c] current_copied_group', this.currentCopiedGroup);
     }
 
     // responds to control+z
   }
 
   @HostListener('document:keydown.control.v') undoCtrlV(event: KeyboardEvent) {
+    this.currentCopiedGroup.setAttr('visible', true);
 
-    if (this.currentActiveGroup.hasChildren) {
+    // this.stage.getStage().getPointerPosition().x - this.currentActiveGroup.attrs.x;
+    // this.stage.getStage().getPointerPosition().y - this.currentActiveGroup.attrs.y;
 
-      this.deleteShapesFromGroup();
-      this.tempService.performUndo(this.mainLayer, this.currentActiveGroup);
-    } else {
-      this.tempService.performUndo(this.mainLayer, this.currentActiveGroup);
-    }
+    this.currentCopiedGroup.setAbsolutePosition(
+      {
+        x: this.stage.getStage().getPointerPosition().x - this.currentActiveGroup.children[0].attrs.x,
+        y: this.stage.getStage().getPointerPosition().y - this.currentActiveGroup.children[0].attrs.y
+      }
+    );
+
 
     // responds to control+z
   }
@@ -847,6 +856,7 @@ export class CanvasComponent implements OnInit {
     });
     this.mainLayer.getStage().add(this.currentActiveGroup);
     this.mainLayer.getStage().add(this.currentLineToDraw.line);
+    this.mainLayer.getStage().add(this.currentCopiedGroup);
 
   }
 
