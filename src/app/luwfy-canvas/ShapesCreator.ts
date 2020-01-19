@@ -1,7 +1,16 @@
 import Konva from 'konva';
 import {theme} from './theme';
 import {ShapesSizes, ShapesSizes as sizes} from './sizes';
-import {BtnEventBlock, CircleTypes, ICircleCustom, IPathCustom, IRectCustom, IStartPointPathInfo, SettingIcons} from './shapes-interface';
+import {
+  BtnEventBlock,
+  CircleTypes,
+  GroupTypes,
+  ICircleCustom,
+  IPathCustom,
+  IRectCustom,
+  IStartPointPathInfo,
+  SettingIcons
+} from './shapes-interface';
 
 
 const ShapeCreator = {
@@ -162,6 +171,7 @@ const ShapeCreator = {
       y,
       width,
       height,
+      type: GroupTypes.Flowboard,
       draggable: true
     });
   },

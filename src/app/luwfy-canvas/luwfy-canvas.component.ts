@@ -50,9 +50,10 @@ export class CanvasComponent implements OnInit {
   KonvaUtil = KonvaUtil;
   konvaSize = {width: window.screen.width, height: window.screen.height};
 
-  subTabs: dataInTabLayer[]  = [{label: 'Main Project', layerData:[]}, {label: 'Sub Menu', layerData:[]}];
+  subTabs: dataInTabLayer[] = [{label: 'Main Project', layerData: []}, {label: 'Sub Menu', layerData: []}];
   flowboards: Group[];
-
+  top: any;
+  left: any;
 
   rectangle: IRectCustom = new Konva.Rect({
     x: null,
@@ -63,12 +64,12 @@ export class CanvasComponent implements OnInit {
     stroke: 'black',
     draggable: true,
   });
-  currentCopiedGroup:IGroupCustom =    new Konva.Group({
+  currentCopiedGroup: IGroupCustom = new Konva.Group({
     x: 0,
     y: 0,
     type: GroupTypes.CopiedGroup,
     draggable: true,
-    opacity:.5,
+    opacity: .5,
     zIndex: 1000
   });
 
@@ -81,8 +82,8 @@ export class CanvasComponent implements OnInit {
   //   number_of_groups: 0
   // });
 
-  currentId: string;
-  idChangedTrigger: boolean = false;
+  // currentId: string;
+  // idChangedTrigger: boolean = false;
 
   currentLineToDraw: ICurrentLineToDraw = {
     isLineDrawable: false,
@@ -359,15 +360,21 @@ export class CanvasComponent implements OnInit {
     } else {
 
       let temp;
-      this.canvasService.getAllFlowsFromLayer(this.mainLayer).each((flowGroup) => {
-        console.log('[c] vvveee', flowGroup);
+      // this.canvasService.getAllFlowsFromLayer(this.mainLayer).each((flowGroup) => {
+      //   console.log('[c] vvveee', flowGroup);
+      //
+      //   if (this.checkIsGroupInFlow(flowGroup)) {
+      //     temp = this.checkIsGroupInFlow(flowGroup, true);
+      //     return 0;
+      //   }
+      //
+      // });
 
-        if (this.checkIsGroupInFlow(flowGroup)) {
-          temp = this.checkIsGroupInFlow(flowGroup, true);
-          console.log('[c] temp_ooo', temp);
-          return 0;
-        }
-
+      this.flowboards.forEach((elem)=> {
+          if (this.checkIsGroupInFlow(elem)) {
+            temp = this.checkIsGroupInFlow(elem, true);
+            return 0;
+          }
       });
 
       this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].position({
@@ -376,7 +383,6 @@ export class CanvasComponent implements OnInit {
       });
 
       if (temp) {
-        console.log('[c] temp_ooo2');
         temp.children.each(elem => {
           if (elem.className === 'Rect') {
             elem.setAttr('stroke', 'green');
@@ -385,7 +391,6 @@ export class CanvasComponent implements OnInit {
         });
       } else {
         this.canvasService.getAllFlowsFromLayer(this.mainLayer).each(elem => {
-
           elem.children.each(elem => {
             if (elem.className === 'Rect') {
               elem.setAttr('stroke', theme.line_color);
@@ -412,7 +417,6 @@ export class CanvasComponent implements OnInit {
       return null;
     }
   }
-
 
 
   handleMouseUp = (e) => {
@@ -639,7 +643,7 @@ export class CanvasComponent implements OnInit {
   @HostListener('document:keydown.control.c') undoCtrlC(event: KeyboardEvent) {
 
     if (this.currentActiveGroup.hasChildren) {
-     // this.currentCopiedGroup
+      // this.currentCopiedGroup
     }
 
     // responds to control+z
@@ -859,8 +863,8 @@ export class CanvasComponent implements OnInit {
     let newFlow = new Konva.Group({
       x: newX,
       y: newY,
-      width: this.newFlowWidth,
-      height: this.newFlowHeight,
+      width: FlowboardSizes.newFlowWidth,
+      height: FlowboardSizes.newFlowHeight,
       draggable: true,
       type: GroupTypes.Flowboard,
     });
