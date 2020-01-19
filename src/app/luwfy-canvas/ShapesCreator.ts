@@ -41,7 +41,7 @@ const ShapeCreator = {
     });
   },
 
-  createCircleOutput: ( y?: number, payload?: any) => {
+  createCircleOutput: (y?: number, payload?: any) => {
     return new Konva.Circle({
       x: sizes.block_width,
       y,
@@ -71,14 +71,14 @@ const ShapeCreator = {
       strokeWidth: 3,
       lineJoin: 'round',
       opacity: 1,
-      stroke: strokeLine,
+      stroke: strokeLine || theme.line_color,
       isLastPathInGroup: true
     });
   },
 
   iconGroupCreator: (x, y, iconsGroup: SettingIcons) => {
     return new Konva.Group({
-      x ,
+      x,
       y,
       type: 'iconGroup',
       hovered: true

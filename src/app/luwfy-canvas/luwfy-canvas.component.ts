@@ -622,11 +622,7 @@ export class CanvasComponent implements OnInit {
 
   @HostListener('document:keydown.control.z') undoCtrlZ(event: KeyboardEvent) {
 
-    if (this.currentActiveGroup.hasChildren
-      // &&
-      // this.undoRedoService.undoRedoArr[this.undoRedoService.undoRedoArr.length - 1].action === ActionType.Select &&
-      // (this.undoRedoService.undoRedoArr[this.undoRedoService.undoRedoArr.length - 1].object as IGroupCustom | IPathCustom)._id === this.currentActiveGroup._id)
-    ) {
+    if (this.currentActiveGroup.hasChildren) {
 
       this.deleteShapesFromGroup();
       this.tempService.performUndo(this.mainLayer, this.currentActiveGroup);
@@ -667,11 +663,13 @@ export class CanvasComponent implements OnInit {
         });
 
         if (current_path) {
-
           current_path.setAttr('data', KonvaUtil.generateLinkPath(this.currentLineToDraw.prevX - current_group.getPosition().x - 20, this.currentLineToDraw.prevY - current_group.getPosition().y, Math.ceil((pos.x - current_group.getPosition().x) / 5) * 5, Math.ceil((pos.y - current_group.getPosition().y) / 5) * 5, 1));
+          // current_path.setAttr('data', KonvaUtil.generateLinkPath(0, 0, 100, 100, 1));
+          current_path.parent.zIndex(1000);
+          //current_path.zIndex(100);
 
-          // current_path.zIndex(100);
           //current_path.show();
+          // current_path.draw();
 
         }
       }
