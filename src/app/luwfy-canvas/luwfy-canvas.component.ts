@@ -323,15 +323,15 @@ export class CanvasComponent implements OnInit {
 
   handleClickEvent = (event) => {
 
-    console.log('flowboards', this.flowboards[0].children[0]);
-    this.flowboards[0].children.each((elem) => {
-      if (elem.className == 'Rect') {
-        elem.setAttr('width', this.flowboards[0].attrs.width + 50);
-
-      }
-
-
-    });
+    // console.log('flowboards', this.flowboards[0].children[0]);
+    // this.flowboards[0].children.each((elem) => {
+    //   if (elem.className == 'Rect') {
+    //     elem.setAttr('width', this.flowboards[0].attrs.width + 50);
+    //
+    //   }
+    //
+    //
+    // });
     this.flowboards[0].setAttr('width', this.flowboards[0].attrs.width + 50);
     this.flowboards[1] && this.flowboards[1].setAttr('x', this.flowboards[1].attrs.x + 50);
     this.flowboards[2] && this.flowboards[2].setAttr('x', this.flowboards[2].attrs.x + 50);
@@ -857,7 +857,6 @@ export class CanvasComponent implements OnInit {
       this.canvasService.getAllFlowsFromLayer(this.mainLayer).each((flowGroup) => {
         if (!temp) {
           temp = this.checkIsGroupInFlow(flowGroup, true);
-          console.log('[c] rrrrr', temp);
           if (temp) {
 
 
@@ -916,7 +915,7 @@ export class CanvasComponent implements OnInit {
       y: newY,
       width: FlowboardSizes.newFlowWidth,
       height: FlowboardSizes.newFlowHeight,
-      draggable: true,
+      //draggable: true,
       type: GroupTypes.Flowboard,
     });
     this.flowboards.push(newFlow);

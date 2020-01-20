@@ -68,6 +68,7 @@ const ShapeCreator = {
       fill: theme.rect_background,
       cornerRadius: 10,
       stroke: strokeColor,
+      main_stroke:strokeColor
     });
   },
 

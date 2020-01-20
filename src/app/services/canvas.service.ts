@@ -239,15 +239,43 @@ export class CanvasService {
         let temp_blocks = this.getAllBlocksFromFlowBoard(event.target.parent, event.target._id);
         console.log('sss', temp_blocks);
         if (temp_blocks && this.checkIfCollision(temp_blocks, event.target)) {
-          //event.target.setAttr('draggable', false);
-          console.log('[c] event.evt.movementX', event.evt.movementX);
-          console.log('[c] event.evt.movementY', event.evt.movementY);
+          event.target.setAttr('collision', true);
 
-          event.target.position({
-            x: event.target.position().x -50,
-            y: event.target.position().y - 50,
-          });
+
+          // event.target.position({
+          //   x: event.target.position().x - 50,
+          //   y: event.target.position().y - 50,
+          // });
           // event.target.setDraggable
+        } else {
+          event.target.setAttr('collision', false);
+        }
+
+
+      });
+
+      group.on('dragend', (event) => {
+        if (event.target.attrs.collision) {
+
+          event.target.position(event.target.attrs.drag_start_position);
+
+          let temp_blocks = this.getAllBlocksFromFlowBoard(event.target.parent, event.target._id);
+          console.log('[c] dddd', temp_blocks);
+          if (temp_blocks) {
+            console.log('zaqxsw 2');
+            temp_blocks.each((elem) => {
+              elem.children.each((elem) => {
+                if (elem.className === 'Rect') {
+                  elem.setAttr('stroke', elem.attrs.main_stroke);
+                }
+
+              });
+
+
+            });
+          }
+
+
         }
 
 
@@ -420,6 +448,7 @@ export class CanvasService {
     //todo add switch for different types of groups
 
     group.on('dragstart', (event) => {
+      event.target.setAttr('drag_start_position', {x: event.target.attrs.x, y: event.target.attrs.y});
       if (this.currentLineToDraw.isLineDrawable) {
         return 0;
       }
@@ -682,13 +711,29 @@ export class CanvasService {
     children.each((elem) => {
       if (elem.attrs.type === GroupTypes.Block) {
         if (this.haveIntersection(current_group.attrs, elem.attrs)) {
+
+          elem.children.each((elem) => {
+            if (elem.className == 'Rect') {
+              elem.setAttr('stroke', 'red');
+
+            }
+
+          });
           temp = true;
           return true;
+        } else {
+          elem.children.each((elem) => {
+            if (elem.className == 'Rect' && elem.attrs.stroke !== elem.attrs.main_stroke) {
+              elem.setAttr('stroke', elem.attrs.main_stroke);
+            }
+
+          });
         }
 
 
       }
     });
+
     return temp;
 
 
