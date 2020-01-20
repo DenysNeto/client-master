@@ -2,7 +2,7 @@ import Konva from 'konva';
 import {theme} from './theme';
 import {ShapesSizes, ShapesSizes as sizes} from './sizes';
 import {
-  BtnEventBlock,
+  BtnEventBlock, ButtonsTypes,
   CircleTypes,
   GroupTypes,
   ICircleCustom,
@@ -68,7 +68,7 @@ const ShapeCreator = {
       fill: theme.rect_background,
       cornerRadius: 10,
       stroke: strokeColor,
-      main_stroke:strokeColor
+      main_stroke: strokeColor
     });
   },
 
@@ -210,7 +210,7 @@ const ShapeCreator = {
       fontFamily: 'FontAwesome',
       text: '\uf047',
       fill: '#115770',
-      type: 'dragPoint'
+      type: ButtonsTypes.DrugPoint
     });
   },
   createMenuButton: () => {
@@ -221,7 +221,7 @@ const ShapeCreator = {
       fontFamily: 'FontAwesome',
       text: '\uf196',
       fill: '#115770',
-      type: 'menuButton'
+      type: ButtonsTypes.MenuButton
     })
       .on('mousedown', event => event.target.attrs.fill = 'silver')
       .on('mouseup', event => event.target.attrs.fill = '#115770');

@@ -233,11 +233,11 @@ export class CanvasService {
 
     if (group.attrs.type === GroupTypes.Block) {
       group.on('dragmove', (event) => {
-        this.checkTheGroupNearBorder(event.target);
+        this.checkTheGroupNearBorder(event.target as IGroupCustom);
 
 
-        let temp_blocks = this.getAllBlocksFromFlowBoard(event.target.parent, event.target._id);
-        if (temp_blocks && this.checkIfCollision(temp_blocks, event.target)) {
+        let temp_blocks = this.getAllBlocksFromFlowBoard(event.target.parent as IGroupCustom, event.target._id);
+        if (temp_blocks && this.checkIfCollision(temp_blocks, event.target as IGroupCustom)) {
           event.target.setAttr('collision', true);
         } else {
           event.target.setAttr('collision', false);
@@ -251,7 +251,7 @@ export class CanvasService {
 
           event.target.position(event.target.attrs.drag_start_position);
 
-          let temp_blocks = this.getAllBlocksFromFlowBoard(event.target.parent, event.target._id);
+          let temp_blocks = this.getAllBlocksFromFlowBoard(event.target.parent as IGroupCustom, event.target._id);
           console.log('[c] dddd', temp_blocks);
           if (temp_blocks) {
             console.log('zaqxsw 2');
@@ -939,7 +939,7 @@ export class CanvasService {
     }
   };
 
-  getAllBlocksFromFlowBoard(component: Group, except_id?: Group) {
+  getAllBlocksFromFlowBoard(component: Group, except_id?: number) {
     if (component) {
       return component.find((elem) => {
         if (elem.attrs.type === GroupTypes.Block && elem._id !== except_id) {

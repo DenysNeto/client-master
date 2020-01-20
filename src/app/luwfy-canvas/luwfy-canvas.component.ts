@@ -11,7 +11,7 @@ import {
   IActiveWrapperBlock,
   ICurrentLineToDraw,
   IGroupCustom,
-  IPathCustom,
+  IPathCustom, IRectCustom,
 } from './shapes-interface';
 import {Collection} from 'konva/types/Util';
 import {MatDialog, MatMenuTrigger} from '@angular/material';
@@ -55,15 +55,7 @@ export class CanvasComponent implements OnInit {
   menuOfViews: string[] = [];
   isMouseDown: boolean;
 
-  rectangle: IRectCustom = new Konva.Rect({
-    x: null,
-    y: null,
-    width: 100,
-    height: 50,
-    fill: theme.rect_background,
-    stroke: 'black',
-    draggable: true,
-  });
+
   currentCopiedGroup: IGroupCustom = new Konva.Group({
     x: 0,
     y: 0,
@@ -324,17 +316,16 @@ export class CanvasComponent implements OnInit {
 
   handleClickEvent = (event) => {
 
-    console.log('flowboards', this.flowboards[0].children[0]);
-    this.flowboards[0].children.each((elem) => {
-      if (elem.className == 'Rect') {
-        elem.setAttr('width', this.flowboards[0].attrs.width + 50);
 
-      }
-
-
-    });
-    this.flowboards[0].setAttr('width', this.flowboards[0].attrs.width + 50);
-
+    // this.flowboards[0].children.each((elem) => {
+    //   if (elem.className == 'Rect') {
+    //     elem.setAttr('width', this.flowboards[0].attrs.width + 50);
+    //
+    //   }
+    //
+    //
+    // });
+    //this.flowboards[0].setAttr('width', this.flowboards[0].attrs.width + 50);
 
 
     if (this.currentLineToDraw.isLineDrawable) {
@@ -810,7 +801,7 @@ export class CanvasComponent implements OnInit {
   };
 
   onClickMenu() {
-    this.menu.nativeElement.style.display = 'none';
+    //  this.menu.nativeElement.style.display = 'none';
   }
 
 
@@ -928,7 +919,7 @@ export class CanvasComponent implements OnInit {
       y: newY,
       width: FlowboardSizes.newFlowWidth,
       height: FlowboardSizes.newFlowHeight,
-      //draggable: true,
+      draggable: true,
       type: GroupTypes.Flowboard,
     });
     this.flowboards.push(newFlow);
