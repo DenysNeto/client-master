@@ -855,22 +855,35 @@ export class CanvasComponent implements OnInit {
     this.canvasService.dragFinished.subscribe(() => {
       let temp;
       this.canvasService.getAllFlowsFromLayer(this.mainLayer).each((flowGroup) => {
-        temp = this.checkIsGroupInFlow(flowGroup, true);
-        if (temp) {
-          temp.add(this.currentDraggedGroup);
-          this.currentDraggedGroup.position({
-            x: this.currentDraggedGroup.position().x - temp.position().x,
-            y: this.currentDraggedGroup.position().y - temp.position().y,
-          });
+        if (!temp) {
+          temp = this.checkIsGroupInFlow(flowGroup, true);
+          console.log('[c] rrrrr', temp);
+          if (temp) {
 
-          // temp.add(this.currentDraggedGroup);
-          flowGroup.children.each(elem => {
-            if (elem.className === 'Rect') {
-              elem.setAttr('stroke', theme.line_color);
-            }
-          });
-          return 0;
+
+            this.currentDraggedGroup.position({
+              x: Math.abs(this.currentDraggedGroup.position().x - temp.position().x),
+              y: Math.abs(this.currentDraggedGroup.position().y - temp.position().y),
+            });
+            temp.add(this.currentDraggedGroup);
+
+
+            // temp.add(this.currentDraggedGroup);
+            flowGroup.children.each(elem => {
+              if (elem.className === 'Rect') {
+                elem.setAttr('stroke', theme.line_color);
+                return 0;
+              }
+            });
+            temp = true;
+            return 0;
+
+          }
+
+        } else {
+          return;
         }
+
 
       });
 

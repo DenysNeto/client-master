@@ -240,7 +240,8 @@ export class CanvasService {
         console.log('sss', temp_blocks);
         if (temp_blocks && this.checkIfCollision(temp_blocks, event.target)) {
           //event.target.setAttr('draggable', false);
-
+          console.log('[c] event.evt.movementX', event.evt.movementX);
+          console.log('[c] event.evt.movementY', event.evt.movementY);
 
           event.target.position({
             x: event.target.position().x -50,
