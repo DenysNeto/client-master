@@ -3,6 +3,7 @@ import {StageComponent} from 'ng2-konva';
 import {Group} from 'konva/types/Group';
 import Konva from 'konva';
 import {
+  ButtonsTypes,
   CircleTypes, GroupTypes,
   IActiveWrapperBlock,
   ICircleCustom,
@@ -284,7 +285,7 @@ export class CanvasService {
   checkTheGroupNearBorder(current_group: IGroupCustom) {
     let temp_changes: boolean = false;
     console.log('[c] inside_1', current_group.parent.attrs.width - current_group.attrs.x - current_group.attrs.width);
-    if (current_group.parent.attrs.width - current_group.attrs.x - current_group.attrs.width < GridSizes.flowboard_cell) {
+    if (current_group.parent.attrs.width - current_group.attrs.x - current_group.attrs.width < GridSizes.flowboard_cell && current_group.parent.attrs.width + GridSizes.flowboard_cell < GridSizes.flowboard_max_width) {
       current_group.parent.children.each((elem) => {
         if (elem.className === 'Rect') {
           elem.setAttr('width', elem.attrs.width + GridSizes.flowboard_cell);
@@ -292,22 +293,37 @@ export class CanvasService {
         }
       });
       current_group.parent.setAttr('width', current_group.parent.attrs.width + GridSizes.flowboard_cell);
+      current_group.parent.findOne((elem) => {
+        if (elem.attrs.type === ButtonsTypes.DrugPoint || elem.attrs.type === ButtonsTypes.MenuButton) {
+          elem.setAttr('x', current_group.parent.attrs.width);
+        }
+      });
       temp_changes = true;
 
 
-    } else if (current_group.parent.attrs.y + current_group.parent.attrs.height - current_group.attrs.y + current_group.attrs.height < GridSizes.flowboard_cell) {
-      current_group.parent.findOne((elem) => {
+    } else if (current_group.parent.attrs.height - current_group.attrs.y - current_group.attrs.height < GridSizes.flowboard_cell && current_group.parent.attrs.height + GridSizes.flowboard_cell < GridSizes.flowboard_max_height) {
+      current_group.parent.children.each((elem) => {
         if (elem.className === 'Rect') {
           elem.setAttr('height', elem.attrs.height + GridSizes.flowboard_cell);
+          return 0;
         }
-        current_group.setAttr('width', current_group.attrs.height + GridSizes.flowboard_cell);
-        temp_changes = true;
-
       });
+      current_group.parent.setAttr('height', current_group.parent.attrs.height + GridSizes.flowboard_cell);
+      temp_changes = true;
     }
 
 
     if (temp_changes) {
+      current_group.find((elem) => {
+        if (elem.className === 'Line') {
+          return elem;
+        }
+
+      }).each((elem) => {
+        elem.remove();
+      });
+
+
       let vertLines = current_group.parent.attrs.height / GridSizes.flowboard_cell;
       let horLines = current_group.parent.attrs.width / GridSizes.flowboard_cell;
       let maxLines = vertLines > horLines ? vertLines : horLines;

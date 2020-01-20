@@ -16,6 +16,8 @@ export const ShapesSizes = {
 
 export const GridSizes = {
   flowboard_cell: 20,
+  flowboard_max_width: 1000,
+  flowboard_max_height: 800
 };
 
 export const SwitcherSizes = {
