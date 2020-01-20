@@ -1,4 +1,4 @@
-import {Component, ElementRef, HostListener, OnInit, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, ElementRef, HostListener, OnInit, ViewChild} from '@angular/core';
 import {RegistryService} from '../services/registry.service';
 import KonvaUtil from './konva-util';
 import {theme} from './theme';
@@ -22,7 +22,7 @@ import {ActionType} from './undo-redo.interface';
 import {Layer} from 'konva/types/Layer';
 import {UndoRedoCanvasService} from '../services/undo-redo-canvas.service';
 import {StageComponent} from 'ng2-konva';
-import {ShapesSizes} from './sizes';
+import {KonvaStartSizes, ShapesSizes} from './sizes';
 import ShapeCreator from './ShapesCreator';
 import {FlowboardSizes} from './sizes';
 import {Stage} from 'konva/types/Stage';
@@ -33,7 +33,7 @@ import {Stage} from 'konva/types/Stage';
   styleUrls: ['./luwfy-canvas.component.scss'],
 })
 
-export class CanvasComponent implements OnInit {
+export class CanvasComponent implements OnInit, AfterViewInit {
   constructor(private RegistryService: RegistryService, private canvasService: CanvasService, private dialog: MatDialog,
               private blocksRedactorService: BlocksRedactorService, private undoRedoService: UndoRedoService, private tempService: UndoRedoCanvasService) {
   }
@@ -49,7 +49,7 @@ export class CanvasComponent implements OnInit {
   currentId: string;
   idChangedTrigger: boolean = false;
   KonvaUtil = KonvaUtil;
-  konvaSize = {width: 1780, height: 870};
+  konvaSize = {width: KonvaStartSizes.width, height: KonvaStartSizes.height};
   flowboards: Group[] = [];
   subTabs: dataInTabLayer[] = [];
   menuOfViews: string[] = [];
@@ -396,6 +396,7 @@ export class CanvasComponent implements OnInit {
         });
 
       } else {
+        // @ts-ignore
         this.canvasService.getAllFlowsFromLayer(this.mainLayer).each(elem => {
           elem.children.each(elem => {
             if (elem.className === 'Rect') {
@@ -854,6 +855,7 @@ export class CanvasComponent implements OnInit {
   ngAfterViewInit() {
     this.canvasService.dragFinished.subscribe(() => {
       let temp;
+      // @ts-ignore
       this.canvasService.getAllFlowsFromLayer(this.mainLayer).each((flowGroup) => {
         if (!temp) {
           temp = this.checkIsGroupInFlow(flowGroup, true);

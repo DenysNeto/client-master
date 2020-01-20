@@ -28,3 +28,8 @@ export const FlowboardSizes = {
   newFlowHeight: 500,
   sizeBetweenFlowblock: 50
 };
+
+export const KonvaStartSizes = {
+  width: 1780,
+  height: 870
+};

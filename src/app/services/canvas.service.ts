@@ -30,6 +30,9 @@ import {main} from '@angular/compiler-cli/src/main';
   providedIn: 'root',
 })
 export class CanvasService {
+    getAllFlowsFromLayer(mainLayer: any) {
+        throw new Error("Method not implemented.");
+    }
 
   currentLineToDraw: ICurrentLineToDraw = {
     isLineDrawable: false,
