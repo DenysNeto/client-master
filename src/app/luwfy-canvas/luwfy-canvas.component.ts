@@ -817,7 +817,7 @@ export class CanvasComponent implements OnInit {
     if (flowGroup && flowGroup.attrs.x < this.currentDraggedGroup.attrs.x - ShapesSizes.circle_radius && flowGroup.attrs.x + flowGroup.attrs.width > this.currentDraggedGroup.attrs.x + this.currentDraggedGroup.width() - ShapesSizes.circle_radius
       &&
       flowGroup.attrs.y < this.currentDraggedGroup.attrs.y && flowGroup.attrs.y + flowGroup.attrs.height > this.currentDraggedGroup.attrs.y + this.currentDraggedGroup.height()) {
-      console.log('[c] each2[5]');
+      console.log('[c] each2[5]', flowGroup);
       return returnFlow ? flowGroup : true;
     }
   }
@@ -858,6 +858,12 @@ export class CanvasComponent implements OnInit {
         temp = this.checkIsGroupInFlow(flowGroup, true);
         if (temp) {
           temp.add(this.currentDraggedGroup);
+          this.currentDraggedGroup.position({
+            x: this.currentDraggedGroup.position().x - temp.position().x,
+            y: this.currentDraggedGroup.position().y - temp.position().y,
+          });
+
+          // temp.add(this.currentDraggedGroup);
           flowGroup.children.each(elem => {
             if (elem.className === 'Rect') {
               elem.setAttr('stroke', theme.line_color);
@@ -870,7 +876,6 @@ export class CanvasComponent implements OnInit {
 
       !temp && this.currentDraggedGroup && this.currentDraggedGroup.destroy();
     });
-
 
 
     this.flowboards.forEach(flow => {

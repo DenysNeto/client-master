@@ -24,6 +24,7 @@ import {ModalPropComponent} from '../popups/modal-prop/modal-prop.component';
 import {UndoRedoService} from './undo-redo.service';
 import {BlocksRedactorService} from '../popups/blocks-redactor.service';
 import {BlocksService} from './blocks.service';
+import {main} from '@angular/compiler-cli/src/main';
 
 @Injectable({
   providedIn: 'root',
@@ -229,15 +230,24 @@ export class CanvasService {
       }
     });
 
-    console.log('[c] fffff', group.attrs);
 
     if (group.attrs.type === GroupTypes.Block) {
       group.on('dragmove', (event) => {
-        console.log('[c] event target_qqq', event.target);
-        //this.checkIfCollision(event.target.parent);
-        // if () {
-        //
-        // }
+        // console.log('[c] event target_qqq', event.target);
+        //event.target.draggable(true);
+        //event.target.setAttr('draggable', true);
+        let temp_blocks = this.getAllBlocksFromFlowBoard(event.target.parent, event.target._id);
+        console.log('sss', temp_blocks);
+        if (temp_blocks && this.checkIfCollision(temp_blocks, event.target)) {
+          //event.target.setAttr('draggable', false);
+
+
+          event.target.position({
+            x: event.target.position().x -50,
+            y: event.target.position().y - 50,
+          });
+          // event.target.setDraggable
+        }
 
 
       });
@@ -666,15 +676,19 @@ export class CanvasService {
   }
 
 
-  checkIfCollision(children: Collection<any>, current_group: IGroupCustom) {
-
-
+  checkIfCollision(children: any, current_group: IGroupCustom) {
+    let temp;
     children.each((elem) => {
-      if (elem.type === GroupTypes.Block) {
-        let a = this.haveIntersection(current_group.attrs, elem.attrs);
-        console.log(a);
+      if (elem.attrs.type === GroupTypes.Block) {
+        if (this.haveIntersection(current_group.attrs, elem.attrs)) {
+          temp = true;
+          return true;
+        }
+
+
       }
     });
+    return temp;
 
 
     // (current_group as any).getIntersection(current_group.getPosition());
@@ -837,10 +851,10 @@ export class CanvasService {
     }
   };
 
-  getAllBlocksFromFlowBoard(component: Layer) {
+  getAllBlocksFromFlowBoard(component: Group, except_id?: Group) {
     if (component) {
-      return component.getStage().findOne((elem) => {
-        if (elem.attrs.type === GroupTypes.Switcher) {
+      return component.find((elem) => {
+        if (elem.attrs.type === GroupTypes.Block && elem._id !== except_id) {
           return elem;
         }
       });
