@@ -6,7 +6,7 @@ export default {
   createStage: (options) => {
     return of({
       width: options.width,
-      height: options.height,
+      height: options.height
     });
   },
 

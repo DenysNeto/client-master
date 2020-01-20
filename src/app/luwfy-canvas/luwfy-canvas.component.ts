@@ -6,15 +6,15 @@ import {theme} from './theme';
 import Konva from 'konva';
 import {CanvasService} from '../services/canvas.service';
 import {
-  CircleTypes, dataInTabLayer,
+  ButtonsTypes,
+  CircleTypes, dataInTabLayer, GroupTypes,
   IActiveWrapperBlock,
   ICurrentLineToDraw,
   IGroupCustom,
   IPathCustom,
-  IRectCustom,
 } from './shapes-interface';
 import {Collection} from 'konva/types/Util';
-import {MatDialog} from '@angular/material';
+import {MatDialog, MatMenuTrigger} from '@angular/material';
 import {BlocksRedactorService} from '../popups/blocks-redactor.service';
 import {Group} from 'konva/types/Group';
 import {UndoRedoService} from '../services/undo-redo.service';
@@ -24,7 +24,7 @@ import {UndoRedoCanvasService} from '../services/undo-redo-canvas.service';
 import {StageComponent} from 'ng2-konva';
 import ShapeCreator from './ShapesCreator';
 import {FlowboardSizes} from './sizes';
-import {log} from 'util';
+import {Stage} from 'konva/types/Stage';
 
 @Component({
   selector: 'luwfy-canvas',
@@ -37,21 +37,22 @@ export class CanvasComponent implements OnInit {
               private blocksRedactorService: BlocksRedactorService, private undoRedoService: UndoRedoService, private tempService: UndoRedoCanvasService) {
   }
 
-  @ViewChild('stage', null) stage: any;
-  @ViewChild('menu', null) menu: ElementRef;
-  @ViewChild('lineLayer', null) lineLayer: any;
+  @ViewChild('stage', null) stage: Stage;
+  @ViewChild('menuTrigger', null) menuTrigger: MatMenuTrigger;
   @ViewChild('mainLayer', null) mainLayer: any = new Konva.Layer({});
 
+  private activeTab: dataInTabLayer;
+  private calledMenuButton = '';
   data = [];
   lines = [];
   currentId: string;
   idChangedTrigger: boolean = false;
   KonvaUtil = KonvaUtil;
-  konvaSize = {width: window.screen.width, height: window.screen.height};
-  flowboards: Group[];
-  subTabs: dataInTabLayer[] = [{label: 'Main Project', layerData: []}, {label: 'Sub Menu', layerData: []}];
-  top: any;
-  left: any;
+  konvaSize = {width: 1780, height: 870};
+  flowboards: Group[] = [];
+  subTabs: dataInTabLayer[] = [];
+  menuOfViews: string[] = [];
+  isMouseDown: boolean;
 
 
   currentLineToDraw: ICurrentLineToDraw = {
@@ -95,7 +96,6 @@ export class CanvasComponent implements OnInit {
       parent: event.target.parent as Layer
     });
   }).on('dragmove', (event) => {
-
     if (!event) {
       return 0;
     }
@@ -319,27 +319,20 @@ export class CanvasComponent implements OnInit {
   };
 
   handleDragOver = (e) => {
-
     if (this.idChangedTrigger) {
       let current_group = this.canvasService.createDefaultGroup(this.mainLayer, this.activeWrapperBlock, this.currentActiveGroup, this.currentId);
       this.idChangedTrigger = false;
       this.setClickEventForGroup(current_group);
       this.mainLayer.getStage().add(current_group);
-
-
       this.undoRedoService.addAction({
         action: ActionType.Create, object: current_group, parent: this.mainLayer
       });
-
     } else {
-
       this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].position({
         x: e.layerX,
         y: e.layerY,
       });
-
     }
-
   };
 
   //todo uncomment
@@ -358,6 +351,7 @@ export class CanvasComponent implements OnInit {
 
 
   handleMouseUp = (e) => {
+    this.isMouseDown = false;
     if (this.currentLineToDraw.isLineDrawable) {
       let current_group = this.canvasService.getGroupById(this.currentLineToDraw.groupId, this.mainLayer);
       let temp_path = this.canvasService.getPathFromGroupById(this.currentLineToDraw.lineId, current_group);
@@ -540,38 +534,25 @@ export class CanvasComponent implements OnInit {
   }
 
   @HostListener('document:keydown.backspace') undoBackspace(event: KeyboardEvent) {
-
     if (this.currentActiveGroup.hasChildren()) {
       this.undoRedoService.addAction({
         action: ActionType.Delete,
         object: this.currentActiveGroup.children,
         parent: this.currentActiveGroup
       });
-
-
       this.currentActiveGroup.removeChildren();
     }
-
-
     if (this.canvasService.activePathsArr.length > 0) {
-
-
       console.log('[c] this.canvasService.activePathsArr', this.canvasService);
       this.canvasService.activePathsArr.forEach((elem) => {
         elem.remove();
       });
-
-
       this.undoRedoService.addAction({
         action: ActionType.Delete,
         object: this.canvasService.activePathsArr,
       });
-
       this.canvasService.resetActivePathArr();
-
     }
-
-
   }
 
 
@@ -598,6 +579,12 @@ export class CanvasComponent implements OnInit {
 
 
   handleMouseMove = (e) => {
+    if (this.stage.getStage().getPointerPosition().x > (this.stage.getStage().width() - 20) && this.isMouseDown) {
+      this.stage.getStage().width(this.stage.getStage().width() + 500);
+    }
+    if (this.stage.getStage().getPointerPosition().y > (this.stage.getStage().height() - 20) && this.isMouseDown) {
+      this.stage.getStage().height(this.stage.getStage().height() + 500);
+    }
 
     if (!e) {
       return 0;
@@ -647,18 +634,16 @@ export class CanvasComponent implements OnInit {
 //todo uncomment
 
   handleMouseDown = (e) => {
+    this.isMouseDown = true;
     if (this.currentLineToDraw.isLineDrawable) {
       return 0;
     }
-
     if (this.activeWrapperBlock.isActive) {
-
       if (this.currentActiveGroup.hasChildren()) {
         let temp_arr = [];
         this.currentActiveGroup.children.each((elem) => {
           temp_arr.push(elem);
         });
-
         console.log('[c] temp_arr', temp_arr);
         this.undoRedoService.addAction({action: ActionType.Unselect, object: temp_arr, parent: this.currentActiveGroup});
       }
@@ -688,33 +673,35 @@ export class CanvasComponent implements OnInit {
         flow.add(ShapeCreator.createLineForGrid([0, distBetweenLines * i, flow.attrs.width, distBetweenLines * i]));
       }
     }
-
     let menuButton = ShapeCreator.createMenuButton();
-
+    // todo open menu with sub views
     menuButton.on('click', event => {
-      console.log(event.evt.screenY);
-      this.top = event.evt.screenX;
-      this.left = event.evt.screenY;
-      this.menu.nativeElement.style.display = 'initial';
+      let menu = document.getElementById('menuTrigger');
+      menu.style.display = '';
+      menu.style.position = 'fixed';
+      menu.style.left = event.evt.clientX + 'px';
+      menu.style.top = event.evt.clientY + 10 + 'px';
+      this.menuTrigger.openMenu();
+      this.calledMenuButton = event.target.parent;
     });
-
-
     flow.add(ShapeCreator.createShadowForGrid(flow.attrs.width, flow.attrs.height), ShapeCreator.createDrugPoint(),
       ShapeCreator.createNameOfFlowboard(this.flowboards.length), menuButton);
   };
 
-  onClickMenu() {
-    this.menu.nativeElement.style.display = 'none';
-  }
-
-
+  // todo ngOnInit
   ngOnInit() {
+    this.subTabs = [{label: 'Main Project', layerData: []}, {label: 'Sub View', layerData: []}];
+    this.activeTab = this.subTabs[0];
 
-    this.flowboards = [ShapeCreator.createFlowboard(FlowboardSizes.sizeBetweenFlowblock, FlowboardSizes.sizeBetweenFlowblock,
-      FlowboardSizes.newFlowWidth, FlowboardSizes.newFlowHeight)];
+    if (this.subTabs.length > 1) {
+      this.subTabs.forEach((tab, index) => {
+        if (index > 0) {
+          this.menuOfViews.push(tab.label);
+        }
+      });
+    }
 
     this.RegistryService.currentDraggableItem.subscribe((data) => {
-      console.log('[c] yyy', data);
       this.currentId = data;
       this.idChangedTrigger = true;
     });
@@ -731,67 +718,109 @@ export class CanvasComponent implements OnInit {
       this.activeWrapperBlock = data;
     });
 
-
     setInterval(() => {
-      // this.lineLayer.getStage().draw();
-      //   this.stage.getStage().add(this.mainLayer.getStage());
-      //this.stage.getStage().add(this.lineLayer.getStage());
       this.stage.getStage().add(this.mainLayer.getStage());
-      this.mainLayer.getStage().add(this.activeWrapperBlock.rectangle);
-      // this.mainLayer.getStage().draw();
     }, 0);
 
-    // setTimeout(() => {
-    //   for (let i = 0; i < 10000; i++) {
-    //     console.log('[c] qqqqqqqq');
-    //     this.mainLayer.getStage().add(new Konva.Rect({
-    //       x: 100 + i * 30,
-    //       y: 50 + i * 30,
-    //       width: 100,
-    //       height: 50,
-    //       fill: 'red',
-    //       stroke: 'black',
-    //       draggable: true
-    //     }));
-    //
-    //   }
-    //
-    // }, 0);
-    // todo draw
-
-
     setTimeout(() => {
-      this.flowboards.forEach(flow => {
-        this.createGrid(flow);
-        this.mainLayer.getStage().add(flow);
-      });
       this.mainLayer.getStage().add(this.currentActiveGroup);
       this.mainLayer.getStage().add(this.currentLineToDraw.line);
       this.subTabs[0].layerData = this.mainLayer.getStage().children;
+      this.mainLayer.getStage().add(this.activeWrapperBlock.rectangle);
     }, 0);
   }
 
   addFlowToLayer() {
     let newX, newY;
-    let lastFlowboard = this.flowboards[this.flowboards.length - 1];
-    if (lastFlowboard.attrs.x + lastFlowboard.attrs.width + FlowboardSizes.newFlowWidth < this.konvaSize.width) {
-      newX = lastFlowboard.attrs.x + lastFlowboard.attrs.width + FlowboardSizes.sizeBetweenFlowblock;
-      newY = lastFlowboard.attrs.y;
+    if (this.flowboards.length === 0) {
+      newX = newY = FlowboardSizes.sizeBetweenFlowblock;
     } else {
-      newX = FlowboardSizes.sizeBetweenFlowblock;
-      newY = lastFlowboard.attrs.y + lastFlowboard.attrs.height + FlowboardSizes.sizeBetweenFlowblock;
+      let lastFlowboard = this.flowboards[this.flowboards.length - 1];
+      if (lastFlowboard.attrs.x + lastFlowboard.attrs.width + FlowboardSizes.newFlowWidth < this.stage.getStage().width()) {
+        newX = lastFlowboard.attrs.x + lastFlowboard.attrs.width + FlowboardSizes.sizeBetweenFlowblock;
+        newY = lastFlowboard.attrs.y;
+      } else {
+        newX = FlowboardSizes.sizeBetweenFlowblock;
+        newY = lastFlowboard.attrs.y + lastFlowboard.attrs.height + FlowboardSizes.sizeBetweenFlowblock;
+      }
     }
     let newFlow = ShapeCreator.createFlowboard(newX, newY, FlowboardSizes.newFlowWidth, FlowboardSizes.newFlowHeight);
     this.flowboards.push(newFlow);
     this.createGrid(newFlow);
     this.mainLayer.getStage().add(newFlow);
+    this.subTabs[0].layerData = [];
+    this.subTabs[0].layerData = this.mainLayer.getStage().children.toArray();
   }
 
-  onMainClick(event) {
-    let activeTab = this.subTabs.find(tab => tab.label === event.tab.textLabel);
-    this.mainLayer.getStage().children = activeTab.layerData;
-
+  onMainTabBarClick(event) {
+    this.activeTab = this.subTabs.find(tab => tab.label === event.tab.textLabel);
+    this.mainLayer.getStage().removeChildren();
+    if (this.activeTab.label === this.subTabs[0].label) {
+      this.activeTab.layerData.forEach(elem => {
+        // this.convertMyFlowForView(elem); // try do without reconvert
+        this.mainLayer.getStage().add(elem);
+      });
+    } else {
+      if (this.activeTab.layerData.length !== 0) {
+        this.showSubView(this.activeTab.layerData[0]);
+      }
+    }
   }
+
+  onFlowTabBarClick(event) {
+    this.showSubView(this.activeTab.layerData[event]);
+  }
+
+  showSubView(id) {
+    this.mainLayer.getStage().removeChildren();
+    let showFlow = this.flowboards.find(flow => flow._id === id).clone();
+    this.convertMyFlowForView(showFlow);
+    this.mainLayer.getStage().add(showFlow);
+  }
+
+  convertMyFlowForView(flowboard) {
+    if (flowboard.attrs.type === GroupTypes.Flowboard) {
+      this.draggingOnOff(flowboard);
+      this.setPositionInView(flowboard);
+      flowboard.children.toArray().forEach(obj => {
+        if (obj.attrs.type === GroupTypes.Block) {
+          this.draggingOnOff(obj);
+        }
+        if (obj.attrs.type === ButtonsTypes.DrugPoint || obj.attrs.type === ButtonsTypes.MenuButton) {
+          this.showOrHide(obj);
+        }
+      });
+    }
+  }
+
+  setPositionInView(flowboard) {
+    flowboard.attrs.x = (window.screen.width - flowboard.attrs.width) / 2 - 100;
+    flowboard.attrs.y = (window.screen.height - flowboard.attrs.height) / 2 - 100;
+  }
+
+  // Turn off dragging when flowboard show in sub view and on dragging in main tab
+  draggingOnOff(elem) {
+    elem.draggable(!elem.draggable());
+  }
+
+  // Hide buttons when flowboard show in sub view and show in main tab
+  showOrHide(elem) {
+    if (elem.isVisible()) {
+      elem.hide();
+    } else {
+      elem.show();
+    }
+  }
+
+  addFlowToSubView(subViewName: string) {
+    let tmp = this.subTabs.find(tab => tab.label === subViewName);
+    // @ts-ignore
+    if (!tmp.layerData.find(elem => elem === this.calledMenuButton._id)) {
+      // @ts-ignore
+      tmp.layerData.push(this.calledMenuButton._id);
+    }
+  }
+
 
 }
 

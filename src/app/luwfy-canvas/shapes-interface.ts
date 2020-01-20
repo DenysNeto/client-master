@@ -17,6 +17,11 @@ export enum GroupTypes {
   IconsGroup = 'iconsGroup'
 }
 
+export enum ButtonsTypes {
+  DrugPoint = 'dragPoint',
+  MenuButton = 'menuButton'
+}
+
 
 export interface ICoordinates {
   x: number,
