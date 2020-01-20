@@ -11,7 +11,7 @@ import {
   IPathCustom,
 } from '../luwfy-canvas/shapes-interface';
 import ShapeCreator from '../luwfy-canvas/ShapesCreator';
-import {ShapesSizes, ShapesSizes as sizes, SwitcherSizes} from '../luwfy-canvas/sizes';
+import {GridSizes, ShapesSizes, ShapesSizes as sizes, SwitcherSizes} from '../luwfy-canvas/sizes';
 import {theme} from '../luwfy-canvas/theme';
 import KonvaUtil from '../luwfy-canvas/konva-util';
 import {Layer} from 'konva/types/Layer';
@@ -233,20 +233,12 @@ export class CanvasService {
 
     if (group.attrs.type === GroupTypes.Block) {
       group.on('dragmove', (event) => {
-        // console.log('[c] event target_qqq', event.target);
-        //event.target.draggable(true);
-        //event.target.setAttr('draggable', true);
+        this.checkTheGroupNearBorder(event.target);
+
+
         let temp_blocks = this.getAllBlocksFromFlowBoard(event.target.parent, event.target._id);
-        console.log('sss', temp_blocks);
         if (temp_blocks && this.checkIfCollision(temp_blocks, event.target)) {
           event.target.setAttr('collision', true);
-
-
-          // event.target.position({
-          //   x: event.target.position().x - 50,
-          //   y: event.target.position().y - 50,
-          // });
-          // event.target.setDraggable
         } else {
           event.target.setAttr('collision', false);
         }
@@ -280,6 +272,56 @@ export class CanvasService {
 
 
       });
+    }
+
+
+  }
+
+
+  checkTheGroupNearBorder(current_group: IGroupCustom) {
+    let temp_changes: boolean = false;
+    console.log('[c] inside_1', current_group.parent.attrs.width - current_group.attrs.x - current_group.attrs.width);
+    if (current_group.parent.attrs.width - current_group.attrs.x - current_group.attrs.width < GridSizes.flowboard_cell) {
+      current_group.parent.children.each((elem) => {
+        if (elem.className === 'Rect') {
+          elem.setAttr('width', elem.attrs.width + GridSizes.flowboard_cell);
+          return 0;
+        }
+      });
+      current_group.parent.setAttr('width', current_group.parent.attrs.width + GridSizes.flowboard_cell);
+      temp_changes = true;
+
+
+    } else if (current_group.parent.attrs.y + current_group.parent.attrs.height - current_group.attrs.y + current_group.attrs.height < GridSizes.flowboard_cell) {
+      current_group.parent.findOne((elem) => {
+        if (elem.className === 'Rect') {
+          elem.setAttr('height', elem.attrs.height + GridSizes.flowboard_cell);
+        }
+        current_group.setAttr('width', current_group.attrs.height + GridSizes.flowboard_cell);
+        temp_changes = true;
+
+      });
+    }
+
+
+    if (temp_changes) {
+      let vertLines = current_group.parent.attrs.height / GridSizes.flowboard_cell;
+      let horLines = current_group.parent.attrs.width / GridSizes.flowboard_cell;
+      let maxLines = vertLines > horLines ? vertLines : horLines;
+      for (let i = 1; i <= maxLines; i++) {
+        if (horLines > i) {
+          let temp = ShapeCreator.createLineForGrid([GridSizes.flowboard_cell * i, 0, GridSizes.flowboard_cell * i, current_group.parent.attrs.height]);
+
+          current_group.parent.add(temp);
+          temp.setAttr('zIndex', 0);
+        }
+
+        if (vertLines > i) {
+          let temp = ShapeCreator.createLineForGrid([0, GridSizes.flowboard_cell * i, current_group.parent.attrs.width, GridSizes.flowboard_cell * i]);
+          current_group.parent.add(temp);
+          temp.setAttr('zIndex', 0);
+        }
+      }
     }
 
 

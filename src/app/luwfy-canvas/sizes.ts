@@ -14,6 +14,10 @@ export const ShapesSizes = {
   error_icon_size: 19
 };
 
+export const GridSizes = {
+  flowboard_cell: 20,
+};
+
 export const SwitcherSizes = {
   iconsFontSize: 19,
   margin_left: 10,

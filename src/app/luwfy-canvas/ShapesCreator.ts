@@ -181,7 +181,7 @@ const ShapeCreator = {
     return new Konva.Line({
       points,
       stroke: '#eef6fa',
-      strokeWidth: 1
+      strokeWidth: 1,
     });
   },
   createShadowForGrid: (width, height) => {
