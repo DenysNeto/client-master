@@ -28,24 +28,16 @@
   pointer-events: none;
 }
 
-.stage {
-  background: #fff;
-}
-
 #add_flow {
   position: fixed;
   bottom: 50px;
   right: 50px;
 }
-#menu {
-  display: none;
-  position: absolute;
-  width: 60px;
-  height: 100px;
-  background-color: white;
-  box-shadow: 0 0 5px grey;
-  border-radius: 3px;
-  background-color: rebeccapurple;
-  cursor: pointer;
-  z-index: 100;
+
+.container {
+  margin: 0;
+  padding: 0;
+  width: 1780px !important;
+  height: 870px;
+  overflow: auto;
 }

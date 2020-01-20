@@ -221,7 +221,7 @@ const ShapeCreator = {
       fontFamily: 'FontAwesome',
       text: '\uf196',
       fill: '#115770',
-      type: 'dragPoint'
+      type: 'menuButton'
     })
       .on('mousedown', event => event.target.attrs.fill = 'silver')
       .on('mouseup', event => event.target.attrs.fill = '#115770');

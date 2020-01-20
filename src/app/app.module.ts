@@ -8,7 +8,7 @@ import {LufyTabsComponent} from './luwfy-tabs/luwfy-tabs.component';
 import {LuwfyVerticalTabComponent} from './luwfy-vertical-tab/luwfy-vertical-tab.component';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {PopupsModule} from './popups/popups.module';
-import {MatButtonModule, MatTabsModule} from '@angular/material';
+import {MatButtonModule, MatMenuModule, MatTabsModule} from '@angular/material';
 
 @NgModule({
   declarations: [
@@ -24,7 +24,8 @@ import {MatButtonModule, MatTabsModule} from '@angular/material';
         BrowserAnimationsModule,
         PopupsModule,
         MatButtonModule,
-        MatTabsModule
+        MatTabsModule,
+        MatMenuModule
     ],
   providers: [],
   bootstrap: [AppComponent]
