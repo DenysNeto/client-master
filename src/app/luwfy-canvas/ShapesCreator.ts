@@ -121,6 +121,7 @@ const ShapeCreator = {
     return new Konva.Group({
       x,
       y,
+      type: GroupTypes.Switcher,
       switched: true
     }).add(
       new Konva.Rect({

@@ -48,7 +48,7 @@ export class CanvasComponent implements OnInit {
   currentId: string;
   idChangedTrigger: boolean = false;
   KonvaUtil = KonvaUtil;
-  konvaSize = {width: window.screen.width, height: window.screen.height};
+  konvaSize = {width: window.screen.width * 2, height: window.screen.height * 2};
 
   subTabs: dataInTabLayer[] = [{label: 'Main Project', layerData: []}, {label: 'Sub Menu', layerData: []}];
   flowboards: Group[];
@@ -323,6 +323,20 @@ export class CanvasComponent implements OnInit {
 
   handleClickEvent = (event) => {
 
+    console.log('flowboards', this.flowboards[0].children[0]);
+    this.flowboards[0].children.each((elem) => {
+      if (elem.className == 'Rect') {
+        elem.setAttr('width', this.flowboards[0].attrs.width + 50);
+
+      }
+
+
+    });
+    this.flowboards[0].setAttr('width', this.flowboards[0].attrs.width + 50);
+    this.flowboards[1] && this.flowboards[1].setAttr('x', this.flowboards[1].attrs.x + 50);
+    this.flowboards[2] && this.flowboards[2].setAttr('x', this.flowboards[2].attrs.x + 50);
+
+
     if (this.currentLineToDraw.isLineDrawable) {
       this.currentLineToDraw.isLineDrawable = false;
 
@@ -352,6 +366,7 @@ export class CanvasComponent implements OnInit {
       this.currentDraggedGroup = this.canvasService.createDefaultGroup(this.mainLayer, this.activeWrapperBlock, this.currentActiveGroup, this.currentId);
       this.idChangedTrigger = false;
       this.setClickEventForGroup(this.currentDraggedGroup);
+      //todo
       this.mainLayer.getStage().add(this.currentDraggedGroup);
 
       this.undoRedoService.addAction({
@@ -390,6 +405,7 @@ export class CanvasComponent implements OnInit {
           }
 
         });
+
       } else {
         this.canvasService.getAllFlowsFromLayer(this.mainLayer).each(elem => {
           elem.children.each(elem => {
@@ -657,8 +673,6 @@ export class CanvasComponent implements OnInit {
   @HostListener('document:keydown.control.v') undoCtrlV(event: KeyboardEvent) {
     this.currentCopiedGroup.setAttr('visible', true);
 
-    // this.stage.getStage().getPointerPosition().x - this.currentActiveGroup.attrs.x;
-    // this.stage.getStage().getPointerPosition().y - this.currentActiveGroup.attrs.y;
 
     this.currentCopiedGroup.setAbsolutePosition(
       {
@@ -679,6 +693,8 @@ export class CanvasComponent implements OnInit {
     if (!e) {
       return 0;
     }
+
+    //this.flowboards[0].draw();
 
     if (this.currentLineToDraw.isLineDrawable) {
       const pos = this.stage.getStage().getPointerPosition();
@@ -715,6 +731,13 @@ export class CanvasComponent implements OnInit {
     }
     if (this.canvasService.activePathsArr.length > 0) {
       return 0;
+    }
+
+    if (this.currentCopiedGroup.hasChildren()) {
+      this.currentCopiedGroup.setAbsolutePosition({
+        x: this.stage.getStage().getPointerPosition().x - this.currentActiveGroup.children[0].attrs.x,
+        y: this.stage.getStage().getPointerPosition().y - this.currentActiveGroup.children[0].attrs.y
+      });
     }
 
     if (this.activeWrapperBlock.isDraw) {
@@ -830,12 +853,11 @@ export class CanvasComponent implements OnInit {
 
   ngAfterViewInit() {
     this.canvasService.dragFinished.subscribe(() => {
-      console.log('[c] each_0');
       let temp;
       this.canvasService.getAllFlowsFromLayer(this.mainLayer).each((flowGroup) => {
-        console.log('[c] each');
-        if (this.checkIsGroupInFlow(flowGroup)) {
-          temp = true;
+        temp = this.checkIsGroupInFlow(flowGroup, true);
+        if (temp) {
+          temp.add(this.currentDraggedGroup);
           flowGroup.children.each(elem => {
             if (elem.className === 'Rect') {
               elem.setAttr('stroke', theme.line_color);
@@ -848,6 +870,7 @@ export class CanvasComponent implements OnInit {
 
       !temp && this.currentDraggedGroup && this.currentDraggedGroup.destroy();
     });
+
 
 
     this.flowboards.forEach(flow => {

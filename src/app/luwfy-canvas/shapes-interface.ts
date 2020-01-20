@@ -12,13 +12,12 @@ export enum CircleTypes {
 
 export enum GroupTypes {
   Flowboard = 'flowboard',
+  Block = 'block',
   Switcher = 'switcher',
   CopiedGroup = 'copied_group',
-IconsGroup = 'iconsGroup',
+  IconsGroup = 'iconsGroup',
 
 }
-
-
 
 
 export interface ICoordinates {

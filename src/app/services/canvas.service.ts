@@ -1,880 +1,940 @@
-import { Injectable } from '@angular/core';
-import { StageComponent } from 'ng2-konva';
-import { Group } from 'konva/types/Group';
+import {Injectable} from '@angular/core';
+import {StageComponent} from 'ng2-konva';
+import {Group} from 'konva/types/Group';
 import Konva from 'konva';
 import {
-    CircleTypes, GroupTypes,
-    IActiveWrapperBlock,
-    ICircleCustom,
-    ICurrentLineToDraw,
-    IGroupCustom, InputBlocksInterface,
-    IPathCustom,
+  CircleTypes, GroupTypes,
+  IActiveWrapperBlock,
+  ICircleCustom,
+  ICurrentLineToDraw,
+  IGroupCustom, InputBlocksInterface,
+  IPathCustom,
 } from '../luwfy-canvas/shapes-interface';
 import ShapeCreator from '../luwfy-canvas/ShapesCreator';
-import { ShapesSizes, ShapesSizes as sizes, SwitcherSizes } from '../luwfy-canvas/sizes';
-import { theme } from '../luwfy-canvas/theme';
+import {ShapesSizes, ShapesSizes as sizes, SwitcherSizes} from '../luwfy-canvas/sizes';
+import {theme} from '../luwfy-canvas/theme';
 import KonvaUtil from '../luwfy-canvas/konva-util';
-import { Layer } from 'konva/types/Layer';
-import { BehaviorSubject, Subject } from 'rxjs';
-import { Collection } from 'konva/types/Util';
-import { Path } from 'konva/types/shapes/Path';
-import { ActionType } from '../luwfy-canvas/undo-redo.interface';
-import { MatDialog, MatDialogRef } from '@angular/material';
-import { ModalPropComponent } from '../popups/modal-prop/modal-prop.component';
-import { UndoRedoService } from './undo-redo.service';
-import { BlocksRedactorService } from '../popups/blocks-redactor.service';
-import { BlocksService } from './blocks.service';
+import {Layer} from 'konva/types/Layer';
+import {BehaviorSubject, Subject} from 'rxjs';
+import {Collection} from 'konva/types/Util';
+import {Path} from 'konva/types/shapes/Path';
+import {ActionType} from '../luwfy-canvas/undo-redo.interface';
+import {MatDialog, MatDialogRef} from '@angular/material';
+import {ModalPropComponent} from '../popups/modal-prop/modal-prop.component';
+import {UndoRedoService} from './undo-redo.service';
+import {BlocksRedactorService} from '../popups/blocks-redactor.service';
+import {BlocksService} from './blocks.service';
 
-@Injectable ( {
-    providedIn: 'root',
-} )
+@Injectable({
+  providedIn: 'root',
+})
 export class CanvasService {
 
-    currentLineToDraw: ICurrentLineToDraw = {
-        isLineDrawable: false,
-        groupId       : 0,
-        lineId        : 0,
-        line          : new Konva.Path ( {
-            attached   : false,
-            width      : 1,
-            height     : 1,
-            strokeWidth: 3,
-            opacity    : 1,
-            data       : '',
-            stroke     : '#999',
-        } ),
-        prevX         : 0,
-        prevY         : 0,
-        prevMainX     : 0,
-        prevMainY     : 0,
-        positionStart : {
-            x: 0, y: 0,
-        },
-        positionEnd   : {
-            x: 0, y: 0,
-        },
+  currentLineToDraw: ICurrentLineToDraw = {
+    isLineDrawable: false,
+    groupId: 0,
+    lineId: 0,
+    line: new Konva.Path({
+      attached: false,
+      width: 1,
+      height: 1,
+      strokeWidth: 3,
+      opacity: 1,
+      data: '',
+      stroke: '#999',
+    }),
+    prevX: 0,
+    prevY: 0,
+    prevMainX: 0,
+    prevMainY: 0,
+    positionStart: {
+      x: 0, y: 0,
+    },
+    positionEnd: {
+      x: 0, y: 0,
+    },
 
-        swapOrientation: () => {
-            this.currentLineToDraw.positionStart = { x: this.currentLineToDraw.prevX, y: this.currentLineToDraw.prevY };
-            this.currentLineToDraw.positionEnd   = {
-                x: this.currentLineToDraw.prevMainX,
-                y: this.currentLineToDraw.prevMainY,
-            };
-        },
-    };
+    swapOrientation: () => {
+      this.currentLineToDraw.positionStart = {x: this.currentLineToDraw.prevX, y: this.currentLineToDraw.prevY};
+      this.currentLineToDraw.positionEnd = {
+        x: this.currentLineToDraw.prevMainX,
+        y: this.currentLineToDraw.prevMainY,
+      };
+    },
+  };
 
-    // chosedGroupOfLines:IPathCustom[] = [];
+  // chosedGroupOfLines:IPathCustom[] = [];
 
-    activePathsArr: IPathCustom[] = [];
+  activePathsArr: IPathCustom[] = [];
 
-    activeWrapperBlock: IActiveWrapperBlock   = {
+  activeWrapperBlock: IActiveWrapperBlock = {
 
-        initial_position: {
-            x: 0,
-            y: 0,
-        },
-        now_position    : {
-            x: 0, y: 0,
-        },
+    initial_position: {
+      x: 0,
+      y: 0,
+    },
+    now_position: {
+      x: 0, y: 0,
+    },
 
-        isActive : false,
-        isDraw   : false,
-        rectangle: new Konva.Rect ( {
-            stroke        : 'blue',
-            draggable     : false,
-            isActive_block: true,
-        } ),
+    isActive: false,
+    isDraw: false,
+    rectangle: new Konva.Rect({
+      stroke: 'blue',
+      draggable: false,
+      isActive_block: true,
+    }),
 
-    };
-    dragFinished: BehaviorSubject<boolean>    = new BehaviorSubject<boolean> ( true );
-    lineToDraw: Subject<ICurrentLineToDraw>   = new BehaviorSubject<ICurrentLineToDraw> ( this.currentLineToDraw );
-    activeBlock: Subject<IActiveWrapperBlock> = new BehaviorSubject<IActiveWrapperBlock> ( this.activeWrapperBlock );
-    fileNameDialogRef: MatDialogRef<ModalPropComponent>;
-    blocksArr: InputBlocksInterface[];
+  };
 
-    isElem () {
-        return this.activePathsArr.length > 0;
+  dragFinished: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(true);
+  lineToDraw: Subject<ICurrentLineToDraw> = new BehaviorSubject<ICurrentLineToDraw>(this.currentLineToDraw);
+  activeBlock: Subject<IActiveWrapperBlock> = new BehaviorSubject<IActiveWrapperBlock>(this.activeWrapperBlock);
+  fileNameDialogRef: MatDialogRef<ModalPropComponent>;
+  blocksArr: InputBlocksInterface[];
+
+  isElem() {
+    return this.activePathsArr.length > 0;
+  }
+
+  constructor(private dialog: MatDialog, private undoRedoService: UndoRedoService, private blocksRedactorService: BlocksRedactorService, private blocksService: BlocksService) {
+    this.blocksArr = this.blocksService.getBlocks() as InputBlocksInterface[];
+  }
+
+  deleteShapesFromGroup = (mainLayer: Layer, currentActiveGroup: any) => {
+
+    let group_children_temp = currentActiveGroup.children;
+
+    if (group_children_temp.length > 0) {
+      while (group_children_temp.length) {
+        group_children_temp[group_children_temp.length - 1].children.each((elem) => {
+          if (elem.className !== 'Path') {
+            elem.setAttr('stroke', theme.rect_border);
+          }
+        });
+        group_children_temp[group_children_temp.length - 1].setAttr('draggable', true);
+        group_children_temp[group_children_temp.length - 1].setAttr('x',
+          group_children_temp[group_children_temp.length - 1].position().x + currentActiveGroup.position().x);
+        group_children_temp[group_children_temp.length - 1].setAttr('y',
+          group_children_temp[group_children_temp.length - 1].position().y + currentActiveGroup.position().y);
+        mainLayer.getStage().add(group_children_temp[group_children_temp.length - 1]);
+      }
+
+      currentActiveGroup.removeChildren();
+      mainLayer.getStage().draw();
+
     }
 
-    constructor ( private dialog: MatDialog, private undoRedoService: UndoRedoService, private blocksRedactorService: BlocksRedactorService, private blocksService: BlocksService ) {
-        this.blocksArr = this.blocksService.getBlocks () as InputBlocksInterface[];
-    }
+  };
 
-    deleteShapesFromGroup = ( mainLayer: Layer, currentActiveGroup: any ) => {
+  setRegularGroupHandlers(group: IGroupCustom, mainLayer: Layer, activeWrapperBlock: IActiveWrapperBlock, currentActiveGroup: Group) {
+    this.setDragGroupEvents(group, mainLayer, currentActiveGroup);
+    this.setMouseMoveEvents(group, mainLayer, activeWrapperBlock);
+    //  this.setClickEvent(group, mainLayer, activeWrapperBlock, this.currentActiveGroup)
+  }
 
-        let group_children_temp = currentActiveGroup.children;
+  setMouseMoveEvents(group: IGroupCustom, mainLayer: Layer, activeWrapperBlock: IActiveWrapperBlock) {
 
-        if ( group_children_temp.length > 0 ) {
-            while ( group_children_temp.length ) {
-                group_children_temp[ group_children_temp.length - 1 ].children.each ( ( elem ) => {
-                    if ( elem.className !== 'Path' ) {
-                        elem.setAttr ( 'stroke', theme.rect_border );
-                    }
-                } );
-                group_children_temp[ group_children_temp.length - 1 ].setAttr ( 'draggable', true );
-                group_children_temp[ group_children_temp.length - 1 ].setAttr ( 'x',
-                    group_children_temp[ group_children_temp.length - 1 ].position ().x + currentActiveGroup.position ().x );
-                group_children_temp[ group_children_temp.length - 1 ].setAttr ( 'y',
-                    group_children_temp[ group_children_temp.length - 1 ].position ().y + currentActiveGroup.position ().y );
-                mainLayer.getStage ().add ( group_children_temp[ group_children_temp.length - 1 ] );
-            }
+    //todo add switch for different types of groups
 
-            currentActiveGroup.removeChildren ();
-            mainLayer.getStage ().draw ();
+    group.on('mousedown', (event) => {
+      activeWrapperBlock.isActive = false;
+      activeWrapperBlock.isDraw = false;
+      activeWrapperBlock.rectangle.setAttr('visible', false);
+    });
 
+    group.on('mouseup', (event) => {
+
+      if (this.currentLineToDraw.isLineDrawable && event.target._id !== this.currentLineToDraw.groupId && event.target.parent._id !== this.currentLineToDraw.groupId && this.currentLineToDraw.groupId !== 0) {
+        let input_circle = this.getInputCircleFromGroup(event.target as Group);
+
+        let current_path_group = this.getGroupById(this.currentLineToDraw.groupId, mainLayer.getStage());
+
+        current_path_group.setAttr('draggable', 'true');
+
+        let current_path = current_path_group.findOne((elem) => {
+          if (elem.className === 'Path' && elem.attrs.start_info.start_group_id === this.currentLineToDraw.groupId && elem._id === this.currentLineToDraw.lineId) {
+            return elem;
+          }
+        });
+
+        let start_circle = current_path_group.findOne((elem) => {
+          if (current_path.attrs.start_info && elem._id === current_path.attrs.start_info.start_circle_id) {
+            return elem;
+
+          }
+
+        });
+        let deltaX = event.target.parent.attrs.x - current_path_group.attrs.x;
+        let deltaY = event.target.parent.attrs.y - current_path_group.attrs.y;
+
+        current_path.setAttr('data', KonvaUtil.generateLinkPath(start_circle.attrs.x, start_circle.attrs.y,
+          event.target.parent.attrs.x - current_path_group.attrs.x,
+          event.target.parent.attrs.y - current_path_group.attrs.y + input_circle.attrs.y, this.setParamForLine(deltaX, deltaY)));
+
+        current_path.setAttr('custom_id_output', event.target._id);
+
+        current_path.setAttr('end_info', {
+          end_group_id: event.target.parent._id,
+          end_circle_id: input_circle._id,
+        });
+        current_path.setAttr('zIndex', 0);
+
+        this.undoRedoService.addAction({
+          action: ActionType.Create,
+          object: current_path,
+          parent: event.target.parent as Group,
+        });
+
+        // add start and end points for gradient for path
+
+        current_path.strokeLinearGradientStartPoint({
+          x: start_circle.attrs.x,
+          y: start_circle.attrs.y,
+        });
+
+        current_path.strokeLinearGradientEndPoint({
+          x: event.target.parent.attrs.x - current_path_group.attrs.x,
+          y: event.target.parent.attrs.y - current_path_group.attrs.y + input_circle.attrs.y,
+        });
+
+        let startColor = current_path.parent.parent.findOne(elem => elem._id === current_path.attrs.start_info.start_circle_id).attrs.stroke;
+        let endColor = current_path.parent.parent.findOne(elem => elem._id === current_path.attrs.end_info.end_circle_id).attrs.fill;
+        current_path.strokeLinearGradientColorStops([0, startColor, 1, endColor]);
+
+        if (!current_path.attrs.end_info || current_path.attrs.start_info.start_group_id === current_path.attrs.end_info.end_group_id) {
+          console.log('[c] removing');
+          current_path.remove();
         }
 
-    };
+        this.currentLineToDraw.isLineDrawable = false;
+        this.lineToDraw.next(this.currentLineToDraw);
+        // event.target.parent.draw();
+        return 0;
 
-    setRegularGroupHandlers ( group: IGroupCustom, mainLayer: Layer, activeWrapperBlock: IActiveWrapperBlock, currentActiveGroup: Group ) {
-        this.setDragGroupEvents ( group, mainLayer, currentActiveGroup );
-        this.setMouseMoveEvents ( group, mainLayer, activeWrapperBlock );
-        //  this.setClickEvent(group, mainLayer, activeWrapperBlock, this.currentActiveGroup)
-    }
+      }
 
-    setMouseMoveEvents ( group: IGroupCustom, mainLayer: Layer, activeWrapperBlock: IActiveWrapperBlock ) {
+    });
 
-        //todo add switch for different types of groups
+    group.on('mouseenter', (event) => {
+      if (this.currentLineToDraw.isLineDrawable) {
+        event.target.parent.setAttr('zIndex', 60);
+      }
 
-        group.on ( 'mousedown', ( event ) => {
-            activeWrapperBlock.isActive = false;
-            activeWrapperBlock.isDraw   = false;
-            activeWrapperBlock.rectangle.setAttr ( 'visible', false );
-        } );
+    });
 
-        group.on ( 'mouseup', ( event ) => {
+    group.on('mouseleave', (event) => {
+      if (event.target.parent.attrs.type && event.target.parent.attrs.type.includes('output')) {
 
-            if ( this.currentLineToDraw.isLineDrawable && event.target._id !== this.currentLineToDraw.groupId && event.target.parent._id !== this.currentLineToDraw.groupId && this.currentLineToDraw.groupId !== 0 ) {
-                let input_circle = this.getInputCircleFromGroup ( event.target as Group );
+      }
+    });
 
-                let current_path_group = this.getGroupById ( this.currentLineToDraw.groupId, mainLayer.getStage () );
+    console.log('[c] fffff', group.attrs);
 
-                current_path_group.setAttr ( 'draggable', 'true' );
-
-                let current_path = current_path_group.findOne ( ( elem ) => {
-                    if ( elem.className === 'Path' && elem.attrs.start_info.start_group_id === this.currentLineToDraw.groupId && elem._id === this.currentLineToDraw.lineId ) {
-                        return elem;
-                    }
-                } );
-
-                let start_circle = current_path_group.findOne ( ( elem ) => {
-                    if ( current_path.attrs.start_info && elem._id === current_path.attrs.start_info.start_circle_id ) {
-                        return elem;
-
-                    }
-
-                } );
-                let deltaX       = event.target.parent.attrs.x - current_path_group.attrs.x;
-                let deltaY       = event.target.parent.attrs.y - current_path_group.attrs.y;
-
-                current_path.setAttr ( 'data', KonvaUtil.generateLinkPath ( start_circle.attrs.x, start_circle.attrs.y,
-                    event.target.parent.attrs.x - current_path_group.attrs.x,
-                    event.target.parent.attrs.y - current_path_group.attrs.y + input_circle.attrs.y, this.setParamForLine ( deltaX, deltaY ) ) );
-
-                current_path.setAttr ( 'custom_id_output', event.target._id );
-
-                current_path.setAttr ( 'end_info', {
-                    end_group_id : event.target.parent._id,
-                    end_circle_id: input_circle._id,
-                } );
-                current_path.setAttr ( 'zIndex', 0 );
-
-                this.undoRedoService.addAction ( {
-                    action: ActionType.Create,
-                    object: current_path,
-                    parent: event.target.parent as Group,
-                } );
-
-                // add start and end points for gradient for path
-
-                current_path.strokeLinearGradientStartPoint ( {
-                    x: start_circle.attrs.x,
-                    y: start_circle.attrs.y,
-                } );
-
-                current_path.strokeLinearGradientEndPoint ( {
-                    x: event.target.parent.attrs.x - current_path_group.attrs.x,
-                    y: event.target.parent.attrs.y - current_path_group.attrs.y + input_circle.attrs.y,
-                } );
-
-                let startColor = current_path.parent.parent.findOne ( elem => elem._id === current_path.attrs.start_info.start_circle_id ).attrs.stroke;
-                let endColor   = current_path.parent.parent.findOne ( elem => elem._id === current_path.attrs.end_info.end_circle_id ).attrs.fill;
-                current_path.strokeLinearGradientColorStops ( [ 0, startColor, 1, endColor ] );
-
-                if ( !current_path.attrs.end_info || current_path.attrs.start_info.start_group_id === current_path.attrs.end_info.end_group_id ) {
-                    console.log ( '[c] removing' );
-                    current_path.remove ();
-                }
-
-                this.currentLineToDraw.isLineDrawable = false;
-                this.lineToDraw.next ( this.currentLineToDraw );
-                // event.target.parent.draw();
-                return 0;
-
-            }
-
-        } );
-
-        group.on ( 'mouseenter', ( event ) => {
-            if ( this.currentLineToDraw.isLineDrawable ) {
-                event.target.parent.setAttr ( 'zIndex', 60 );
-            }
-
-        } );
-
-        group.on ( 'mouseleave', ( event ) => {
-            if ( event.target.parent.attrs.type && event.target.parent.attrs.type.includes ( 'output' ) ) {
-
-            }
-        } );
-
-    }
-
-    setMouseDownEventForSwitchCircle ( circle: ICircleCustom, mainLayer: Layer, currentActiveGroup: Group ) {
-
-        circle.on ( 'mousedown', ( event ) => {
-
-            if ( event.target.attrs.type === CircleTypes.Output && !currentActiveGroup.hasChildren () ) {
-                console.log('[c] circle mousedown', event.target.parent);
-                let line_temp: IPathCustom = ShapeCreator.createLine ( {
-                    start_circle_id: event.target._id,
-                    start_group_id : event.target.parent._id,
-
-
-                } ) as IPathCustom;
-
-                this.setClickEventForPath ( line_temp, mainLayer, currentActiveGroup );
-
-                event.target.parent.add ( line_temp );
-                event.target.parent.setAttr ( 'draggable', false );
-
-                this.currentLineToDraw.isLineDrawable = true;
-                this.currentLineToDraw.lineId         = line_temp._id;
-                this.currentLineToDraw.groupId        = event.target.parent._id;
-
-                this.currentLineToDraw.prevX = event.target.parent.attrs.x + event.target.attrs.x + 20;
-                this.currentLineToDraw.prevY = event.target.parent.attrs.y + event.target.attrs.y;
-
-                this.lineToDraw.next ( this.currentLineToDraw );
-            }
-
-        } );
-    }
-
-    setClickEventForPath ( path: IPathCustom, mainLayer: Layer, currentActiveGroup: Group ) {
-        path.on ( 'mousedown', ( event ) => {
-
-            if ( event.evt.ctrlKey ) {
-
-            }
-
-            //todo add chooser
-            //
-
-        } );
-
-        path.on ( 'mouseup', ( event ) => {
-            if ( this.currentLineToDraw.isLineDrawable ) {
-                event.cancelBubble = true;
-            }
-
-            // let start_group = this.getGroupById(event.target.attrs.start_info.start_group_id, mainLayer.getStage());
-            // let end_group = this.getGroupById(event.target.attrs.end_info.end_group_id, mainLayer.getStage());
-            // start_group.setAttr('draggable', true);
-            // end_group.setAttr('draggable', true);
-
-        } );
-
-        path.on ( 'mouseenter', ( event ) => {
-            console.log ( '[c] mouse enter path' );
-
-        } );
-
-        path.on ( 'click', ( event ) => {
-            if ( event.evt.ctrlKey ) {
-                if ( currentActiveGroup.hasChildren () ) {
-                    event.cancelBubble = true;
-                    return 0;
-                }
-
-                this.activePathsArr.push ( event.target as IPathCustom );
-                event.cancelBubble             = true;
-                this.activeWrapperBlock.isDraw = false;
-
-                this.undoRedoService.addAction ( {
-                    action: ActionType.Select,
-                    object: event.target as IPathCustom,
-                    parent: event.target.parent as IGroupCustom,
-                } );
-
-                event.target.setAttr ( 'stroke', theme.choose_group_color );
-            }
-
-        } );
-
-    }
-
-    resetActivePathArr () {
-        this.activePathsArr = [];
-    }
-
-    addElemToActivePathArr ( elem: IPathCustom ) {
-        this.activePathsArr.push ( elem );
-    }
-
-    removeLastElementFromPathArr () {
-        this.activePathsArr.pop ();
-        console.log ( '[c] rrr', this.activePathsArr );
-    }
-
-    handleOnCancelEvent ( event ) {
-        console.log ( '[c] ON_CANCEL_EVENT', event );
-    }
-
-    getInputCircleFromGroup ( component: Group | IGroupCustom ) {
-        if ( component ) {
-            return component.getStage ().findOne ( ( elem ) => {
-                if ( elem.className == 'Circle' || elem.attrs.type === CircleTypes.Input ) {
-                    return elem;
-                }
-
-            } );
-
-        } else {
-            return null;
-        }
-
-    }
-
-    setClickEvent ( group: IGroupCustom, mainLayer: Layer, activeWrapperBlock: IActiveWrapperBlock, currentActiveGroup: Group ) {
-
-        group.on ( 'click', ( event ) => {
-
-            event.cancelBubble = true;
-
-            if ( event.evt.ctrlKey ) {
-
-                event.target.parent.setAttr ( 'x', event.target.parent.position ().x - currentActiveGroup.position ().x );
-                event.target.parent.setAttr ( 'y', event.target.parent.position ().y - currentActiveGroup.position ().y );
-
-                currentActiveGroup.add ( event.target.parent as Group );
-                event.target.parent.children.each ( ( elem ) => {
-                    elem.setAttr ( 'stroke', 'yellow' );
-                    elem.setAttr ( 'draggable', false );
-
-                } );
-                event.target.parent.setAttr ( 'draggable', false );
-
-            }
-
-        } );
-
-    }
-
-    setParamForLine ( deltaX: number, deltaY: number ) {
-
-        if ( deltaX < 0 ) {
-            return 3;
-        }
-
-        // if ( deltaX < 180 ) {
-        //     return 1;
+    if (group.attrs.type === GroupTypes.Block) {
+      group.on('dragmove', (event) => {
+        console.log('[c] event target_qqq', event.target);
+        //this.checkIfCollision(event.target.parent);
+        // if () {
+        //
         // }
 
-        if ( deltaX < 280 ) {
-            return 1;
-        } else return 3;
 
+      });
     }
 
-    setDragGroupEvents ( group: IGroupCustom, mainLayer: Layer, currentActiveGroup ) {
-        //todo add switch for different types of groups
 
-        group.on ( 'dragstart', ( event ) => {
-            if ( this.currentLineToDraw.isLineDrawable ) {
-                return 0;
-            }
+  }
 
-            this.undoRedoService.addAction ( {
-                action     : ActionType.Move,
-                object     : event.target,
-                coordinates: { x: event.target.attrs.x, y: event.target.attrs.y },
-                parent     : event.target.parent as Layer,
-            } );
+  setMouseDownEventForSwitchCircle(circle: ICircleCustom, mainLayer: Layer, currentActiveGroup: Group) {
 
-            if ( currentActiveGroup.isDraw ) {
-                this.deleteShapesFromGroup ( mainLayer, currentActiveGroup );
-            }
-            this.activeWrapperBlock.isDraw = false;
-            this.activeWrapperBlock.rectangle.setAttr ( 'visible', false );
-            this.activeBlock.next ( this.activeWrapperBlock );
+    circle.on('mousedown', (event) => {
 
-        } );
-        group.on ( 'dragmove', ( event ) => {
-            if ( !event ) {
-                return 0;
-            }
+      if (event.target.attrs.type === CircleTypes.Output && !currentActiveGroup.hasChildren()) {
+        console.log('[c] circle mousedown', event.target.parent);
+        let line_temp: IPathCustom = ShapeCreator.createLine({
+          start_circle_id: event.target._id,
+          start_group_id: event.target.parent._id,
 
-            let isPathInGroup = this.isPathInGroup ( event.target as Group );
 
-            let input_paths: Array<IPathCustom> = this.getAllInputLinesFromGroup ( mainLayer, event.target as Group | IGroupCustom );
-            if ( isPathInGroup || input_paths ) {
+        }) as IPathCustom;
 
-                let output_paths: Collection<IPathCustom> = this.getAllOutputLinesFromGroup ( event.target as Group | IGroupCustom );
+        this.setClickEventForPath(line_temp, mainLayer, currentActiveGroup);
 
-                if ( output_paths ) {
+        event.target.parent.add(line_temp);
+        event.target.parent.setAttr('draggable', false);
 
-                    output_paths.each ( ( elem ) => {
+        this.currentLineToDraw.isLineDrawable = true;
+        this.currentLineToDraw.lineId = line_temp._id;
+        this.currentLineToDraw.groupId = event.target.parent._id;
 
-                        //start point
-                        let temp_start_point_group = this.getGroupById ( elem.attrs.end_info.end_group_id, mainLayer.getStage () );
-                        let temp_end_point_circle  = this.getCircleFromGroupById ( event.target.getStage (), elem.attrs.start_info.start_circle_id );
+        this.currentLineToDraw.prevX = event.target.parent.attrs.x + event.target.attrs.x + 20;
+        this.currentLineToDraw.prevY = event.target.parent.attrs.y + event.target.attrs.y;
 
-                        let temp_start_circle = this.getCircleFromGroupById ( temp_start_point_group, elem.attrs.end_info.end_circle_id );
+        this.lineToDraw.next(this.currentLineToDraw);
+      }
 
-                        //end point
+    });
+  }
 
-                        let deltaX = temp_start_point_group.getAbsolutePosition ().x - event.target.attrs.x + temp_start_circle.attrs.x - temp_end_point_circle.attrs.x;
-                        let deltaY = temp_start_point_group.getAbsolutePosition ().y - event.target.attrs.y + temp_start_circle.attrs.y - temp_end_point_circle.attrs.y;
-                        // this.setParamForLine ( deltaX, deltaY );
+  setClickEventForPath(path: IPathCustom, mainLayer: Layer, currentActiveGroup: Group) {
+    path.on('mousedown', (event) => {
 
-                        elem.setAttr ( 'data',
-                            KonvaUtil.generateLinkPath ( temp_start_point_group.getAbsolutePosition ().x - event.target.attrs.x + temp_start_circle.attrs.x,
-                                temp_start_point_group.getAbsolutePosition ().y - event.target.attrs.y + temp_start_circle.attrs.y,
-                                temp_end_point_circle.attrs.x, temp_end_point_circle.attrs.y, (-1) * this.setParamForLine ( deltaX, deltaY ) ) );
+      if (event.evt.ctrlKey) {
 
-                    } );
+      }
 
-                }
+      //todo add chooser
+      //
 
-                if ( input_paths ) {
+    });
 
-                    console.log ( '[c] input_path' );
-                    input_paths.forEach ( ( elem ) => {
+    path.on('mouseup', (event) => {
+      if (this.currentLineToDraw.isLineDrawable) {
+        event.cancelBubble = true;
+      }
 
-                        //start point
-                        let temp_start_point_group = this.getGroupById ( elem.attrs.start_info.start_group_id, mainLayer.getStage () );
-                        let temp_end_point_circle  = this.getCircleFromGroupById ( event.target.getStage (), elem.attrs.end_info.end_circle_id );
+      // let start_group = this.getGroupById(event.target.attrs.start_info.start_group_id, mainLayer.getStage());
+      // let end_group = this.getGroupById(event.target.attrs.end_info.end_group_id, mainLayer.getStage());
+      // start_group.setAttr('draggable', true);
+      // end_group.setAttr('draggable', true);
 
-                        let temp_start_point_circle = this.getCircleFromGroupById ( event.target.getStage (), elem.attrs.start_info.start_circle_id );
+    });
 
-                        let temp_start_circle = this.getCircleFromGroupById ( temp_start_point_group, elem.attrs.start_info.start_circle_id );
+    path.on('mouseenter', (event) => {
+      console.log('[c] mouse enter path');
 
-                        let temp_input_circle = event.target.getStage ().findOne ( ( elem ) => {
-                            if ( elem.className === 'Circle' && elem.attrs.type === CircleTypes.Input ) {
-                                return elem;
-                            }
-                        } );
-                        console.log ( '[c] i', event.target );
+    });
 
-                        let deltaX = event.target.attrs.x - temp_start_point_group.attrs.x;
-                        let deltaY = temp_start_point_group.getAbsolutePosition ().y - temp_start_point_group.attrs.y + temp_start_circle.attrs.y;
-                        // this.setParamForLine (deltaX, deltaY );
-                        console.log ( '[c] DELTA_INPUT_X', deltaX );
-                        console.log ( '[c] DELTA_INPUT_Y', deltaY );
+    path.on('click', (event) => {
+      if (event.evt.ctrlKey) {
+        if (currentActiveGroup.hasChildren()) {
+          event.cancelBubble = true;
+          return 0;
+        }
 
-                        elem.setAttr ( 'data',
-                            KonvaUtil.generateLinkPath ( temp_start_point_group.getAbsolutePosition ().x - temp_start_point_group.attrs.x + temp_start_circle.attrs.x,
-                                temp_start_point_group.getAbsolutePosition ().y - temp_start_point_group.attrs.y + temp_start_circle.attrs.y,
-                                event.target.attrs.x - temp_start_point_group.attrs.x, event.target.attrs.y - temp_start_point_group.attrs.y + temp_input_circle.attrs.y, this.setParamForLine ( deltaX, deltaY ) ) );
-                    } );
+        this.activePathsArr.push(event.target as IPathCustom);
+        event.cancelBubble = true;
+        this.activeWrapperBlock.isDraw = false;
 
-                }
+        this.undoRedoService.addAction({
+          action: ActionType.Select,
+          object: event.target as IPathCustom,
+          parent: event.target.parent as IGroupCustom,
+        });
 
-            }
+        event.target.setAttr('stroke', theme.choose_group_color);
+      }
 
-        } );
+    });
 
+  }
+
+  resetActivePathArr() {
+    this.activePathsArr = [];
+  }
+
+  addElemToActivePathArr(elem: IPathCustom) {
+    this.activePathsArr.push(elem);
+  }
+
+  removeLastElementFromPathArr() {
+    this.activePathsArr.pop();
+    console.log('[c] rrr', this.activePathsArr);
+  }
+
+  handleOnCancelEvent(event) {
+    console.log('[c] ON_CANCEL_EVENT', event);
+  }
+
+  getInputCircleFromGroup(component: Group | IGroupCustom) {
+    if (component) {
+      return component.getStage().findOne((elem) => {
+        if (elem.className == 'Circle' || elem.attrs.type === CircleTypes.Input) {
+          return elem;
+        }
+
+      });
+
+    } else {
+      return null;
     }
 
-    setRegularGroupEvents ( group: IGroupCustom ) {
+  }
 
-        //group
+  setClickEvent(group: IGroupCustom, mainLayer: Layer, activeWrapperBlock: IActiveWrapperBlock, currentActiveGroup: Group) {
 
+    group.on('click', (event) => {
+
+      event.cancelBubble = true;
+
+      if (event.evt.ctrlKey) {
+
+        event.target.parent.setAttr('x', event.target.parent.position().x - currentActiveGroup.position().x);
+        event.target.parent.setAttr('y', event.target.parent.position().y - currentActiveGroup.position().y);
+
+        currentActiveGroup.add(event.target.parent as Group);
+        event.target.parent.children.each((elem) => {
+          elem.setAttr('stroke', 'yellow');
+          elem.setAttr('draggable', false);
+
+        });
+        event.target.parent.setAttr('draggable', false);
+
+      }
+
+    });
+
+  }
+
+  setParamForLine(deltaX: number, deltaY: number) {
+
+    if (deltaX < 0) {
+      return 3;
     }
 
-    // createOutputPorts ( number_of_ports: number, temp_group: Group, height: number ) {
-    //
-    //     if ( number_of_ports === 1 ) {
-    //         temp_group.add ( ShapeCreator.createCircleOutput ( height / 2 ) );
-    //
-    //     } else if ( number_of_ports === 2 ) {
-    //         temp_group.add ( ShapeCreator.createCircleOutput ( 25 ) );
-    //         temp_group.add ( ShapeCreator.createCircleOutput ( 55 ) );
-    //     } else if ( number_of_ports >= 3 ) {
-    //         let a           = (number_of_ports - 1);
-    //         let margin_temp = (height - a * 30) / 2 - 10;
-    //         let y;
-    //         for ( let i = 0; i < number_of_ports; ) {
-    //             i++;
-    //             if ( i == 1 ) {
-    //                 y = margin_temp + 10;
-    //                 console.log ( '[c] ddd ', y );
-    //                 let temp_circle = ShapeCreator.createCircleOutput ( y );
-    //                 temp_group.add ( temp_circle );
-    //                 temp_circle.zIndex ( 1 );
-    //
-    //             } else {
-    //                 y               = margin_temp + i * (20) + (i - 2) * 10;
-    //                 let temp_circle = ShapeCreator.createCircleOutput ( y );
-    //                 temp_group.add ( temp_circle );
-    //                 temp_circle.zIndex ( 1 );
-    //             }
-    //
-    //         }
-    //     }
-    //
-    // };
+    // if ( deltaX < 180 ) {
+    //     return 1;
+    // }
 
-    getAllInputLinesFromGroup ( component: Layer, group: Group | IGroupCustom ): Array<IPathCustom> {
+    if (deltaX < 280) {
+      return 1;
+    } else {
+      return 3;
+    }
 
-        let collection_ports: Array<IPathCustom> = [];
-        let all_groups                           = component.getStage ().find ( ( elem ) => {
-            if ( !elem.className ) {
+  }
+
+  setDragGroupEvents(group: IGroupCustom, mainLayer: Layer, currentActiveGroup) {
+    //todo add switch for different types of groups
+
+    group.on('dragstart', (event) => {
+      if (this.currentLineToDraw.isLineDrawable) {
+        return 0;
+      }
+
+      this.undoRedoService.addAction({
+        action: ActionType.Move,
+        object: event.target,
+        coordinates: {x: event.target.attrs.x, y: event.target.attrs.y},
+        parent: event.target.parent as Layer,
+      });
+
+      if (currentActiveGroup.isDraw) {
+        this.deleteShapesFromGroup(mainLayer, currentActiveGroup);
+      }
+      this.activeWrapperBlock.isDraw = false;
+      this.activeWrapperBlock.rectangle.setAttr('visible', false);
+      this.activeBlock.next(this.activeWrapperBlock);
+
+    });
+    group.on('dragmove', (event) => {
+      if (!event) {
+        return 0;
+      }
+
+      let isPathInGroup = this.isPathInGroup(event.target as Group);
+
+      let input_paths: Array<IPathCustom> = this.getAllInputLinesFromGroup(mainLayer, event.target as Group | IGroupCustom);
+      if (isPathInGroup || input_paths) {
+
+        let output_paths: Collection<IPathCustom> = this.getAllOutputLinesFromGroup(event.target as Group | IGroupCustom);
+
+        if (output_paths) {
+
+          output_paths.each((elem) => {
+
+            //start point
+            let temp_start_point_group = this.getGroupById(elem.attrs.end_info.end_group_id, mainLayer.getStage());
+            let temp_end_point_circle = this.getCircleFromGroupById(event.target.getStage(), elem.attrs.start_info.start_circle_id);
+
+            let temp_start_circle = this.getCircleFromGroupById(temp_start_point_group, elem.attrs.end_info.end_circle_id);
+
+            //end point
+
+            let deltaX = temp_start_point_group.getAbsolutePosition().x - event.target.attrs.x + temp_start_circle.attrs.x - temp_end_point_circle.attrs.x;
+            let deltaY = temp_start_point_group.getAbsolutePosition().y - event.target.attrs.y + temp_start_circle.attrs.y - temp_end_point_circle.attrs.y;
+            // this.setParamForLine ( deltaX, deltaY );
+
+            elem.setAttr('data',
+              KonvaUtil.generateLinkPath(temp_start_point_group.getAbsolutePosition().x - event.target.attrs.x + temp_start_circle.attrs.x,
+                temp_start_point_group.getAbsolutePosition().y - event.target.attrs.y + temp_start_circle.attrs.y,
+                temp_end_point_circle.attrs.x, temp_end_point_circle.attrs.y, (-1) * this.setParamForLine(deltaX, deltaY)));
+
+          });
+
+        }
+
+        if (input_paths) {
+
+          console.log('[c] input_path');
+          input_paths.forEach((elem) => {
+
+            //start point
+            let temp_start_point_group = this.getGroupById(elem.attrs.start_info.start_group_id, mainLayer.getStage());
+            let temp_end_point_circle = this.getCircleFromGroupById(event.target.getStage(), elem.attrs.end_info.end_circle_id);
+
+            let temp_start_point_circle = this.getCircleFromGroupById(event.target.getStage(), elem.attrs.start_info.start_circle_id);
+
+            let temp_start_circle = this.getCircleFromGroupById(temp_start_point_group, elem.attrs.start_info.start_circle_id);
+
+            let temp_input_circle = event.target.getStage().findOne((elem) => {
+              if (elem.className === 'Circle' && elem.attrs.type === CircleTypes.Input) {
                 return elem;
-                // return elem.find((elem) => {
-                //   if (elem.className === 'Path' && elem.attrs.end_info.group_id === group._id) {
-                //     return elem;
-                //   }
-                // });
-            }
-        } );
-        all_groups.each ( ( elem ) => {
+              }
+            });
+            console.log('[c] i', event.target);
 
-            elem.getStage ().find ( ( elem ) => {
-                if ( elem.className === 'Path' && elem.attrs.end_info && elem.attrs.end_info.end_group_id === group._id ) {
-                    collection_ports.push ( elem );
-                }
-            } );
+            let deltaX = event.target.attrs.x - temp_start_point_group.attrs.x;
+            let deltaY = temp_start_point_group.getAbsolutePosition().y - temp_start_point_group.attrs.y + temp_start_circle.attrs.y;
+            // this.setParamForLine (deltaX, deltaY );
+            console.log('[c] DELTA_INPUT_X', deltaX);
+            console.log('[c] DELTA_INPUT_Y', deltaY);
 
-        } );
-        console.log ( '[c] ppp', collection_ports );
-        return collection_ports;
+            elem.setAttr('data',
+              KonvaUtil.generateLinkPath(temp_start_point_group.getAbsolutePosition().x - temp_start_point_group.attrs.x + temp_start_circle.attrs.x,
+                temp_start_point_group.getAbsolutePosition().y - temp_start_point_group.attrs.y + temp_start_circle.attrs.y,
+                event.target.attrs.x - temp_start_point_group.attrs.x, event.target.attrs.y - temp_start_point_group.attrs.y + temp_input_circle.attrs.y, this.setParamForLine(deltaX, deltaY)));
+          });
 
-    }
+        }
 
-    getActiveBlock ( mainLayer: Layer ) {
-        return mainLayer.findOne ( ( elem ) => {
-            if ( elem.attrs.isActive_block ) {
-                return elem;
-            }
-        } );
+      }
 
-    }
+    });
 
-    getAllOutputLinesFromGroup ( group: Group | IGroupCustom ): Collection<IPathCustom> {
-        return group.find ( ( elem ) => {
-            console.log ( '[c] elem ppp', elem );
-            if ( elem.className === 'Path' ) {
-                return elem;
-            }
-        } );
-    };
+  }
+
+  setRegularGroupEvents(group: IGroupCustom) {
+
+    //group
+
+  }
+
+  // createOutputPorts ( number_of_ports: number, temp_group: Group, height: number ) {
+  //
+  //     if ( number_of_ports === 1 ) {
+  //         temp_group.add ( ShapeCreator.createCircleOutput ( height / 2 ) );
+  //
+  //     } else if ( number_of_ports === 2 ) {
+  //         temp_group.add ( ShapeCreator.createCircleOutput ( 25 ) );
+  //         temp_group.add ( ShapeCreator.createCircleOutput ( 55 ) );
+  //     } else if ( number_of_ports >= 3 ) {
+  //         let a           = (number_of_ports - 1);
+  //         let margin_temp = (height - a * 30) / 2 - 10;
+  //         let y;
+  //         for ( let i = 0; i < number_of_ports; ) {
+  //             i++;
+  //             if ( i == 1 ) {
+  //                 y = margin_temp + 10;
+  //                 console.log ( '[c] ddd ', y );
+  //                 let temp_circle = ShapeCreator.createCircleOutput ( y );
+  //                 temp_group.add ( temp_circle );
+  //                 temp_circle.zIndex ( 1 );
+  //
+  //             } else {
+  //                 y               = margin_temp + i * (20) + (i - 2) * 10;
+  //                 let temp_circle = ShapeCreator.createCircleOutput ( y );
+  //                 temp_group.add ( temp_circle );
+  //                 temp_circle.zIndex ( 1 );
+  //             }
+  //
+  //         }
+  //     }
+  //
+  // };
+
+  getAllInputLinesFromGroup(component: Layer, group: Group | IGroupCustom): Array<IPathCustom> {
+
+    let collection_ports: Array<IPathCustom> = [];
+    let all_groups = component.getStage().find((elem) => {
+      if (!elem.className) {
+        return elem;
+        // return elem.find((elem) => {
+        //   if (elem.className === 'Path' && elem.attrs.end_info.group_id === group._id) {
+        //     return elem;
+        //   }
+        // });
+      }
+    });
+    all_groups.each((elem) => {
+
+      elem.getStage().find((elem) => {
+        if (elem.className === 'Path' && elem.attrs.end_info && elem.attrs.end_info.end_group_id === group._id) {
+          collection_ports.push(elem);
+        }
+      });
+
+    });
+    console.log('[c] ppp', collection_ports);
+    return collection_ports;
+
+  }
+
+  getActiveBlock(mainLayer: Layer) {
+    return mainLayer.findOne((elem) => {
+      if (elem.attrs.isActive_block) {
+        return elem;
+      }
+    });
+
+  }
+
+  getAllOutputLinesFromGroup(group: Group | IGroupCustom): Collection<IPathCustom> {
+    return group.find((elem) => {
+      console.log('[c] elem ppp', elem);
+      if (elem.className === 'Path') {
+        return elem;
+      }
+    });
+  };
 
 // function add all ports (input, output, error)
-    createPorts ( blockVariables: InputBlocksInterface, temp_group: Group, height: number ) {
-        let inputPorts  = blockVariables.inputs;
-        let outputPorts = blockVariables.outputs;
-        let errorPorts  = blockVariables.output_errors;
-        let max_ports   = errorPorts + outputPorts > inputPorts ? errorPorts + outputPorts : inputPorts;
-        let delayInput  = height / (inputPorts + 1);
-        let delayOutput = height / ((outputPorts + errorPorts) + 1);
-        for ( let i = 1; i <= max_ports; i++ ) {
-            if ( inputPorts > 0 ) {
-                temp_group.add ( ShapeCreator.createPortCircle ( 0, delayInput * i, blockVariables.color, true ) ); // add input
-                inputPorts--;
-            }
-            if ( outputPorts > 0 ) {
-                temp_group.add ( ShapeCreator.createPortCircle ( sizes.block_width, delayOutput * i, blockVariables.color, false ) ); // add output
-                outputPorts--;
-            } else if ( errorPorts > 0 ) {
-                temp_group.add ( ShapeCreator.createErrorOutput ( delayOutput * i ) ); // add error
-                errorPorts--;
-            }
-        }
+  createPorts(blockVariables: InputBlocksInterface, temp_group: Group, height: number) {
+    let inputPorts = blockVariables.inputs;
+    let outputPorts = blockVariables.outputs;
+    let errorPorts = blockVariables.output_errors;
+    let max_ports = errorPorts + outputPorts > inputPorts ? errorPorts + outputPorts : inputPorts;
+    let delayInput = height / (inputPorts + 1);
+    let delayOutput = height / ((outputPorts + errorPorts) + 1);
+    for (let i = 1; i <= max_ports; i++) {
+      if (inputPorts > 0) {
+        temp_group.add(ShapeCreator.createPortCircle(0, delayInput * i, blockVariables.color, true)); // add input
+        inputPorts--;
+      }
+      if (outputPorts > 0) {
+        temp_group.add(ShapeCreator.createPortCircle(sizes.block_width, delayOutput * i, blockVariables.color, false)); // add output
+        outputPorts--;
+      } else if (errorPorts > 0) {
+        temp_group.add(ShapeCreator.createErrorOutput(delayOutput * i)); // add error
+        errorPorts--;
+      }
     }
+  }
 
-    switcherAnimation ( event, colorActive, colorDisabled, blockColor ) {
-        let parent           = event.target.parent;
-        let elemSwitchRect   = parent.findOne ( 'Rect' );
-        let elemSwitchText   = parent.findOne ( 'Text' );
-        let elemSwitchCircle = parent.findOne ( 'Circle' );
-        let highParent       = event.target.parent.parent;
-        let highSwitchRect   = highParent.findOne ( 'Rect' );
-        let highSwitchCircle = highParent.findOne ( 'Circle' );
-        if ( parent.attrs.switched ) {
-            elemSwitchRect.attrs.fill = elemSwitchRect.attrs.stroke = highSwitchCircle.attrs.fill = highSwitchRect.attrs.stroke = colorDisabled;
-            elemSwitchText.attrs.fill = colorActive;
-            elemSwitchText.offsetX ( 17 );
-            elemSwitchText.text ( 'OFF' );
-            elemSwitchCircle.offsetX ( -27 );
-            elemSwitchCircle.attrs.fill = colorActive;
-            console.log ( false );
-            parent.attrs.switched = !parent.attrs.switched;
-        } else {
-            elemSwitchRect.attrs.fill   = colorActive;
-            elemSwitchRect.attrs.stroke = highSwitchRect.attrs.stroke = highSwitchCircle.attrs.fill = blockColor;
-            elemSwitchText.attrs.fill   = colorDisabled;
-            elemSwitchText.offsetX ( 0 );
-            elemSwitchText.text ( 'ON' );
-            elemSwitchCircle.offsetX ( 0 );
-            elemSwitchCircle.attrs.fill = 'white';
-            console.log ( true );
-            parent.attrs.switched = !parent.attrs.switched;
-        }
+  switcherAnimation(event, colorActive, colorDisabled, blockColor) {
+    let parent = event.target.parent;
+    let elemSwitchRect = parent.findOne('Rect');
+    let elemSwitchText = parent.findOne('Text');
+    let elemSwitchCircle = parent.findOne('Circle');
+    let highParent = event.target.parent.parent;
+    let highSwitchRect = highParent.findOne('Rect');
+    let highSwitchCircle = highParent.findOne('Circle');
+    if (parent.attrs.switched) {
+      elemSwitchRect.attrs.fill = elemSwitchRect.attrs.stroke = highSwitchCircle.attrs.fill = highSwitchRect.attrs.stroke = colorDisabled;
+      elemSwitchText.attrs.fill = colorActive;
+      elemSwitchText.offsetX(17);
+      elemSwitchText.text('OFF');
+      elemSwitchCircle.offsetX(-27);
+      elemSwitchCircle.attrs.fill = colorActive;
+      console.log(false);
+      parent.attrs.switched = !parent.attrs.switched;
+    } else {
+      elemSwitchRect.attrs.fill = colorActive;
+      elemSwitchRect.attrs.stroke = highSwitchRect.attrs.stroke = highSwitchCircle.attrs.fill = blockColor;
+      elemSwitchText.attrs.fill = colorDisabled;
+      elemSwitchText.offsetX(0);
+      elemSwitchText.text('ON');
+      elemSwitchCircle.offsetX(0);
+      elemSwitchCircle.attrs.fill = 'white';
+      console.log(true);
+      parent.attrs.switched = !parent.attrs.switched;
     }
+  }
 
-    clickButtonAnimation ( event ) {
-        let parent          = event.target.parent;
-        let elemRect        = parent.findOne ( 'Rect' );
-        let elemText        = parent.findOne ( 'Text' );
-        elemRect.attrs.fill = 'steelblue';
-        elemText.attrs.fill = 'white';
-        console.warn ( 'It was click on push' );
-        setTimeout ( () => {
-            elemRect.attrs.fill = 'white';
-            elemText.attrs.fill = 'steelblue';
-            parent.attrs.switch = !parent.attrs.switch;
-        }, 50 );
+  clickButtonAnimation(event) {
+    let parent = event.target.parent;
+    let elemRect = parent.findOne('Rect');
+    let elemText = parent.findOne('Text');
+    elemRect.attrs.fill = 'steelblue';
+    elemText.attrs.fill = 'white';
+    console.warn('It was click on push');
+    setTimeout(() => {
+      elemRect.attrs.fill = 'white';
+      elemText.attrs.fill = 'steelblue';
+      parent.attrs.switch = !parent.attrs.switch;
+    }, 50);
+  }
+
+  haveIntersection(r1, r2) {
+    return !(
+      r2.x > r1.x + r1.width ||
+      r2.x + r2.width < r1.x ||
+      r2.y > r1.y + r1.height ||
+      r2.y + r2.height < r1.y
+    );
+  }
+
+
+  checkIfCollision(children: Collection<any>, current_group: IGroupCustom) {
+
+
+    children.each((elem) => {
+      if (elem.type === GroupTypes.Block) {
+        let a = this.haveIntersection(current_group.attrs, elem.attrs);
+        console.log(a);
+      }
+    });
+
+
+    // (current_group as any).getIntersection(current_group.getPosition());
+    // (current_group as any).getIntersection({x: current_group.getPosition().x + current_group.attrs.width, y: current_group.getPosition().y + current_group.attrs.height });
+    // (current_group as any).getIntersection({x: current_group.getPosition().x + current_group.attrs.width, y: current_group.getPosition().y + current_group.attrs.height });
+
+  }
+
+
+  // TODO create universal block creator using data from JSON with properties for block
+  createDefaultGroup(mainLayer: Layer, activeWrapperBlock, currentActiveGroup: Group, blockName) {
+    let newBlockVariables = this.blocksArr.find(block => block.name === blockName);
+    let temp_group = new Konva.Group({
+      draggable: true,
+      type: GroupTypes.Block
+    }) as IGroupCustom;
+    // mouseInsideRectangle is flag set true when mouse inside rectangle
+    // and will changes when mouse leave rectangle
+    let mouseInsideRectangle: boolean;
+    let height;
+    if ((newBlockVariables.outputs + newBlockVariables.output_errors) > 2 || newBlockVariables.inputs > 2) {
+      let max_ports = (newBlockVariables.outputs + newBlockVariables.output_errors) > newBlockVariables.inputs ?
+        (newBlockVariables.outputs + newBlockVariables.output_errors) : newBlockVariables.inputs;
+      height = sizes.block_height + (max_ports - 1) * 30;
+    } else {
+      height = sizes.block_height;
     }
-
-    // TODO create universal block creator using data from JSON with properties for block
-    createDefaultGroup ( mainLayer: Layer, activeWrapperBlock, currentActiveGroup: Group, blockName ) {
-        let newBlockVariables = this.blocksArr.find ( block => block.name === blockName );
-        let temp_group        = new Konva.Group ( {
-            draggable: true,
-        } ) as IGroupCustom;
-        // mouseInsideRectangle is flag set true when mouse inside rectangle
-        // and will changes when mouse leave rectangle
-        let mouseInsideRectangle: boolean;
-        let height;
-        if ( (newBlockVariables.outputs + newBlockVariables.output_errors) > 2 || newBlockVariables.inputs > 2 ) {
-            let max_ports = (newBlockVariables.outputs + newBlockVariables.output_errors) > newBlockVariables.inputs ?
-                (newBlockVariables.outputs + newBlockVariables.output_errors) : newBlockVariables.inputs;
-            height        = sizes.block_height + (max_ports - 1) * 30;
-        } else {
-            height = sizes.block_height;
-        }
-        temp_group.add ( ShapeCreator.createShapeName ( newBlockVariables.label, newBlockVariables.color ) );
-        temp_group.add ( ShapeCreator.createRect ( newBlockVariables.color, height ).on ( 'mouseenter', ( event ) => {
-            mouseInsideRectangle = true;
-            onChangeHiddenElement ( temp_group );
-        } ) );
-        this.createPorts ( newBlockVariables, temp_group, height );
-        temp_group.add ( ShapeCreator.iconGroupCreator ( SwitcherSizes.margin_left, (height - SwitcherSizes.iconsFontSize) / 2,
-            newBlockVariables.setting_icons ).hide () );
-        temp_group.add ( ShapeCreator.createFaceImage ( (ShapesSizes.block_width - ShapesSizes.face_img_font_size - 10),
-            (height - ShapesSizes.face_img_font_size) / 2, newBlockVariables.color, newBlockVariables.setting_icons.face_image ) );
-        if ( newBlockVariables.btn_event_block.switch > -1 ) {
-            temp_group.add ( ShapeCreator.switcherGroupCreator ( (ShapesSizes.block_width - 45) / 2,
-                height - 9, 45, newBlockVariables.color, newBlockVariables.btn_event_block ) );
-            let blockSwitcher = temp_group.findOne ( elem => !!elem.attrs.switched );
-            if ( newBlockVariables.btn_event_block.switch === 1 ) {
-                blockSwitcher.on ( 'click', event => this.switcherAnimation ( event, newBlockVariables.btn_event_block.color_active,
-                    newBlockVariables.btn_event_block.color_disabled, newBlockVariables.color ) );
-            } else if ( newBlockVariables.btn_event_block.switch === 0 ) {
-                blockSwitcher.on ( 'mousedown', event => this.clickButtonAnimation ( event ) );
-            }
-        }
-        temp_group.on ( 'mouseleave', ( event ) => {
-            mouseInsideRectangle = false;
-            onChangeHiddenElement ( temp_group );
-        } );
-
-        temp_group.setAttrs ( {
-            'width' : sizes.block_width + sizes.circle_radius*2,
-            'height': height,
-        } );
-        // Take icons group from created shape and add listeners on icons
-        let icons_group = temp_group.findOne ( elem => elem.attrs.type === 'iconGroup' );
-        Array.from ( icons_group.children ).forEach ( elem => {
-            elem.on ( 'click', () => {
-                if ( !this.blocksRedactorService.checkerOnExistBlock ( elem ) ) {
-                    this.blocksRedactorService.addBlock ( elem );
-                }
-                this.fileNameDialogRef = this.dialog.open ( ModalPropComponent, { data: elem._id } );
-            } );
-        } );
-
-        // Function hide face image and show to us icons (edit, wizard, settings)
-        const onChangeHiddenElement = ( group: Group ) => {
-            let iconGroup = group.findOne ( elem => elem.attrs.type === 'iconGroup' );
-            let headImage = group.findOne ( elem => elem.attrs.type === 'headImage' );
-            if ( mouseInsideRectangle ) {
-                headImage.hide ();
-                iconGroup.show ();
-            } else {
-                headImage.show ();
-                iconGroup.hide ();
-            }
-        };
-
-        let circles_collection = this.getAllCirclesFromGroup ( temp_group );
-        circles_collection && circles_collection.each ( ( elem: ICircleCustom ) => {
-            elem.setAttr ( 'zIndex', 1000 );
-            this.setMouseDownEventForSwitchCircle ( elem, mainLayer, currentActiveGroup );
-        } );
-        this.setRegularGroupHandlers ( temp_group, mainLayer, activeWrapperBlock, currentActiveGroup );
-        return temp_group;
+    temp_group.add(ShapeCreator.createShapeName(newBlockVariables.label, newBlockVariables.color));
+    temp_group.add(ShapeCreator.createRect(newBlockVariables.color, height).on('mouseenter', (event) => {
+      mouseInsideRectangle = true;
+      onChangeHiddenElement(temp_group);
+    }));
+    this.createPorts(newBlockVariables, temp_group, height);
+    temp_group.add(ShapeCreator.iconGroupCreator(SwitcherSizes.margin_left, (height - SwitcherSizes.iconsFontSize) / 2,
+      newBlockVariables.setting_icons).hide());
+    temp_group.add(ShapeCreator.createFaceImage((ShapesSizes.block_width - ShapesSizes.face_img_font_size - 10),
+      (height - ShapesSizes.face_img_font_size) / 2, newBlockVariables.color, newBlockVariables.setting_icons.face_image));
+    if (newBlockVariables.btn_event_block.switch > -1) {
+      temp_group.add(ShapeCreator.switcherGroupCreator((ShapesSizes.block_width - 45) / 2,
+        height - 9, 45, newBlockVariables.color, newBlockVariables.btn_event_block));
+      let blockSwitcher = temp_group.findOne(elem => !!elem.attrs.switched);
+      if (newBlockVariables.btn_event_block.switch === 1) {
+        blockSwitcher.on('click', event => this.switcherAnimation(event, newBlockVariables.btn_event_block.color_active,
+          newBlockVariables.btn_event_block.color_disabled, newBlockVariables.color));
+      } else if (newBlockVariables.btn_event_block.switch === 0) {
+        blockSwitcher.on('mousedown', event => this.clickButtonAnimation(event));
+      }
     }
+    temp_group.on('mouseleave', (event) => {
+      mouseInsideRectangle = false;
+      onChangeHiddenElement(temp_group);
+    });
 
-    getAllCirclesFromGroup ( component: Group | IGroupCustom ) {
-        if ( component ) {
-            return component.find ( ( elem ) => {
-                if ( elem.className == 'Circle' ) {
-                    return elem;
-                }
-
-            } );
-
-        } else {
-            return null;
+    temp_group.setAttrs({
+      'width': sizes.block_width + sizes.circle_radius * 2,
+      'height': height,
+    });
+    // Take icons group from created shape and add listeners on icons
+    let icons_group = temp_group.findOne(elem => elem.attrs.type === 'iconGroup');
+    Array.from(icons_group.children).forEach(elem => {
+      elem.on('click', () => {
+        if (!this.blocksRedactorService.checkerOnExistBlock(elem)) {
+          this.blocksRedactorService.addBlock(elem);
         }
+        this.fileNameDialogRef = this.dialog.open(ModalPropComponent, {data: elem._id});
+      });
+    });
 
-    }
-
-    getGroupById ( id: number, component: StageComponent ) {
-        if ( component ) {
-            console.log ( '[c] current group id', id );
-            return component.getStage ().findOne ( ( elem ) => {
-
-                if ( elem._id === id ) {
-                    return elem;
-                }
-
-            } );
-
-        } else {
-            return null;
-        }
-
-    }
-
-    getPathFromGroupById ( id: number, component: StageComponent | any ) {
-        if ( component ) {
-            return component.findOne ( ( elem ) => {
-                if ( elem.className === 'Path' && elem._id === id ) {
-                    return elem;
-                }
-            } );
-        } else {
-            return null;
-        }
-    }
-
-    getLastPathFromGroup = ( component: Group ) => {
-
-        if ( component ) {
-            return component.find ( ( elem ) => {
-                if ( elem.className == 'Path' && elem.attrs.last_path ) {
-                    return elem;
-                }
-
-            } );
-
-        } else {
-            return null;
-        }
-
+    // Function hide face image and show to us icons (edit, wizard, settings)
+    const onChangeHiddenElement = (group: Group) => {
+      let iconGroup = group.findOne(elem => elem.attrs.type === 'iconGroup');
+      let headImage = group.findOne(elem => elem.attrs.type === 'headImage');
+      if (mouseInsideRectangle) {
+        headImage.hide();
+        iconGroup.show();
+      } else {
+        headImage.show();
+        iconGroup.hide();
+      }
     };
 
-    getAllPathsFromGroup = ( component: Group ) => {
-        if ( component ) {
-            return component.find ( ( elem ) => {
-                if ( elem.className == 'Path' ) {
-                    return elem;
-                }
-            } );
-        } else {
-            return null;
-        }
-    };
+    let circles_collection = this.getAllCirclesFromGroup(temp_group);
+    circles_collection && circles_collection.each((elem: ICircleCustom) => {
+      elem.setAttr('zIndex', 1000);
+      this.setMouseDownEventForSwitchCircle(elem, mainLayer, currentActiveGroup);
+    });
+    this.setRegularGroupHandlers(temp_group, mainLayer, activeWrapperBlock, currentActiveGroup);
+    return temp_group;
+  }
 
-    getRectFromGroup ( component: IGroupCustom ) {
-        if ( component ) {
-            return component.getStage ().findOne ( ( elem ) => {
-                if ( elem.className === 'Rect' ) {
-                    return elem;
-                }
-            } );
-        } else {
-            return null;
-        }
-    }
-
-    getCircleFromGroupById ( component: Group, circle_id: number ) {
-        if ( component ) {
-            return component.getStage ().findOne ( ( elem ) => {
-                if ( elem.className === 'Circle' && elem._id === circle_id ) {
-                    return elem;
-                }
-            } );
-        } else {
-            return null;
-        }
-    }
-
-    getCircleFromGroup ( component: Group ) {
-        if ( component ) {
-            return component.findOne ( ( elem ) => {
-                console.log ( '[c]', elem.className === 'Circle' );
-                if ( elem.className === 'Circle' ) {
-                    return elem;
-                }
-            } );
-        } else {
-            return null;
-        }
-    }
-
-    isGroupInGroup ( group_id: number, search_group: IGroupCustom ) {
-        if ( search_group ) {
-
-            return search_group.findOne ( ( elem ) => {
-                if ( elem._id === group_id ) {
-                    return elem;
-                }
-            } );
-        } else {
-            return null;
-        }
-    }
-
-    getAllPathsConnectedWithBlock () {
-
-    }
-
-    getPathFromGroup ( component: StageComponent | any ) {
-        if ( component ) {
-            return component.findOne ( ( elem ) => {
-                if ( elem.className === 'Path' ) {
-                    return elem;
-                }
-            } );
-        } else {
-            return null;
-        }
-    }
-
-    getAllFlowsFromLayer ( component: Layer ) {
-        if ( component ) {
-            return component.getStage ().find ( ( elem ) => {
-                if ( elem.attrs.type === GroupTypes.Flowboard ) {
-                    return elem;
-                }
-            } );
-        } else {
-            return null;
+  getAllCirclesFromGroup(component: Group | IGroupCustom) {
+    if (component) {
+      return component.find((elem) => {
+        if (elem.className == 'Circle') {
+          return elem;
         }
 
+      });
+
+    } else {
+      return null;
     }
 
-    isPathInGroup ( component: Group ) {
-        if ( component ) {
-            let temp = this.getPathFromGroup ( component );
-            return !!temp;
-        } else {
-            return false;
+  }
+
+  getGroupById(id: number, component: StageComponent) {
+    if (component) {
+      console.log('[c] current group id', id);
+      return component.getStage().findOne((elem) => {
+
+        if (elem._id === id) {
+          return elem;
         }
+
+      });
+
+    } else {
+      return null;
     }
+
+  }
+
+  getPathFromGroupById(id: number, component: StageComponent | any) {
+    if (component) {
+      return component.findOne((elem) => {
+        if (elem.className === 'Path' && elem._id === id) {
+          return elem;
+        }
+      });
+    } else {
+      return null;
+    }
+  }
+
+  getLastPathFromGroup = (component: Group) => {
+
+    if (component) {
+      return component.find((elem) => {
+        if (elem.className == 'Path' && elem.attrs.last_path) {
+          return elem;
+        }
+
+      });
+
+    } else {
+      return null;
+    }
+
+  };
+
+  getAllPathsFromGroup = (component: Group) => {
+    if (component) {
+      return component.find((elem) => {
+        if (elem.className == 'Path') {
+          return elem;
+        }
+      });
+    } else {
+      return null;
+    }
+  };
+
+  getAllBlocksFromFlowBoard(component: Layer) {
+    if (component) {
+      return component.getStage().findOne((elem) => {
+        if (elem.attrs.type === GroupTypes.Switcher) {
+          return elem;
+        }
+      });
+    } else {
+      return null;
+    }
+
+  }
+
+  getRectFromGroup(component: IGroupCustom) {
+    if (component) {
+      return component.getStage().findOne((elem) => {
+        if (elem.className === 'Rect') {
+          return elem;
+        }
+      });
+    } else {
+      return null;
+    }
+  }
+
+  getCircleFromGroupById(component: Group, circle_id: number) {
+    if (component) {
+      return component.getStage().findOne((elem) => {
+        if (elem.className === 'Circle' && elem._id === circle_id) {
+          return elem;
+        }
+      });
+    } else {
+      return null;
+    }
+  }
+
+  getCircleFromGroup(component: Group) {
+    if (component) {
+      return component.findOne((elem) => {
+        console.log('[c]', elem.className === 'Circle');
+        if (elem.className === 'Circle') {
+          return elem;
+        }
+      });
+    } else {
+      return null;
+    }
+  }
+
+  isGroupInGroup(group_id: number, search_group: IGroupCustom) {
+    if (search_group) {
+
+      return search_group.findOne((elem) => {
+        if (elem._id === group_id) {
+          return elem;
+        }
+      });
+    } else {
+      return null;
+    }
+  }
+
+  getAllPathsConnectedWithBlock() {
+
+  }
+
+  getPathFromGroup(component: StageComponent | any) {
+    if (component) {
+      return component.findOne((elem) => {
+        if (elem.className === 'Path') {
+          return elem;
+        }
+      });
+    } else {
+      return null;
+    }
+  }
+
+  getAllFlowsFromLayer(component: Layer) {
+    if (component) {
+      return component.getStage().find((elem) => {
+        if (elem.attrs.type === GroupTypes.Flowboard) {
+          return elem;
+        }
+      });
+    } else {
+      return null;
+    }
+
+  }
+
+  isPathInGroup(component: Group) {
+    if (component) {
+      let temp = this.getPathFromGroup(component);
+      return !!temp;
+    } else {
+      return false;
+    }
+  }
 }
