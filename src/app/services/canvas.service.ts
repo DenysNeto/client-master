@@ -65,7 +65,6 @@ export class CanvasService {
     },
   };
 
-  // chosedGroupOfLines:IPathCustom[] = [];
 
   activePathsArr: IPathCustom[] = [];
 
@@ -361,6 +360,7 @@ export class CanvasService {
         let line_temp: IPathCustom = ShapeCreator.createLine({
           start_circle_id: event.target._id,
           start_group_id: event.target.parent._id,
+          start_flowboard_id: event.target.parent.parent._id,
 
 
         }) as IPathCustom;
@@ -373,7 +373,7 @@ export class CanvasService {
         this.currentLineToDraw.isLineDrawable = true;
         this.currentLineToDraw.lineId = line_temp._id;
         this.currentLineToDraw.groupId = event.target.parent._id;
-
+        this.currentLineToDraw.flowboardId = event.target.parent.parent._id;
         this.currentLineToDraw.prevX = event.target.parent.attrs.x + event.target.attrs.x + 20;
         this.currentLineToDraw.prevY = event.target.parent.attrs.y + event.target.attrs.y;
 
@@ -400,12 +400,8 @@ export class CanvasService {
         event.cancelBubble = true;
       }
 
-      // let start_group = this.getGroupById(event.target.attrs.start_info.start_group_id, mainLayer.getStage());
-      // let end_group = this.getGroupById(event.target.attrs.end_info.end_group_id, mainLayer.getStage());
-      // start_group.setAttr('draggable', true);
-      // end_group.setAttr('draggable', true);
-
     });
+
 
     path.on('mouseenter', (event) => {
       console.log('[c] mouse enter path');

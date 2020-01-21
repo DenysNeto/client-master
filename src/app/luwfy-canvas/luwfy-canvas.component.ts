@@ -81,6 +81,7 @@ export class CanvasComponent implements OnInit {
   currentLineToDraw: ICurrentLineToDraw = {
     isLineDrawable: false,
     groupId: 0,
+    flowboardId: 0,
     lineId: 0,
     line: new Konva.Path({
       attached: false,
@@ -315,17 +316,6 @@ export class CanvasComponent implements OnInit {
   };
 
   handleClickEvent = (event) => {
-
-
-    // this.flowboards[0].children.each((elem) => {
-    //   if (elem.className == 'Rect') {
-    //     elem.setAttr('width', this.flowboards[0].attrs.width + 50);
-    //
-    //   }
-    //
-    //
-    // });
-    //this.flowboards[0].setAttr('width', this.flowboards[0].attrs.width + 50);
 
 
     if (this.currentLineToDraw.isLineDrawable) {
@@ -676,6 +666,11 @@ export class CanvasComponent implements OnInit {
   //todo uncomment
 
   handleMouseMove = (e) => {
+    if (!e) {
+      return 0;
+    }
+
+
     if (this.stage.getStage().getPointerPosition().x > (this.stage.getStage().width() - 20) && this.isMouseDown) {
       this.stage.getStage().width(this.stage.getStage().width() + 500);
     }
@@ -683,19 +678,20 @@ export class CanvasComponent implements OnInit {
       this.stage.getStage().height(this.stage.getStage().height() + 500);
     }
 
-    if (!e) {
-      return 0;
-    }
-
-    //this.flowboards[0].draw();
 
     if (this.currentLineToDraw.isLineDrawable) {
       const pos = this.stage.getStage().getPointerPosition();
       if (Math.abs(this.currentLineToDraw.prevMainX - pos.x) > 10 || Math.abs(this.currentLineToDraw.prevMainY - pos.y) > 10) {
 
         const pos = this.stage.getStage().getPointerPosition();
+        let current_flowboard = this.mainLayer.getStage().findOne((elem) => {
 
-        let current_group = this.mainLayer.getStage().findOne((elem) => {
+          if (elem._id === this.currentLineToDraw.flowboardId) {
+            return elem;
+          }
+
+        });
+        let current_group = current_flowboard.findOne((elem) => {
 
           if (elem._id === this.currentLineToDraw.groupId) {
             return elem;
@@ -711,10 +707,9 @@ export class CanvasComponent implements OnInit {
         });
 
         if (current_path) {
-          current_path.setAttr('data', KonvaUtil.generateLinkPath(this.currentLineToDraw.prevX - current_group.getPosition().x - 20, this.currentLineToDraw.prevY - current_group.getPosition().y, Math.ceil((pos.x - current_group.getPosition().x) / 5) * 5, Math.ceil((pos.y - current_group.getPosition().y) / 5) * 5, 1));
-          // current_path.setAttr('data', KonvaUtil.generateLinkPath(0, 0, 100, 100, 1));
+          current_path.setAttr('data', KonvaUtil.generateLinkPath(this.currentLineToDraw.prevX - current_group.getPosition().x - 20, this.currentLineToDraw.prevY - current_group.getPosition().y,
+            Math.ceil((pos.x - current_group.parent.getPosition().x - current_group.getPosition().x) / 5) * 5, Math.ceil((pos.y - current_group.parent.getPosition().y - current_group.getPosition().y) / 5) * 5, 1));
           current_path.parent.zIndex(1000);
-          //current_path.zIndex(100);
 
           //current_path.show();
           // current_path.draw();
@@ -947,7 +942,7 @@ export class CanvasComponent implements OnInit {
       y: newY,
       width: FlowboardSizes.newFlowWidth,
       height: FlowboardSizes.newFlowHeight,
-      draggable: true,
+      //draggable: true,
       type: GroupTypes.Flowboard,
     });
     this.flowboards.push(newFlow);

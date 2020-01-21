@@ -32,6 +32,7 @@ export interface ICoordinates {
 
 export interface ICurrentLineToDraw {
   isLineDrawable: boolean,
+  flowboardId:number
   lineId: number
   groupId: number,
   line: Path | IPathCustom,
@@ -73,11 +74,13 @@ export interface IGroupCustom extends Group {
 export interface IStartPointPathInfo {
   start_group_id: number,
   start_circle_id: number,
+  start_flowboard_id:number
 }
 
 export interface IEndPointPathInfo {
   end_group_id: number,
   end_circle_id: number,
+  end_flowboard_id:number
 }
 
 export interface IPathCustom extends Path {
