@@ -22,7 +22,7 @@ import {ActionType} from './undo-redo.interface';
 import {Layer} from 'konva/types/Layer';
 import {UndoRedoCanvasService} from '../services/undo-redo-canvas.service';
 import {StageComponent} from 'ng2-konva';
-import {KonvaStartSizes, MaxStageSize, ShapesSizes} from './sizes';
+import {GridSizes, KonvaStartSizes, MaxStageSize, ShapesSizes} from './sizes';
 import ShapeCreator from './ShapesCreator';
 import {FlowboardSizes} from './sizes';
 import {Stage} from 'konva/types/Stage';
@@ -1021,7 +1021,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
   // Turn off dragging when flowboard show in sub view and on dragging in main tab
   draggingOnOff(elem) {
-    elem.draggable(!elem.draggable());
+    elem.draggable(elem.draggable());
   }
 
   // Hide buttons when flowboard show in sub view and show in main tab
@@ -1046,7 +1046,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   zoomingEvent(event) {
     this.zoomInPercent = event * 100;
     this.stage.getStage().scale({x: event, y: event});
-    this.stage.getStage().width(this.activeTab.startStageSize.oldWidth * event < MaxStageSize ? this.activeTab.startStageSize.oldWidth* event : MaxStageSize);
+    this.stage.getStage().width(this.activeTab.startStageSize.oldWidth * event < MaxStageSize ? this.activeTab.startStageSize.oldWidth * event : MaxStageSize);
     this.stage.getStage().height(this.activeTab.startStageSize.oldHeight * event < MaxStageSize ? this.activeTab.startStageSize.oldHeight * event : MaxStageSize);
   }
 }
