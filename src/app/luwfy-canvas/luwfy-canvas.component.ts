@@ -22,7 +22,7 @@ import {ActionType} from './undo-redo.interface';
 import {Layer} from 'konva/types/Layer';
 import {UndoRedoCanvasService} from '../services/undo-redo-canvas.service';
 import {StageComponent} from 'ng2-konva';
-import {ShapesSizes} from './sizes';
+import {GridSizes, ShapesSizes} from './sizes';
 import ShapeCreator from './ShapesCreator';
 import {FlowboardSizes} from './sizes';
 import {Stage} from 'konva/types/Stage';
@@ -865,6 +865,16 @@ export class CanvasComponent implements OnInit {
               y: Math.abs(this.currentDraggedGroup.position().y - temp.position().y),
             });
             temp.add(this.currentDraggedGroup);
+
+            this.currentDraggedGroup.dragBoundFunc(function(pos) {
+              return {
+                x: pos.x <= this.parent.position().x + GridSizes.flowboard_cell ? this.parent.position().x + GridSizes.flowboard_cell : pos.x <= (this.parent.position().x + this.parent.attrs.width - this.attrs.width) ? pos.x : this.parent.position().x + this.parent.attrs.width - this.attrs.width,
+                y: pos.y <= this.parent.position().y + GridSizes.flowboard_cell * 2 ? this.parent.position().y + GridSizes.flowboard_cell : pos.y <= (this.parent.position().y + this.parent.attrs.height - this.attrs.height) ? pos.y : this.parent.position().y + this.parent.attrs.height - this.attrs.height - GridSizes.flowboard_cell
+              };
+            });
+
+            // .dragBoundFunc(() => this.canvasService.setDragBoundFunc(this.currentDraggedGroup.absolutePosition()));
+            // this.currentDraggedGroup.setAttr('dragBoundFunction', this.canvasService.setDragBoundFunc(this.currentDraggedGroup.absolutePosition()));
 
 
             // temp.add(this.currentDraggedGroup);

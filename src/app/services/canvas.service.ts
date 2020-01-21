@@ -261,21 +261,25 @@ export class CanvasService {
                 if (elem.className === 'Rect') {
                   elem.setAttr('stroke', elem.attrs.main_stroke);
                 }
-
               });
-
-
             });
           }
-
-
         }
-
-
       });
+      console.log('[c] pop', group);
+
+
     }
 
 
+  }
+
+  setDragBoundFunc(pos: { x: number, y: number }) {
+    console.log('[c] qwertyui', pos.x, pos.y);
+    return {
+      x: 0,
+      y: 0
+    };
   }
 
 
@@ -298,7 +302,7 @@ export class CanvasService {
       temp_changes = true;
 
 
-    } else if (current_group.parent.attrs.height - current_group.attrs.y - current_group.attrs.height < GridSizes.flowboard_cell && current_group.parent.attrs.height + GridSizes.flowboard_cell < GridSizes.flowboard_max_height) {
+    } else if (current_group.parent.attrs.height - current_group.attrs.y - current_group.attrs.height < GridSizes.flowboard_cell * 2 && current_group.parent.attrs.height + GridSizes.flowboard_cell < GridSizes.flowboard_max_height) {
       current_group.parent.children.each((elem) => {
         if (elem.className === 'Rect') {
           elem.setAttr('height', elem.attrs.height + GridSizes.flowboard_cell);
