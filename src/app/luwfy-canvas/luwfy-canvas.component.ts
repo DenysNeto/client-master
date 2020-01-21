@@ -709,7 +709,10 @@ export class CanvasComponent implements OnInit {
         if (current_path) {
           current_path.setAttr('data', KonvaUtil.generateLinkPath(this.currentLineToDraw.prevX - current_group.getPosition().x - 20, this.currentLineToDraw.prevY - current_group.getPosition().y,
             Math.ceil((pos.x - current_group.parent.getPosition().x - current_group.getPosition().x) / 5) * 5, Math.ceil((pos.y - current_group.parent.getPosition().y - current_group.getPosition().y) / 5) * 5, 1));
-          current_path.parent.zIndex(1000);
+
+
+          //current_path.parent.zIndex(1000);
+         // current_path.parent.zIndex(1000);
 
           //current_path.show();
           // current_path.draw();
