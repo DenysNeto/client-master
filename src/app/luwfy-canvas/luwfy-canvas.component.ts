@@ -711,11 +711,7 @@ export class CanvasComponent implements OnInit {
             Math.ceil((pos.x - current_group.parent.getPosition().x - current_group.getPosition().x) / 5) * 5, Math.ceil((pos.y - current_group.parent.getPosition().y - current_group.getPosition().y) / 5) * 5, 1));
 
 
-          //current_path.parent.zIndex(1000);
-         // current_path.parent.zIndex(1000);
 
-          //current_path.show();
-          // current_path.draw();
 
         }
       }

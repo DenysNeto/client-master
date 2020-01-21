@@ -151,6 +151,7 @@ const ShapeCreator = {
         stroke: 'gray',
         strokeWidth: 1,
         fill: 'red',
+        switcher_circle:true
         //type: CircleTypes.Output
       }));
   },

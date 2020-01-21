@@ -154,17 +154,15 @@ export class CanvasService {
 
     group.on('mouseup', (event) => {
 
-      console.log('[c] mouse_up');
 
       if (this.currentLineToDraw.isLineDrawable && event.target._id !== this.currentLineToDraw.groupId && event.target.parent._id !== this.currentLineToDraw.groupId && this.currentLineToDraw.groupId !== 0) {
-        let input_circle = this.getInputCircleFromGroup(event.target as Group);
+        let input_circle = this.getInputCircleFromGroup(event.target.parent as Group);
 
         let current_flowboard = this.getGroupById(this.currentLineToDraw.flowboardId, mainLayer.getStage());
 
         let current_path_group = this.getGroupById(this.currentLineToDraw.groupId, current_flowboard);
 
 
-        console.log('[c] erty', current_path_group);
         current_path_group.setAttr('draggable', 'true');
 
         let current_path = current_path_group.findOne((elem) => {
@@ -173,6 +171,7 @@ export class CanvasService {
           }
         });
 
+
         let start_circle = current_path_group.findOne((elem) => {
           if (current_path && current_path.attrs.start_info && elem._id === current_path.attrs.start_info.start_circle_id) {
             return elem;
@@ -180,21 +179,23 @@ export class CanvasService {
           }
 
         });
+
+
         let deltaX = event.target.parent.attrs.x - current_path_group.attrs.x;
         let deltaY = event.target.parent.attrs.y - current_path_group.attrs.y;
 
-        console.log('[c] rrrt', start_circle);
 
         current_path.setAttr('data', KonvaUtil.generateLinkPath(start_circle.attrs.x, start_circle.attrs.y,
           event.target.parent.attrs.x - current_path_group.attrs.x,
           event.target.parent.attrs.y - current_path_group.attrs.y + input_circle.attrs.y, this.setParamForLine(deltaX, deltaY)));
+
 
         current_path.setAttr('custom_id_output', event.target._id);
 
         current_path.setAttr('end_info', {
           end_group_id: event.target.parent._id,
           end_circle_id: input_circle._id,
-          end_flowboard_id: event.target.parent.parent
+          end_flowboard_id: event.target.parent.parent._id
         });
         current_path.setAttr('zIndex', 0);
 
@@ -218,8 +219,13 @@ export class CanvasService {
 
         let startColor = current_path.parent.parent.findOne(elem => elem._id === current_path.attrs.start_info.start_circle_id).attrs.stroke;
 
+        console.log('[c] erty 5', startColor);
+        console.log('[c] erty 5[6]', current_path.attrs.end_info.end_circle_id);
+
         let endColor = current_path.parent.parent.findOne(elem => elem._id === current_path.attrs.end_info.end_circle_id).attrs.fill;
         current_path.strokeLinearGradientColorStops([0, startColor, 1, endColor]);
+
+        console.log('[c] erty 6', endColor);
 
         if (!current_path.attrs.end_info || current_path.attrs.start_info.start_group_id === current_path.attrs.end_info.end_group_id) {
           console.log('[c] removing');
@@ -462,8 +468,8 @@ export class CanvasService {
 
   getInputCircleFromGroup(component: Group | IGroupCustom) {
     if (component) {
-      return component.getStage().findOne((elem) => {
-        if (elem.className == 'Circle' || elem.attrs.type === CircleTypes.Input) {
+      return component.findOne((elem) => {
+        if (elem.className == 'Circle' && elem.attrs.type === CircleTypes.Input && !elem.attrs.switcher_circle) {
           return elem;
         }
 
