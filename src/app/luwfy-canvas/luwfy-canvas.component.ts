@@ -989,6 +989,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     if ((showFlow.attrs.height * 1.25) > KonvaStartSizes.height) {
       this.stage.getStage().height(showFlow.attrs.height * 1.25);
     } else {
+      console.log();
       this.stage.getStage().height(KonvaStartSizes.height);
     }
 
