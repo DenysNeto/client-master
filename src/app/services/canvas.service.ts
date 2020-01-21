@@ -316,7 +316,7 @@ export class CanvasService {
       this.flowboardDimensionsChanged.next({dimension: 'width', id: current_group.parent._id});
       current_group.parent.findOne((elem) => {
         if (elem.attrs.type === ButtonsTypes.DrugPoint || elem.attrs.type === ButtonsTypes.MenuButton) {
-          elem.setAttr('x', current_group.parent.attrs.width);
+          elem.setAttr('x', current_group.parent.attrs.width + FlowboardSizes.buttonPadding);
           this.flowboardPositionChanged.next({dimension: 'width', id: elem._id});
         }
       });
@@ -350,7 +350,6 @@ export class CanvasService {
       for (let i = 1; i <= maxLines; i++) {
         if (horLines > i) {
           let temp = ShapeCreator.createLineForGrid([GridSizes.flowboard_cell * i, 0, GridSizes.flowboard_cell * i, current_group.parent.attrs.height]);
-
           current_group.parent.add(temp);
           temp.setAttr('zIndex', 0);
         }
@@ -633,7 +632,6 @@ export class CanvasService {
 
 
   getAllInputLinesFromGroup(component: Layer, group: Group | IGroupCustom): Array<IPathCustom> {
-
     let collection_ports: Array<IPathCustom> = [];
     let all_groups = component.getStage().find((elem) => {
       if (!elem.className) {
@@ -646,17 +644,14 @@ export class CanvasService {
       }
     });
     all_groups.each((elem) => {
-
       elem.getStage().find((elem) => {
         if (elem.className === 'Path' && elem.attrs.end_info && elem.attrs.end_info.end_group_id === group._id) {
           collection_ports.push(elem);
         }
       });
-
     });
     console.log('[c] ppp', collection_ports);
     return collection_ports;
-
   }
 
   getActiveBlock(mainLayer: Layer) {
@@ -745,7 +740,6 @@ export class CanvasService {
   }
 
   haveIntersection(r1, r2) {
-
     return !(
       r2.x > r1.x + r1.width ||
       r2.x + r2.width < r1.x ||
@@ -764,23 +758,16 @@ export class CanvasService {
             elem.setAttr('x', current_flowboard.attrs.x + FlowboardSizes.flowboard_padding + current_flowboard.attrs.width + ButtonSizes.plusBtn * 2);
             this.flowboardPositionChanged.next({dimension: 'width', id: elem._id});
           }
-
         } else if (filter === 'height') {
           if (elem.attrs.y < current_flowboard.attrs.y + current_flowboard.attrs.height + FlowboardSizes.flowboard_padding + ButtonSizes.plusBtn * 2 && elem.attrs.y > current_flowboard.attrs.y) {
             elem.setAttr('y', current_flowboard.attrs.y + FlowboardSizes.flowboard_padding + current_flowboard.attrs.height + ButtonSizes.plusBtn * 2);
             this.flowboardPositionChanged.next({dimension: 'height', id: elem._id});
           }
-
         }
-
-
         temp = true;
         return true;
       }
-
-
     });
-
     return temp;
   }
 
