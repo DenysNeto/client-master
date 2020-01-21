@@ -565,7 +565,8 @@ export class CanvasService {
           output_paths.each((elem) => {
 
             //start point
-            let temp_start_point_group = this.getGroupById(elem.attrs.end_info.end_group_id, mainLayer.getStage());
+            let currentFlowboard = this.getGroupById(elem.attrs.end_info.end_flowboard_id, mainLayer.getStage());
+            let temp_start_point_group = this.getGroupById(elem.attrs.end_info.end_group_id, currentFlowboard);
             let temp_end_point_circle = this.getCircleFromGroupById(event.target.getStage(), elem.attrs.start_info.start_circle_id);
 
             let temp_start_circle = this.getCircleFromGroupById(temp_start_point_group, elem.attrs.end_info.end_circle_id);
@@ -577,8 +578,8 @@ export class CanvasService {
             // this.setParamForLine ( deltaX, deltaY );
 
             elem.setAttr('data',
-              KonvaUtil.generateLinkPath(temp_start_point_group.getAbsolutePosition().x - event.target.attrs.x + temp_start_circle.attrs.x,
-                temp_start_point_group.getAbsolutePosition().y - event.target.attrs.y + temp_start_circle.attrs.y,
+              KonvaUtil.generateLinkPath(temp_start_point_group.getAbsolutePosition().x - event.target.attrs.x + temp_start_circle.attrs.x - event.target.parent.attrs.x,
+                temp_start_point_group.getAbsolutePosition().y - event.target.attrs.y + temp_start_circle.attrs.y - event.target.parent.attrs.y,
                 temp_end_point_circle.attrs.x, temp_end_point_circle.attrs.y, (-1) * this.setParamForLine(deltaX, deltaY)));
 
           });
@@ -612,8 +613,8 @@ export class CanvasService {
             console.log('[c] DELTA_INPUT_Y', deltaY);
 
             elem.setAttr('data',
-              KonvaUtil.generateLinkPath(temp_start_point_group.getAbsolutePosition().x - temp_start_point_group.attrs.x + temp_start_circle.attrs.x,
-                temp_start_point_group.getAbsolutePosition().y - temp_start_point_group.attrs.y + temp_start_circle.attrs.y,
+              KonvaUtil.generateLinkPath(temp_start_point_group.getAbsolutePosition().x - temp_start_point_group.attrs.x + temp_start_circle.attrs.x - event.target.parent.attrs.x,
+                temp_start_point_group.getAbsolutePosition().y - temp_start_point_group.attrs.y + temp_start_circle.attrs.y - event.target.parent.attrs.y,
                 event.target.attrs.x - temp_start_point_group.attrs.x, event.target.attrs.y - temp_start_point_group.attrs.y + temp_input_circle.attrs.y, this.setParamForLine(deltaX, deltaY)));
           });
 
