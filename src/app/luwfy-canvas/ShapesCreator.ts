@@ -1,12 +1,10 @@
 import Konva from 'konva';
 import {theme} from './theme';
-import {ShapesSizes, ShapesSizes as sizes} from './sizes';
+import {FlowboardSizes, ShapesSizes, ShapesSizes as sizes} from './sizes';
 import {
   BtnEventBlock, ButtonsTypes,
   CircleTypes,
   GroupTypes,
-  ICircleCustom,
-  IPathCustom,
   IRectCustom,
   IStartPointPathInfo,
   SettingIcons
@@ -47,17 +45,6 @@ const ShapeCreator = {
       fontFamily: 'FontAwesome',
       fontSize: sizes.error_icon_size,
       fill: 'red'
-    });
-  },
-
-  createCircleOutput: (y?: number, payload?: any) => {
-    return new Konva.Circle({
-      x: sizes.block_width,
-      y,
-      radius: sizes.circle_radius,
-      fill: theme.circle_background_output,
-      stroke: theme.rect_switch_stroke,
-      type: CircleTypes.Output,
     });
   },
 
@@ -204,7 +191,7 @@ const ShapeCreator = {
   },
   createDrugPoint: () => {
     return new Konva.Text({
-      x: 505,
+      x: 500 + FlowboardSizes.buttonPadding,
       y: 10,
       fontSize: 20,
       fontFamily: 'FontAwesome',
@@ -215,7 +202,7 @@ const ShapeCreator = {
   },
   createMenuButton: () => {
     return new Konva.Text({
-      x: 505,
+      x: 500 + FlowboardSizes.buttonPadding,
       y: 40,
       fontSize: 25,
       fontFamily: 'FontAwesome',

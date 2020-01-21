@@ -30,14 +30,28 @@
 
 #add_flow {
   position: fixed;
-  bottom: 50px;
-  right: 50px;
+  bottom: 40px;
+  right: 40px;
+}
+
+.zoom-buttons-group{
+  position: fixed;
+  bottom: 115px;
+  right: 37px;
+  button{
+    background-color: #3f51b5;
+    color: white;
+  }
 }
 
 .container {
-  margin: 0;
-  padding: 0;
-  width: 1780px !important;
-  height: 870px;
+  max-width: 1780px !important;
+  height: 888px;
   overflow: auto;
+}
+
+#flowTabs{
+  position: absolute;
+  width: 100%;
+  z-index: 5;
 }

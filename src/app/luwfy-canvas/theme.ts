@@ -24,7 +24,7 @@ type Theme = {
 export const theme: Theme = {
   line_color: '#999',
   // circle_background: 'white', // After change background on white
-  circle_background: 'black',
+  circle_background: 'white',
   circle_background_input: '#802A6E',
   circle_background_output: 'black',
   circle_background_default: 'white',
@@ -33,7 +33,6 @@ export const theme: Theme = {
   rect_border: 'black',
   rect_selection_border: 'blue',
   choose_group_color: 'yellow',
-  // rect_stroke: '#802a6e', // After change background on white
   rect_switch_stroke: 'white',
   rect_inject_stroke: '#4fd0d6',
   rect_debug_stroke: '#1fce43',

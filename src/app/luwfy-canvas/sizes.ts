@@ -28,10 +28,13 @@ export const SwitcherSizes = {
 export const FlowboardSizes = {
   newFlowWidth: 500,
   newFlowHeight: 500,
-  sizeBetweenFlowblock: 50
+  sizeBetweenFlowblock: 50,
+  buttonPadding: 5
 };
 
 export const KonvaStartSizes = {
   width: 1780,
   height: 870
 };
+
+export const MaxStageSize = 10000;

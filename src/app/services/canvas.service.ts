@@ -12,7 +12,7 @@ import {
   IPathCustom,
 } from '../luwfy-canvas/shapes-interface';
 import ShapeCreator from '../luwfy-canvas/ShapesCreator';
-import {GridSizes, ShapesSizes, ShapesSizes as sizes, SwitcherSizes} from '../luwfy-canvas/sizes';
+import {FlowboardSizes, GridSizes, ShapesSizes, ShapesSizes as sizes, SwitcherSizes} from '../luwfy-canvas/sizes';
 import {theme} from '../luwfy-canvas/theme';
 import KonvaUtil from '../luwfy-canvas/konva-util';
 import {Layer} from 'konva/types/Layer';
@@ -31,10 +31,6 @@ import {main} from '@angular/compiler-cli/src/main';
   providedIn: 'root',
 })
 export class CanvasService {
-    getAllFlowsFromLayer(mainLayer: any) {
-        throw new Error("Method not implemented.");
-    }
-
   currentLineToDraw: ICurrentLineToDraw = {
     isLineDrawable: false,
     groupId: 0,
@@ -295,7 +291,7 @@ export class CanvasService {
       current_group.parent.setAttr('width', current_group.parent.attrs.width + GridSizes.flowboard_cell);
       current_group.parent.findOne((elem) => {
         if (elem.attrs.type === ButtonsTypes.DrugPoint || elem.attrs.type === ButtonsTypes.MenuButton) {
-          elem.setAttr('x', current_group.parent.attrs.width);
+          elem.setAttr('x', current_group.parent.attrs.width + FlowboardSizes.buttonPadding);
         }
       });
       temp_changes = true;

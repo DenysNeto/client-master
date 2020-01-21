@@ -22,7 +22,7 @@ import {ActionType} from './undo-redo.interface';
 import {Layer} from 'konva/types/Layer';
 import {UndoRedoCanvasService} from '../services/undo-redo-canvas.service';
 import {StageComponent} from 'ng2-konva';
-import {KonvaStartSizes, ShapesSizes} from './sizes';
+import {KonvaStartSizes, MaxStageSize, ShapesSizes} from './sizes';
 import ShapeCreator from './ShapesCreator';
 import {FlowboardSizes} from './sizes';
 import {Stage} from 'konva/types/Stage';
@@ -42,8 +42,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   @ViewChild('menuTrigger', null) menuTrigger: MatMenuTrigger;
   @ViewChild('mainLayer', null) mainLayer: any = new Konva.Layer({});
 
-  private activeTab: dataInTabLayer;
-  private calledMenuButton = '';
+
   data = [];
   lines = [];
   currentId: string;
@@ -53,7 +52,13 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   flowboards: Group[] = [];
   subTabs: dataInTabLayer[] = [];
   menuOfViews: string[] = [];
-  isMouseDown: boolean;
+  zoomInPercent: number = 100;
+  // private startStageSize: any;
+  private isMouseDown: boolean;
+  private oldStageWidth: number;
+  private oldStageHeight: number;
+  private activeTab: dataInTabLayer;
+  private calledMenuButton = '';
 
 
   currentCopiedGroup: IGroupCustom = new Konva.Group({
@@ -678,10 +683,16 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
   handleMouseMove = (e) => {
     if (this.stage.getStage().getPointerPosition().x > (this.stage.getStage().width() - 20) && this.isMouseDown) {
-      this.stage.getStage().width(this.stage.getStage().width() + 500);
+      if (this.stage.getStage().width() + 500 <= MaxStageSize) {
+        this.stage.getStage().width(this.stage.getStage().width() + 500);
+        this.activeTab.startStageSize.oldWidth = this.stage.getStage().width();
+      }
     }
     if (this.stage.getStage().getPointerPosition().y > (this.stage.getStage().height() - 20) && this.isMouseDown) {
-      this.stage.getStage().height(this.stage.getStage().height() + 500);
+      if (this.stage.getStage().height() + 500 <= MaxStageSize) {
+        this.stage.getStage().height(this.stage.getStage().height() + 500);
+        this.activeTab.startStageSize.oldHeight = this.stage.getStage().height();
+      }
     }
 
     if (!e) {
@@ -816,9 +827,10 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit() {
-    this.subTabs = [{label: 'Main Project', layerData: []}, {label: 'Sub View', layerData: []}];
+    this.subTabs = [
+      {label: 'Main Project', layerData: [], startStageSize: {oldHeight: 0, oldWidth: 0}},
+      {label: 'Sub View', layerData: [], startStageSize: {oldHeight: 0, oldWidth: 0}}];
     this.activeTab = this.subTabs[0];
-
     if (this.subTabs.length > 1) {
       this.subTabs.forEach((tab, index) => {
         if (index > 0) {
@@ -849,10 +861,12 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       this.mainLayer.getStage().add(this.activeWrapperBlock.rectangle);
       // this.mainLayer.getStage().draw();
     }, 0);
-
   }
 
   ngAfterViewInit() {
+    this.activeTab.startStageSize.oldWidth = this.stage.getStage().width();
+    this.activeTab.startStageSize.oldHeight = this.stage.getStage().height();
+
     this.canvasService.dragFinished.subscribe(() => {
       let temp;
       // @ts-ignore
@@ -860,15 +874,11 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         if (!temp) {
           temp = this.checkIsGroupInFlow(flowGroup, true);
           if (temp) {
-
-
             this.currentDraggedGroup.position({
               x: Math.abs(this.currentDraggedGroup.position().x - temp.position().x),
               y: Math.abs(this.currentDraggedGroup.position().y - temp.position().y),
             });
             temp.add(this.currentDraggedGroup);
-
-
             // temp.add(this.currentDraggedGroup);
             flowGroup.children.each(elem => {
               if (elem.className === 'Rect') {
@@ -878,16 +888,11 @@ export class CanvasComponent implements OnInit, AfterViewInit {
             });
             temp = true;
             return 0;
-
           }
-
         } else {
           return;
         }
-
-
       });
-
       !temp && this.currentDraggedGroup && this.currentDraggedGroup.destroy();
     });
 
@@ -899,7 +904,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     this.mainLayer.getStage().add(this.currentActiveGroup);
     this.mainLayer.getStage().add(this.currentLineToDraw.line);
     this.mainLayer.getStage().add(this.currentCopiedGroup);
-
+    this.zoomInPercent = this.stage.getStage().scaleX() * 100;
   }
 
   addFlowToLayer() {
@@ -935,16 +940,21 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     this.activeTab = this.subTabs.find(tab => tab.label === event.tab.textLabel);
     this.mainLayer.getStage().removeChildren();
     if (this.activeTab.label === this.subTabs[0].label) {
+      this.stage.getStage().width(this.oldStageWidth);
+      this.stage.getStage().height(this.oldStageHeight);
       this.activeTab.layerData.forEach(elem => {
-        // this.convertMyFlowForView(elem); // try do without reconvert
         this.mainLayer.getStage().add(elem);
       });
+      this.zoomingEvent(1);
     } else {
       if (this.activeTab.layerData.length !== 0) {
+        this.oldStageWidth = this.stage.getStage().width();
+        this.oldStageHeight = this.stage.getStage().height();
         this.showSubView(this.activeTab.layerData[0]);
       }
     }
   }
+
 
   onFlowTabBarClick(event) {
     this.showSubView(this.activeTab.layerData[event]);
@@ -953,8 +963,18 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   showSubView(id) {
     this.mainLayer.getStage().removeChildren();
     let showFlow = this.flowboards.find(flow => flow._id === id).clone();
+    this.stage.getStage().width(KonvaStartSizes.width);
+    if ((showFlow.attrs.height * 1.25) > KonvaStartSizes.height) {
+      this.stage.getStage().height(showFlow.attrs.height * 1.25);
+    } else {
+      this.stage.getStage().height(KonvaStartSizes.height);
+    }
+
     this.convertMyFlowForView(showFlow);
     this.mainLayer.getStage().add(showFlow);
+    this.activeTab.startStageSize.oldWidth = this.stage.getStage().width();
+    this.activeTab.startStageSize.oldHeight = this.stage.getStage().height();
+    this.zoomingEvent(1);
   }
 
   convertMyFlowForView(flowboard) {
@@ -974,7 +994,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
   setPositionInView(flowboard) {
     flowboard.attrs.x = (window.screen.width - flowboard.attrs.width) / 2 - 100;
-    flowboard.attrs.y = (window.screen.height - flowboard.attrs.height) / 2 - 100;
+    flowboard.attrs.y = (window.screen.height - flowboard.attrs.height) / 2 - 50;
   }
 
   // Turn off dragging when flowboard show in sub view and on dragging in main tab
@@ -983,6 +1003,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   }
 
   // Hide buttons when flowboard show in sub view and show in main tab
+
   showOrHide(elem) {
     if (elem.isVisible()) {
       elem.hide();
@@ -1000,7 +1021,12 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     }
   }
 
-
+  zoomingEvent(event) {
+    this.zoomInPercent = event * 100;
+    this.stage.getStage().scale({x: event, y: event});
+    this.stage.getStage().width(this.activeTab.startStageSize.oldWidth * event < MaxStageSize ? this.activeTab.startStageSize.oldWidth* event : MaxStageSize);
+    this.stage.getStage().height(this.activeTab.startStageSize.oldHeight * event < MaxStageSize ? this.activeTab.startStageSize.oldHeight * event : MaxStageSize);
+  }
 }
 
 
