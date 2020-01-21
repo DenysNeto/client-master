@@ -155,6 +155,7 @@ const ShapeCreator = {
       type: 'headImage'
     });
   },
+
   createFlowboard: (x, y, width, height) => {
     return new Konva.Group({
       x,
@@ -165,6 +166,7 @@ const ShapeCreator = {
       draggable: true
     });
   },
+
   createLineForGrid: (points) => {
     return new Konva.Line({
       points,
@@ -172,6 +174,7 @@ const ShapeCreator = {
       strokeWidth: 1,
     });
   },
+
   createShadowForGrid: (width, height) => {
     return new Konva.Rect({
       width,
@@ -183,6 +186,7 @@ const ShapeCreator = {
       shadowBlur: 4
     });
   },
+
   createNameOfFlowboard: (num) => {
     return new Konva.Text({
       text: `new flow${num}`,
@@ -190,6 +194,7 @@ const ShapeCreator = {
       color: 'black'
     });
   },
+
   createDrugPoint: () => {
     return new Konva.Text({
       x: 500 + FlowboardSizes.buttonPadding,
@@ -201,6 +206,7 @@ const ShapeCreator = {
       type: ButtonsTypes.DrugPoint
     });
   },
+
   createMenuButton: () => {
     return new Konva.Text({
       x: 500 + FlowboardSizes.buttonPadding,

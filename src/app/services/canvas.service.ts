@@ -815,7 +815,9 @@ export class CanvasService {
     let newBlockVariables = this.blocksArr.find(block => block.name === blockName);
     let temp_group = new Konva.Group({
       draggable: true,
-      type: GroupTypes.Block
+      type: GroupTypes.Block,
+      name: newBlockVariables.name,
+      date: Date.now()
     }) as IGroupCustom;
     // mouseInsideRectangle is flag set true when mouse inside rectangle
     // and will changes when mouse leave rectangle

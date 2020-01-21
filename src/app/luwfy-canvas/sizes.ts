@@ -18,7 +18,6 @@ export const GridSizes = {
   flowboard_cell: 20,
   flowboard_max_width: 1000,
   flowboard_max_height: 800,
-
 };
 
 export const ButtonSizes = {
@@ -40,8 +39,8 @@ export const FlowboardSizes = {
 };
 
 export const KonvaStartSizes = {
-  width: 1780,
-  height: 870
+  width: 1800,
+  height: 900
 };
 
 export const MaxStageSize = 10000;

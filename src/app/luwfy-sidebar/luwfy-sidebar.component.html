@@ -1,0 +1,10 @@
+<div class="sidebar_container">
+  <mat-tab-group mat-stretch-tabs class="example-stretched-tabs mat-elevation-z1">
+    <mat-tab label="Debug"></mat-tab>
+  </mat-tab-group>
+  <button (click)="getBlocks()">Get blocks</button>
+  <div class="info_block" *ngFor="let block of blocksArr">
+    <p>{{block.attrs.date | date: 'medium'}}</p>
+    <p>ID: {{block._id}}</p>
+  </div>
+</div>

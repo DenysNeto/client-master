@@ -26,6 +26,7 @@ import {GridSizes, KonvaStartSizes, MaxStageSize, ShapesSizes} from './sizes';
 import ShapeCreator from './ShapesCreator';
 import {FlowboardSizes} from './sizes';
 import {Stage} from 'konva/types/Stage';
+import {BlocksService} from '../services/blocks.service';
 
 @Component({
   selector: 'luwfy-canvas',
@@ -35,7 +36,8 @@ import {Stage} from 'konva/types/Stage';
 
 export class CanvasComponent implements OnInit, AfterViewInit {
   constructor(private RegistryService: RegistryService, private canvasService: CanvasService, private dialog: MatDialog,
-              private blocksRedactorService: BlocksRedactorService, private undoRedoService: UndoRedoService, private tempService: UndoRedoCanvasService) {
+              private blocksRedactorService: BlocksRedactorService, private undoRedoService: UndoRedoService,
+              private tempService: UndoRedoCanvasService, private blocksService: BlocksService) {
   }
 
   @ViewChild('stage', null) stage: Stage;
@@ -49,7 +51,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   idChangedTrigger: boolean = false;
   KonvaUtil = KonvaUtil;
   konvaSize = {width: KonvaStartSizes.width, height: KonvaStartSizes.height};
-  flowboards: Group[] = [];
   subTabs: dataInTabLayer[] = [];
   menuOfViews: string[] = [];
   zoomInPercent: number = 100;
@@ -370,7 +371,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       //
       // });
 
-      this.flowboards.forEach((elem) => {
+      this.blocksService.getFlowboards().forEach((elem) => {
         if (this.checkIsGroupInFlow(elem)) {
           temp = this.checkIsGroupInFlow(elem, true);
           return 0;
@@ -801,19 +802,14 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       this.calledMenuButton = event.target.parent;
     });
     flow.add(ShapeCreator.createShadowForGrid(flow.attrs.width, flow.attrs.height), ShapeCreator.createDrugPoint(),
-      ShapeCreator.createNameOfFlowboard(this.flowboards.length), menuButton);
+      ShapeCreator.createNameOfFlowboard(this.blocksService.getFlowboards().length), menuButton);
   };
-
-  onClickMenu() {
-    //  this.menu.nativeElement.style.display = 'none';
-  }
 
 
   checkIsGroupInFlow(flowGroup, returnFlow?: boolean) {
     if (flowGroup && flowGroup.attrs.x < this.currentDraggedGroup.attrs.x - ShapesSizes.circle_radius && flowGroup.attrs.x + flowGroup.attrs.width > this.currentDraggedGroup.attrs.x + this.currentDraggedGroup.width() - ShapesSizes.circle_radius
       &&
       flowGroup.attrs.y < this.currentDraggedGroup.attrs.y && flowGroup.attrs.y + flowGroup.attrs.height > this.currentDraggedGroup.attrs.y + this.currentDraggedGroup.height()) {
-      console.log('[c] each2[5]', flowGroup);
       return returnFlow ? flowGroup : true;
     }
   }
@@ -900,26 +896,25 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       !temp && this.currentDraggedGroup && this.currentDraggedGroup.destroy();
     });
     this.canvasService.flowboardDimensionsChanged.subscribe((value) => {
-      let temp_elem = this.flowboards.find((elem) => {
+      let temp_elem = this.blocksService.getFlowboards().find((elem) => {
         if (elem._id === value.id) {
           return elem;
         }
       });
-      console.log('[c] temp_elem', temp_elem);
-      this.canvasService.checkIfCollisionBetweenFlowBoards(temp_elem, this.flowboards, value.dimension);
+      this.canvasService.checkIfCollisionBetweenFlowBoards(temp_elem, this.blocksService.getFlowboards(), value.dimension);
     });
 
     this.canvasService.flowboardPositionChanged.subscribe((value) => {
-      let temp_elem = this.flowboards.find((elem) => {
+      let temp_elem = this.blocksService.getFlowboards().find((elem) => {
         if (elem._id === value.id) {
           return elem;
         }
       });
 
-      temp_elem && this.canvasService.checkIfCollisionBetweenFlowBoards(temp_elem, this.flowboards, value.dimension);
+      temp_elem && this.canvasService.checkIfCollisionBetweenFlowBoards(temp_elem, this.blocksService.getFlowboards(), value.dimension);
     });
 
-    this.flowboards.forEach(flow => {
+    this.blocksService.getFlowboards().forEach(flow => {
       this.createGrid(flow);
       this.mainLayer.getStage().add(flow);
     });
@@ -931,10 +926,10 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
   addFlowToLayer() {
     let newX, newY;
-    if (this.flowboards.length === 0) {
+    if (this.blocksService.getFlowboards().length === 0) {
       newX = newY = FlowboardSizes.sizeBetweenFlowblock;
     } else {
-      let lastFlowboard = this.flowboards[this.flowboards.length - 1];
+      let lastFlowboard = this.blocksService.getFlowboards()[this.blocksService.getFlowboards().length - 1]; // todo VIKTOR - here maybe problem with flowboard
       if (lastFlowboard.attrs.x + lastFlowboard.attrs.width + FlowboardSizes.newFlowWidth < this.stage.getStage().width()) {
         newX = lastFlowboard.attrs.x + lastFlowboard.attrs.width + FlowboardSizes.sizeBetweenFlowblock;
         newY = lastFlowboard.attrs.y;
@@ -951,7 +946,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       //draggable: true,
       type: GroupTypes.Flowboard,
     });
-    this.flowboards.push(newFlow);
+    this.blocksService.addFlowboard(newFlow);
     this.createGrid(newFlow);
     this.mainLayer.getStage().add(newFlow);
     this.subTabs[0].layerData = [];
@@ -984,7 +979,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
   showSubView(id) {
     this.mainLayer.getStage().removeChildren();
-    let showFlow = this.flowboards.find(flow => flow._id === id).clone();
+    let showFlow = this.blocksService.getFlowboards().find(flow => flow._id === id).clone();
     this.stage.getStage().width(KonvaStartSizes.width);
     if ((showFlow.attrs.height * 1.25) > KonvaStartSizes.height) {
       this.stage.getStage().height(showFlow.attrs.height * 1.25);
