@@ -455,7 +455,7 @@ export class CanvasComponent implements OnInit {
 
           this.mainLayer.getStage().children[i].setAttr('draggable', false);
           temp_arr.push(this.mainLayer.getStage().children[i]);
-
+          console.log('[c]');
           this.mainLayer.getStage().children[i].moveTo(this.currentActiveGroup);
 
           i--;
@@ -709,8 +709,6 @@ export class CanvasComponent implements OnInit {
         if (current_path) {
           current_path.setAttr('data', KonvaUtil.generateLinkPath(this.currentLineToDraw.prevX - current_group.getPosition().x - 20, this.currentLineToDraw.prevY - current_group.getPosition().y,
             Math.ceil((pos.x - current_group.parent.getPosition().x - current_group.getPosition().x) / 5) * 5, Math.ceil((pos.y - current_group.parent.getPosition().y - current_group.getPosition().y) / 5) * 5, 1));
-
-
 
 
         }
