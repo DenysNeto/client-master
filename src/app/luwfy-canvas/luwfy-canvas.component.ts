@@ -49,7 +49,7 @@ export class CanvasComponent implements OnInit {
   currentId: string;
   idChangedTrigger: boolean = false;
   KonvaUtil = KonvaUtil;
-  konvaSize = {width: 1780, height: 870};
+  konvaSize = {width: 2000, height: 2000};
   flowboards: Group[] = [];
   subTabs: dataInTabLayer[] = [];
   menuOfViews: string[] = [];
@@ -898,7 +898,25 @@ export class CanvasComponent implements OnInit {
 
       !temp && this.currentDraggedGroup && this.currentDraggedGroup.destroy();
     });
+    this.canvasService.flowboardDimensionsChanged.subscribe((value) => {
+      let temp_elem = this.flowboards.find((elem) => {
+        if (elem._id === value.id) {
+          return elem;
+        }
+      });
+      console.log('[c] temp_elem', temp_elem);
+      this.canvasService.checkIfCollisionBetweenFlowBoards(temp_elem, this.flowboards, value.dimension);
+    });
 
+    this.canvasService.flowboardPositionChanged.subscribe((value) => {
+      let temp_elem = this.flowboards.find((elem) => {
+        if (elem._id === value.id) {
+          return elem;
+        }
+      });
+
+      temp_elem && this.canvasService.checkIfCollisionBetweenFlowBoards(temp_elem, this.flowboards, value.dimension);
+    });
 
     this.flowboards.forEach(flow => {
       this.createGrid(flow);

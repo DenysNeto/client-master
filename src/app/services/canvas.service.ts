@@ -12,7 +12,7 @@ import {
   IPathCustom,
 } from '../luwfy-canvas/shapes-interface';
 import ShapeCreator from '../luwfy-canvas/ShapesCreator';
-import {GridSizes, ShapesSizes, ShapesSizes as sizes, SwitcherSizes} from '../luwfy-canvas/sizes';
+import {ButtonSizes, FlowboardSizes, GridSizes, ShapesSizes, ShapesSizes as sizes, SwitcherSizes} from '../luwfy-canvas/sizes';
 import {theme} from '../luwfy-canvas/theme';
 import KonvaUtil from '../luwfy-canvas/konva-util';
 import {Layer} from 'konva/types/Layer';
@@ -88,7 +88,14 @@ export class CanvasService {
     }),
 
   };
-
+  flowboardDimensionsChanged: BehaviorSubject<{ dimension: 'width' | 'height' | '', id: number }> = new BehaviorSubject<{ dimension: 'width' | 'height' | '', id: number }>({
+    dimension: '',
+    id: 0
+  });
+  flowboardPositionChanged: BehaviorSubject<{ dimension: 'width' | 'height' | '', id: number }> = new BehaviorSubject<{ dimension: 'width' | 'height' | '', id: number }>({
+    dimension: '',
+    id: 0
+  });
   dragFinished: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(true);
   lineToDraw: Subject<ICurrentLineToDraw> = new BehaviorSubject<ICurrentLineToDraw>(this.currentLineToDraw);
   activeBlock: Subject<IActiveWrapperBlock> = new BehaviorSubject<IActiveWrapperBlock>(this.activeWrapperBlock);
@@ -253,9 +260,8 @@ export class CanvasService {
           event.target.position(event.target.attrs.drag_start_position);
 
           let temp_blocks = this.getAllBlocksFromFlowBoard(event.target.parent as IGroupCustom, event.target._id);
-          console.log('[c] dddd', temp_blocks);
+
           if (temp_blocks) {
-            console.log('zaqxsw 2');
             temp_blocks.each((elem) => {
               elem.children.each((elem) => {
                 if (elem.className === 'Rect') {
@@ -266,7 +272,6 @@ export class CanvasService {
           }
         }
       });
-      console.log('[c] pop', group);
 
 
     }
@@ -275,7 +280,6 @@ export class CanvasService {
   }
 
   setDragBoundFunc(pos: { x: number, y: number }) {
-    console.log('[c] qwertyui', pos.x, pos.y);
     return {
       x: 0,
       y: 0
@@ -285,7 +289,6 @@ export class CanvasService {
 
   checkTheGroupNearBorder(current_group: IGroupCustom) {
     let temp_changes: boolean = false;
-    console.log('[c] inside_1', current_group.parent.attrs.width - current_group.attrs.x - current_group.attrs.width);
     if (current_group.parent.attrs.width - current_group.attrs.x - current_group.attrs.width < GridSizes.flowboard_cell && current_group.parent.attrs.width + GridSizes.flowboard_cell < GridSizes.flowboard_max_width) {
       current_group.parent.children.each((elem) => {
         if (elem.className === 'Rect') {
@@ -294,13 +297,15 @@ export class CanvasService {
         }
       });
       current_group.parent.setAttr('width', current_group.parent.attrs.width + GridSizes.flowboard_cell);
+      console.log('[c] err', current_group.parent);
+      this.flowboardDimensionsChanged.next({dimension: 'width', id: current_group.parent._id});
       current_group.parent.findOne((elem) => {
         if (elem.attrs.type === ButtonsTypes.DrugPoint || elem.attrs.type === ButtonsTypes.MenuButton) {
           elem.setAttr('x', current_group.parent.attrs.width);
+          this.flowboardPositionChanged.next({dimension: 'width', id: elem._id});
         }
       });
       temp_changes = true;
-
 
     } else if (current_group.parent.attrs.height - current_group.attrs.y - current_group.attrs.height < GridSizes.flowboard_cell * 2 && current_group.parent.attrs.height + GridSizes.flowboard_cell < GridSizes.flowboard_max_height) {
       current_group.parent.children.each((elem) => {
@@ -310,9 +315,9 @@ export class CanvasService {
         }
       });
       current_group.parent.setAttr('height', current_group.parent.attrs.height + GridSizes.flowboard_cell);
+      this.flowboardDimensionsChanged.next({dimension: 'height', id: current_group.parent._id});
       temp_changes = true;
     }
-
 
     if (temp_changes) {
       current_group.find((elem) => {
@@ -323,7 +328,6 @@ export class CanvasService {
       }).each((elem) => {
         elem.remove();
       });
-
 
       let vertLines = current_group.parent.attrs.height / GridSizes.flowboard_cell;
       let horLines = current_group.parent.attrs.width / GridSizes.flowboard_cell;
@@ -346,6 +350,7 @@ export class CanvasService {
 
 
   }
+
 
   setMouseDownEventForSwitchCircle(circle: ICircleCustom, mainLayer: Layer, currentActiveGroup: Group) {
 
@@ -613,38 +618,6 @@ export class CanvasService {
 
   }
 
-  // createOutputPorts ( number_of_ports: number, temp_group: Group, height: number ) {
-  //
-  //     if ( number_of_ports === 1 ) {
-  //         temp_group.add ( ShapeCreator.createCircleOutput ( height / 2 ) );
-  //
-  //     } else if ( number_of_ports === 2 ) {
-  //         temp_group.add ( ShapeCreator.createCircleOutput ( 25 ) );
-  //         temp_group.add ( ShapeCreator.createCircleOutput ( 55 ) );
-  //     } else if ( number_of_ports >= 3 ) {
-  //         let a           = (number_of_ports - 1);
-  //         let margin_temp = (height - a * 30) / 2 - 10;
-  //         let y;
-  //         for ( let i = 0; i < number_of_ports; ) {
-  //             i++;
-  //             if ( i == 1 ) {
-  //                 y = margin_temp + 10;
-  //                 console.log ( '[c] ddd ', y );
-  //                 let temp_circle = ShapeCreator.createCircleOutput ( y );
-  //                 temp_group.add ( temp_circle );
-  //                 temp_circle.zIndex ( 1 );
-  //
-  //             } else {
-  //                 y               = margin_temp + i * (20) + (i - 2) * 10;
-  //                 let temp_circle = ShapeCreator.createCircleOutput ( y );
-  //                 temp_group.add ( temp_circle );
-  //                 temp_circle.zIndex ( 1 );
-  //             }
-  //
-  //         }
-  //     }
-  //
-  // };
 
   getAllInputLinesFromGroup(component: Layer, group: Group | IGroupCustom): Array<IPathCustom> {
 
@@ -759,12 +732,43 @@ export class CanvasService {
   }
 
   haveIntersection(r1, r2) {
+
     return !(
       r2.x > r1.x + r1.width ||
       r2.x + r2.width < r1.x ||
       r2.y > r1.y + r1.height ||
       r2.y + r2.height < r1.y
     );
+  }
+
+  checkIfCollisionBetweenFlowBoards(current_flowboard, flowBoards_arr, filter: 'width' | 'height' | '') {
+    let temp;
+    flowBoards_arr.forEach((elem) => {
+      if (this.haveIntersection(current_flowboard.attrs, elem.attrs)) {
+        console.log('interception', elem.attrs.x);
+        if (filter === 'width') {
+          if (elem.attrs.x < current_flowboard.attrs.x + FlowboardSizes.flowboard_padding + current_flowboard.attrs.width + ButtonSizes.plusBtn * 2 && elem.attrs.x > current_flowboard.attrs.x) {
+            elem.setAttr('x', current_flowboard.attrs.x + FlowboardSizes.flowboard_padding + current_flowboard.attrs.width + ButtonSizes.plusBtn * 2);
+            this.flowboardPositionChanged.next({dimension: 'width', id: elem._id});
+          }
+
+        } else if (filter === 'height') {
+          if (elem.attrs.y < current_flowboard.attrs.y + current_flowboard.attrs.height + FlowboardSizes.flowboard_padding + ButtonSizes.plusBtn * 2 && elem.attrs.y > current_flowboard.attrs.y) {
+            elem.setAttr('y', current_flowboard.attrs.y + FlowboardSizes.flowboard_padding + current_flowboard.attrs.height + ButtonSizes.plusBtn * 2);
+            this.flowboardPositionChanged.next({dimension: 'height', id: elem._id});
+          }
+
+        }
+
+
+        temp = true;
+        return true;
+      }
+
+
+    });
+
+    return temp;
   }
 
 
