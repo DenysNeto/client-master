@@ -136,5 +136,9 @@ export interface InputBlocksInterface {
 
 export interface dataInTabLayer {
   label: string,
-  layerData: any
+  layerData: any,
+  startStageSize: {
+    oldWidth: any,
+    oldHeight: any
+  }
 }

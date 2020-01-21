@@ -12,7 +12,7 @@ import {
   IPathCustom,
 } from '../luwfy-canvas/shapes-interface';
 import ShapeCreator from '../luwfy-canvas/ShapesCreator';
-import {ButtonSizes, FlowboardSizes, GridSizes, ShapesSizes, ShapesSizes as sizes, SwitcherSizes} from '../luwfy-canvas/sizes';
+import {FlowboardSizes, GridSizes, ShapesSizes, ShapesSizes as sizes, SwitcherSizes} from '../luwfy-canvas/sizes';
 import {theme} from '../luwfy-canvas/theme';
 import KonvaUtil from '../luwfy-canvas/konva-util';
 import {Layer} from 'konva/types/Layer';
@@ -31,7 +31,6 @@ import {main} from '@angular/compiler-cli/src/main';
   providedIn: 'root',
 })
 export class CanvasService {
-
   currentLineToDraw: ICurrentLineToDraw = {
     isLineDrawable: false,
     groupId: 0,

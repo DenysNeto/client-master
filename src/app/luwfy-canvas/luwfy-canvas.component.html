@@ -12,6 +12,7 @@
 
   <!--  Tabs bar where we can switch between our chosen flowboards -->
   <mat-tab-group
+    id="flowTabs"
     backgroundColor="primary"
     color="warn"
     *ngIf="activeTab === subTabs[1]"
@@ -28,21 +29,34 @@
               (mouseup)="handleMouseUp($event)"
               (mousedown)="handleMouseDown($event)"
               (mousemove)="handleMouseMove($event)">
-
       <!--    Layer where created our block schemas-->
       <ko-layer #mainLayer>
       </ko-layer>
     </ko-stage>
   </div>
 
+  <!--  Zoom buttons with indicator-->
+  <div class="zoom-buttons-group">
+    <button mat-button [matMenuTriggerFor]="aboveMenu">{{zoomInPercent}}%</button>
+    <mat-menu #aboveMenu="matMenu" yPosition="above">
+      <button mat-menu-item (click)="zoomingEvent(0.25)">25%</button>
+      <button mat-menu-item (click)="zoomingEvent(0.5)">50%</button>
+      <button mat-menu-item (click)="zoomingEvent(0.75)">75%</button>
+      <button mat-menu-item (click)="zoomingEvent(1)">100%</button>
+      <button mat-menu-item (click)="zoomingEvent(1.25)">125%</button>
+      <button mat-menu-item (click)="zoomingEvent(1.5)">150%</button>
+      <button mat-menu-item (click)="zoomingEvent(1.75)">175%</button>
+      <button mat-menu-item (click)="zoomingEvent(2)">200%</button>
+    </mat-menu>
+  </div>
+
   <!--  Button add new flowboard-->
   <button
     id="add_flow"
-    mat-mini-fab
+    mat-fab
     color="primary"
     (click)="addFlowToLayer()"
     *ngIf="activeTab === subTabs[0]"
-  >
-    <span style="font-size:xx-large">+</span>
+  ><span style="font-size:xx-large">+</span>
   </button>
 </div>
