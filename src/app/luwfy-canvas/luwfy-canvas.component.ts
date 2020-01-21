@@ -50,10 +50,10 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   KonvaUtil = KonvaUtil;
   konvaSize = {width: KonvaStartSizes.width, height: KonvaStartSizes.height};
   flowboards: Group[] = [];
+  interval: any;
   subTabs: dataInTabLayer[] = [];
   menuOfViews: string[] = [];
   zoomInPercent: number = 100;
-  // private startStageSize: any;
   private isMouseDown: boolean;
   private oldStageWidth: number;
   private oldStageHeight: number;
@@ -235,6 +235,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     return ({x1: r1x, y1: r1y, x2: r2x, y2: r2y});
   };
 
+
   updateDragWrapper(posIn: { x: number, y: number }) {
     this.activeWrapperBlock.now_position = {x: posIn.x, y: posIn.y};
     let posRect = this.reverseFunction(this.activeWrapperBlock.initial_position, this.activeWrapperBlock.now_position);
@@ -353,56 +354,71 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       this.setClickEventForGroup(this.currentDraggedGroup);
       //todo
       this.mainLayer.getStage().add(this.currentDraggedGroup);
+      this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].setAttr('time', new Date().getTime());
+      this.mainLayer.getStage().draw();
 
       this.undoRedoService.addAction({
         action: ActionType.Create, object: this.currentDraggedGroup, parent: this.mainLayer,
       });
     } else {
 
-      let temp;
-      // this.canvasService.getAllFlowsFromLayer(this.mainLayer).each((flowGroup) => {
-      //   console.log('[c] vvveee', flowGroup);
-      //
-      //   if (this.checkIsGroupInFlow(flowGroup)) {
-      //     temp = this.checkIsGroupInFlow(flowGroup, true);
-      //     return 0;
-      //   }
-      //
-      // });
+      console.log('[c] cc', new Date().getTime() - this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].attrs.time);
 
-      this.flowboards.forEach((elem) => {
-        if (this.checkIsGroupInFlow(elem)) {
-          temp = this.checkIsGroupInFlow(elem, true);
-          return 0;
-        }
-      });
+      if (true && new Date().getTime() - this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].attrs.time > 10) {
 
-      this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].position({
-        x: e.layerX,
-        y: e.layerY,
-      });
+        let temp;
 
-      if (temp) {
-        temp.children.each(elem => {
-          if (elem.className === 'Rect') {
-            elem.setAttr('stroke', 'green');
+        this.flowboards.forEach((elem) => {
+          if (this.checkIsGroupInFlow(elem)) {
+            temp = this.checkIsGroupInFlow(elem, true);
+            return 0;
           }
-
         });
 
-      } else {
-        // @ts-ignore
-        this.canvasService.getAllFlowsFromLayer(this.mainLayer).each(elem => {
-          elem.children.each(elem => {
+        this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].setAttr('time', new Date().getTime());
+        this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].position({
+          x: e.layerX,
+          y: e.layerY,
+        });
+
+        if (temp) {
+          temp.children.each(elem => {
             if (elem.className === 'Rect') {
-              elem.setAttr('stroke', theme.line_color);
+              elem.setAttr('stroke', 'green');
             }
+
           });
 
-        });
+        } else {
+          // @ts-ignore
+          this.canvasService.getAllFlowsFromLayer(this.mainLayer).each(elem => {
+            elem.children.each(elem => {
+              if (elem.className === 'Rect') {
+                elem.setAttr('stroke', theme.line_color);
+              }
+            });
+
+          });
+        }
+        // this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].move({x: 10, y: 10});
+        //
+        // this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].show();
+        console.log('[c] vvvv', !this.interval);
+
+        if (!this.interval) {
+          this.interval = setInterval(() => {
+            this.stage.getStage().add(this.mainLayer.getStage());
+          }, 0);
+        }
+
+
+        //
+
       }
 
+
     }
+
   };
 
   //todo uncomment
@@ -724,6 +740,8 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
 
         }
+        this.mainLayer.getStage().draw();
+
       }
     }
     if (this.canvasService.activePathsArr.length > 0) {
@@ -849,13 +867,18 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     });
 
     setInterval(() => {
-      this.stage.getStage().add(this.mainLayer.getStage());
-      this.mainLayer.getStage().add(this.activeWrapperBlock.rectangle);
+      // this.stage.getStage().add(this.mainLayer.getStage());
+      // this.mainLayer.getStage().add(this.activeWrapperBlock.rectangle);
+
       // this.mainLayer.getStage().draw();
     }, 0);
   }
 
   ngAfterViewInit() {
+
+    this.stage.getStage().add(this.mainLayer.getStage());
+    this.mainLayer.getStage().add(this.activeWrapperBlock.rectangle);
+
     this.activeTab.startStageSize.oldWidth = this.stage.getStage().width();
     this.activeTab.startStageSize.oldHeight = this.stage.getStage().height();
 
@@ -898,6 +921,9 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         }
       });
       !temp && this.currentDraggedGroup && this.currentDraggedGroup.destroy();
+      clearInterval(this.interval);
+      this.interval = undefined;
+      this.mainLayer.getStage().draw();
     });
     this.canvasService.flowboardDimensionsChanged.subscribe((value) => {
       let temp_elem = this.flowboards.find((elem) => {
@@ -956,6 +982,10 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     this.mainLayer.getStage().add(newFlow);
     this.subTabs[0].layerData = [];
     this.subTabs[0].layerData = this.mainLayer.getStage().children.toArray();
+    setTimeout(() => {
+      this.mainLayer.getStage().draw();
+    }, 100);
+    //this.mainLayer.getStage().draw();
   }
 
   onMainTabBarClick(event) {

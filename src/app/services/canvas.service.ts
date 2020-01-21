@@ -152,13 +152,9 @@ export class CanvasService {
     });
 
     group.on('mouseup', (event) => {
-
-
       if (this.currentLineToDraw.isLineDrawable && event.target._id !== this.currentLineToDraw.groupId && event.target.parent._id !== this.currentLineToDraw.groupId && this.currentLineToDraw.groupId !== 0) {
         let input_circle = this.getInputCircleFromGroup(event.target.parent as Group);
-
         let current_flowboard = this.getGroupById(this.currentLineToDraw.flowboardId, mainLayer.getStage());
-
         let current_path_group = this.getGroupById(this.currentLineToDraw.groupId, current_flowboard);
 
 
@@ -234,9 +230,11 @@ export class CanvasService {
         this.currentLineToDraw.isLineDrawable = false;
         this.lineToDraw.next(this.currentLineToDraw);
         // event.target.parent.draw();
+        mainLayer.getStage().draw();
         return 0;
 
       }
+
 
     });
 
