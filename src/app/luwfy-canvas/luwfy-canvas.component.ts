@@ -54,6 +54,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   subTabs: dataInTabLayer[] = [];
   menuOfViews: string[] = [];
   zoomInPercent: number = 100;
+
   private isMouseDown: boolean;
   private oldStageWidth: number;
   private oldStageHeight: number;
@@ -377,8 +378,8 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
         this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].setAttr('time', new Date().getTime());
         this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].position({
-          x: e.layerX,
-          y: e.layerY,
+          x: e.layerX / (this.zoomInPercent / 100),
+          y: e.layerY / (this.zoomInPercent / 100)
         });
 
         if (temp) {
@@ -449,6 +450,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       if (!temp_path.start_info || !temp_path.end_info) {
         temp_path.remove();
       }
+      this.mainLayer.getStage().draw();
       return 0;
 
     }
@@ -736,7 +738,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
         if (current_path) {
           current_path.setAttr('data', KonvaUtil.generateLinkPath(this.currentLineToDraw.prevX - current_group.getPosition().x - 20, this.currentLineToDraw.prevY - current_group.getPosition().y,
-            Math.ceil((pos.x - current_group.parent.getPosition().x - current_group.getPosition().x) / 5) * 5, Math.ceil((pos.y - current_group.parent.getPosition().y - current_group.getPosition().y) / 5) * 5, 1));
+            (Math.ceil((pos.x / (this.zoomInPercent / 100) - current_group.parent.getPosition().x - current_group.getPosition().x) / 5) * 5), (Math.ceil((pos.y / (this.zoomInPercent / 100) - current_group.parent.getPosition().y - current_group.getPosition().y) / 5) * 5), 1));
 
 
         }
@@ -931,7 +933,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
           return elem;
         }
       });
-      console.log('[c] temp_elem', temp_elem);
+
       this.canvasService.checkIfCollisionBetweenFlowBoards(temp_elem, this.flowboards, value.dimension);
     });
 
@@ -953,6 +955,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     this.mainLayer.getStage().add(this.currentLineToDraw.line);
     this.mainLayer.getStage().add(this.currentCopiedGroup);
     this.zoomInPercent = this.stage.getStage().scaleX() * 100;
+    this.canvasService.setCurrentZoom(this.zoomInPercent);
   }
 
   addFlowToLayer() {
@@ -998,6 +1001,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         this.mainLayer.getStage().add(elem);
       });
       this.zoomingEvent(1);
+      this.mainLayer.getStage().draw();
     } else {
       if (this.activeTab.layerData.length !== 0) {
         this.oldStageWidth = this.stage.getStage().width();
@@ -1019,7 +1023,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     if ((showFlow.attrs.height * 1.25) > KonvaStartSizes.height) {
       this.stage.getStage().height(showFlow.attrs.height * 1.25);
     } else {
-      console.log();
+
       this.stage.getStage().height(KonvaStartSizes.height);
     }
 
@@ -1028,6 +1032,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     this.activeTab.startStageSize.oldWidth = this.stage.getStage().width();
     this.activeTab.startStageSize.oldHeight = this.stage.getStage().height();
     this.zoomingEvent(1);
+    this.mainLayer.getStage().draw();
   }
 
   convertMyFlowForView(flowboard) {
@@ -1076,6 +1081,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
   zoomingEvent(event) {
     this.zoomInPercent = event * 100;
+    this.canvasService.setCurrentZoom(event * 100);
     this.stage.getStage().scale({x: event, y: event});
     this.stage.getStage().width(this.activeTab.startStageSize.oldWidth * event < MaxStageSize ? this.activeTab.startStageSize.oldWidth * event : MaxStageSize);
     this.stage.getStage().height(this.activeTab.startStageSize.oldHeight * event < MaxStageSize ? this.activeTab.startStageSize.oldHeight * event : MaxStageSize);
