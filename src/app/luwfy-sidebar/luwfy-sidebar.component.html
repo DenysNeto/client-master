@@ -1,0 +1,9 @@
+<div class="sidebar_container">
+  <mat-tab-group mat-stretch-tabs class="example-stretched-tabs mat-elevation-z1">
+    <mat-tab label="Debug"></mat-tab>
+  </mat-tab-group>
+  <div class="info_block" *ngFor="let block of blocksArr">
+    <p>{{block.attrs.date | date: 'medium'}}</p>
+    <p><span>Label: {{block.attrs.label}} </span><a (click)="focusOnBlock(block)"> ID: {{block._id}}</a></p>
+  </div>
+</div>

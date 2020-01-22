@@ -9,13 +9,15 @@ import {LuwfyVerticalTabComponent} from './luwfy-vertical-tab/luwfy-vertical-tab
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {PopupsModule} from './popups/popups.module';
 import {MatButtonModule, MatMenuModule, MatTabsModule} from '@angular/material';
+import { LuwfySidebarComponent } from './luwfy-sidebar/luwfy-sidebar.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     CanvasComponent,
     LufyTabsComponent,
-    LuwfyVerticalTabComponent
+    LuwfyVerticalTabComponent,
+    LuwfySidebarComponent
   ],
     imports: [
         BrowserModule,

@@ -1,0 +1,29 @@
+.sidebar_container {
+  width: 280px;
+  height: 100%;
+  border-left: 2px solid silver;
+
+  ::ng-deep .mat-tab-label {
+    height: 30px !important;
+  }
+
+  .info_block{
+    width: 100%;
+    background-color: #c6dbe1;
+    box-sizing: border-box;
+    border: 1px silver solid;
+    padding: 5px 2px;
+    margin: 5px;
+
+    a{
+      cursor: pointer;
+      color: gray;
+      &:hover{
+        color: darkgreen;
+      }
+    }
+  }
+}
+
+
+

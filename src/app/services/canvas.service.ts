@@ -818,7 +818,10 @@ export class CanvasService {
     let newBlockVariables = this.blocksArr.find(block => block.name === blockName);
     let temp_group = new Konva.Group({
       draggable: true,
-      type: GroupTypes.Block
+      type: GroupTypes.Block,
+      name: newBlockVariables.name,
+      date: Date.now(),
+      label: newBlockVariables.label
     }) as IGroupCustom;
     // mouseInsideRectangle is flag set true when mouse inside rectangle
     // and will changes when mouse leave rectangle
@@ -834,7 +837,7 @@ export class CanvasService {
     temp_group.add(ShapeCreator.createShapeName(newBlockVariables.label, newBlockVariables.color));
     temp_group.add(ShapeCreator.createRect(newBlockVariables.color, height).on('mouseenter', (event) => {
       mouseInsideRectangle = true;
-      onChangeHiddenElement(temp_group);
+      onHoverEffect(temp_group);
       mainLayer.getStage().draw();
     }));
     this.createPorts(newBlockVariables, temp_group, height);
@@ -855,7 +858,7 @@ export class CanvasService {
     }
     temp_group.on('mouseleave', (event) => {
       mouseInsideRectangle = false;
-      onChangeHiddenElement(temp_group);
+      onHoverEffect(temp_group);
       mainLayer.getStage().draw();
     });
 
@@ -875,17 +878,19 @@ export class CanvasService {
     });
 
     // Function hide face image and show to us icons (edit, wizard, settings)
-    const onChangeHiddenElement = (group: Group) => {
-      let iconGroup = group.findOne(elem => elem.attrs.type === 'iconGroup');
-      let headImage = group.findOne(elem => elem.attrs.type === 'headImage');
-      if (mouseInsideRectangle) {
-        headImage.hide();
-        iconGroup.show();
-      } else {
-        headImage.show();
-        iconGroup.hide();
-      }
+    const onHoverEffect = (group: Group) => {
+      if(!this.currentLineToDraw.isLineDrawable){
+        let iconGroup = group.findOne(elem => elem.attrs.type === 'iconGroup');
+        let headImage = group.findOne(elem => elem.attrs.type === 'headImage');
+        if (mouseInsideRectangle) {
+          headImage.hide();
+          iconGroup.show();
+        } else {
+          headImage.show();
+          iconGroup.hide();
+        }
 
+      }
     };
 
     let circles_collection = this.getAllCirclesFromGroup(temp_group);
