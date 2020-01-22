@@ -65,6 +65,12 @@ export class CanvasService {
     },
   };
 
+  _currentZoom: number;
+
+  setCurrentZoom(value) {
+    this._currentZoom = value;
+  }
+
 
   activePathsArr: IPathCustom[] = [];
 
@@ -152,13 +158,9 @@ export class CanvasService {
     });
 
     group.on('mouseup', (event) => {
-
-
       if (this.currentLineToDraw.isLineDrawable && event.target._id !== this.currentLineToDraw.groupId && event.target.parent._id !== this.currentLineToDraw.groupId && this.currentLineToDraw.groupId !== 0) {
         let input_circle = this.getInputCircleFromGroup(event.target.parent as Group);
-
         let current_flowboard = this.getGroupById(this.currentLineToDraw.flowboardId, mainLayer.getStage());
-
         let current_path_group = this.getGroupById(this.currentLineToDraw.groupId, current_flowboard);
 
 
@@ -196,7 +198,7 @@ export class CanvasService {
           end_circle_id: input_circle._id,
           end_flowboard_id: event.target.parent.parent._id
         });
-        current_path.setAttr('zIndex', 0);
+        current_path.setAttr('zIndex', 1);
 
         this.undoRedoService.addAction({
           action: ActionType.Create,
@@ -234,15 +236,17 @@ export class CanvasService {
         this.currentLineToDraw.isLineDrawable = false;
         this.lineToDraw.next(this.currentLineToDraw);
         // event.target.parent.draw();
+        mainLayer.getStage().draw();
         return 0;
 
       }
+
 
     });
 
     group.on('mouseenter', (event) => {
       if (this.currentLineToDraw.isLineDrawable) {
-        event.target.parent.setAttr('zIndex', 60);
+        // event.target.setAttr('zIndex', 60);
       }
 
     });
@@ -573,11 +577,11 @@ export class CanvasService {
 
             let deltaX = temp_start_point_group.getAbsolutePosition().x - event.target.attrs.x + temp_start_circle.attrs.x - temp_end_point_circle.attrs.x;
             let deltaY = temp_start_point_group.getAbsolutePosition().y - event.target.attrs.y + temp_start_circle.attrs.y - temp_end_point_circle.attrs.y;
-            // this.setParamForLine ( deltaX, deltaY );
 
             elem.setAttr('data',
-              KonvaUtil.generateLinkPath(temp_start_point_group.getAbsolutePosition().x - event.target.attrs.x + temp_start_circle.attrs.x - event.target.parent.attrs.x,
-                temp_start_point_group.getAbsolutePosition().y - event.target.attrs.y + temp_start_circle.attrs.y - event.target.parent.attrs.y,
+              KonvaUtil.generateLinkPath((
+                temp_start_point_group.getAbsolutePosition().x / (this._currentZoom / 100) - event.target.attrs.x + temp_start_circle.attrs.x - event.target.parent.attrs.x),
+                temp_start_point_group.getAbsolutePosition().y / (this._currentZoom / 100) - event.target.attrs.y + temp_start_circle.attrs.y - event.target.parent.attrs.y,
                 temp_end_point_circle.attrs.x, temp_end_point_circle.attrs.y, (-1) * this.setParamForLine(deltaX, deltaY)));
 
           });
@@ -607,12 +611,11 @@ export class CanvasService {
             let deltaX = event.target.attrs.x - temp_start_point_group.attrs.x;
             let deltaY = temp_start_point_group.getAbsolutePosition().y - temp_start_point_group.attrs.y + temp_start_circle.attrs.y;
             // this.setParamForLine (deltaX, deltaY );
-            console.log('[c] DELTA_INPUT_X', deltaX);
-            console.log('[c] DELTA_INPUT_Y', deltaY);
+
 
             elem.setAttr('data',
-              KonvaUtil.generateLinkPath(temp_start_point_group.getAbsolutePosition().x - temp_start_point_group.attrs.x + temp_start_circle.attrs.x - event.target.parent.attrs.x,
-                temp_start_point_group.getAbsolutePosition().y - temp_start_point_group.attrs.y + temp_start_circle.attrs.y - event.target.parent.attrs.y,
+              KonvaUtil.generateLinkPath(temp_start_point_group.getAbsolutePosition().x / (this._currentZoom / 100) - temp_start_point_group.attrs.x + temp_start_circle.attrs.x - event.target.parent.attrs.x,
+                temp_start_point_group.getAbsolutePosition().y / (this._currentZoom / 100) - temp_start_point_group.attrs.y + temp_start_circle.attrs.y - event.target.parent.attrs.y,
                 event.target.attrs.x - temp_start_point_group.attrs.x, event.target.attrs.y - temp_start_point_group.attrs.y + temp_input_circle.attrs.y, this.setParamForLine(deltaX, deltaY)));
           });
 
@@ -835,6 +838,7 @@ export class CanvasService {
     temp_group.add(ShapeCreator.createRect(newBlockVariables.color, height).on('mouseenter', (event) => {
       mouseInsideRectangle = true;
       onChangeHiddenElement(temp_group);
+      mainLayer.getStage().draw();
     }));
     this.createPorts(newBlockVariables, temp_group, height);
     temp_group.add(ShapeCreator.iconGroupCreator(SwitcherSizes.margin_left, (height - SwitcherSizes.iconsFontSize) / 2,
@@ -855,6 +859,7 @@ export class CanvasService {
     temp_group.on('mouseleave', (event) => {
       mouseInsideRectangle = false;
       onChangeHiddenElement(temp_group);
+      mainLayer.getStage().draw();
     });
 
     temp_group.setAttrs({
@@ -883,6 +888,7 @@ export class CanvasService {
         headImage.show();
         iconGroup.hide();
       }
+
     };
 
     let circles_collection = this.getAllCirclesFromGroup(temp_group);

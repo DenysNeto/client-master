@@ -51,10 +51,12 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   idChangedTrigger: boolean = false;
   KonvaUtil = KonvaUtil;
   konvaSize = {width: KonvaStartSizes.width, height: KonvaStartSizes.height};
+  // flowboards: Group[] = [];
+  interval: any;
   subTabs: dataInTabLayer[] = [];
   menuOfViews: string[] = [];
   zoomInPercent: number = 100;
-  // private startStageSize: any;
+
   private isMouseDown: boolean;
   private oldStageWidth: number;
   private oldStageHeight: number;
@@ -236,6 +238,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     return ({x1: r1x, y1: r1y, x2: r2x, y2: r2y});
   };
 
+
   updateDragWrapper(posIn: { x: number, y: number }) {
     this.activeWrapperBlock.now_position = {x: posIn.x, y: posIn.y};
     let posRect = this.reverseFunction(this.activeWrapperBlock.initial_position, this.activeWrapperBlock.now_position);
@@ -354,22 +357,19 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       this.setClickEventForGroup(this.currentDraggedGroup);
       //todo
       this.mainLayer.getStage().add(this.currentDraggedGroup);
+      this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].setAttr('time', new Date().getTime());
+      this.mainLayer.getStage().draw();
 
       this.undoRedoService.addAction({
         action: ActionType.Create, object: this.currentDraggedGroup, parent: this.mainLayer,
       });
     } else {
 
-      let temp;
-      // this.canvasService.getAllFlowsFromLayer(this.mainLayer).each((flowGroup) => {
-      //   console.log('[c] vvveee', flowGroup);
-      //
-      //   if (this.checkIsGroupInFlow(flowGroup)) {
-      //     temp = this.checkIsGroupInFlow(flowGroup, true);
-      //     return 0;
-      //   }
-      //
-      // });
+      console.log('[c] cc', new Date().getTime() - this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].attrs.time);
+
+      if (true && new Date().getTime() - this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].attrs.time > 10) {
+
+        let temp;
 
       this.blocksService.getFlowboards().forEach((elem) => {
         if (this.checkIsGroupInFlow(elem)) {
@@ -378,32 +378,50 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         }
       });
 
-      this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].position({
-        x: e.layerX,
-        y: e.layerY,
-      });
-
-      if (temp) {
-        temp.children.each(elem => {
-          if (elem.className === 'Rect') {
-            elem.setAttr('stroke', 'green');
-          }
-
+        this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].setAttr('time', new Date().getTime());
+        this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].position({
+          x: e.layerX / (this.zoomInPercent / 100),
+          y: e.layerY / (this.zoomInPercent / 100)
         });
 
-      } else {
-        // @ts-ignore
-        this.canvasService.getAllFlowsFromLayer(this.mainLayer).each(elem => {
-          elem.children.each(elem => {
+        if (temp) {
+          temp.children.each(elem => {
             if (elem.className === 'Rect') {
-              elem.setAttr('stroke', theme.line_color);
+              elem.setAttr('stroke', 'green');
             }
+
           });
 
-        });
+        } else {
+          // @ts-ignore
+          this.canvasService.getAllFlowsFromLayer(this.mainLayer).each(elem => {
+            elem.children.each(elem => {
+              if (elem.className === 'Rect') {
+                elem.setAttr('stroke', theme.line_color);
+              }
+            });
+
+          });
+        }
+        // this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].move({x: 10, y: 10});
+        //
+        // this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].show();
+        console.log('[c] vvvv', !this.interval);
+
+        if (!this.interval) {
+          this.interval = setInterval(() => {
+            this.stage.getStage().add(this.mainLayer.getStage());
+          }, 0);
+        }
+
+
+        //
+
       }
 
+
     }
+
   };
 
   //todo uncomment
@@ -434,6 +452,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       if (!temp_path.start_info || !temp_path.end_info) {
         temp_path.remove();
       }
+      this.mainLayer.getStage().draw();
       return 0;
 
     }
@@ -720,10 +739,12 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
         if (current_path) {
           current_path.setAttr('data', KonvaUtil.generateLinkPath(this.currentLineToDraw.prevX - current_group.getPosition().x - 20, this.currentLineToDraw.prevY - current_group.getPosition().y,
-            Math.ceil((pos.x - current_group.parent.getPosition().x - current_group.getPosition().x) / 5) * 5, Math.ceil((pos.y - current_group.parent.getPosition().y - current_group.getPosition().y) / 5) * 5, 1));
+            (Math.ceil((pos.x / (this.zoomInPercent / 100) - current_group.parent.getPosition().x - current_group.getPosition().x) / 5) * 5), (Math.ceil((pos.y / (this.zoomInPercent / 100) - current_group.parent.getPosition().y - current_group.getPosition().y) / 5) * 5), 1));
 
 
         }
+        this.mainLayer.getStage().draw();
+
       }
     }
     if (this.canvasService.activePathsArr.length > 0) {
@@ -843,13 +864,14 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       this.activeWrapperBlock = data;
     });
 
-    setInterval(() => {
-      this.stage.getStage().add(this.mainLayer.getStage());
-      this.mainLayer.getStage().add(this.activeWrapperBlock.rectangle);
-    }, 0);
+
   }
 
   ngAfterViewInit() {
+
+    this.stage.getStage().add(this.mainLayer.getStage());
+    this.mainLayer.getStage().add(this.activeWrapperBlock.rectangle);
+
     this.activeTab.startStageSize.oldWidth = this.stage.getStage().width();
     this.activeTab.startStageSize.oldHeight = this.stage.getStage().height();
 
@@ -867,18 +889,13 @@ export class CanvasComponent implements OnInit, AfterViewInit {
             temp.add(this.currentDraggedGroup);
             this.blocksService.pushFlowboardsChanges();
 
-            this.currentDraggedGroup.dragBoundFunc(function(pos) {
+            this.currentDraggedGroup.dragBoundFunc((pos) => {
               return {
-                x: pos.x <= this.parent.position().x + GridSizes.flowboard_cell ? this.parent.position().x + GridSizes.flowboard_cell : pos.x <= (this.parent.position().x + this.parent.attrs.width - this.attrs.width) ? pos.x : this.parent.position().x + this.parent.attrs.width - this.attrs.width,
-                y: pos.y <= this.parent.position().y + GridSizes.flowboard_cell * 2 ? this.parent.position().y + GridSizes.flowboard_cell : pos.y <= (this.parent.position().y + this.parent.attrs.height - this.attrs.height) ? pos.y : this.parent.position().y + this.parent.attrs.height - this.attrs.height - GridSizes.flowboard_cell
+                x: pos.x <= (this.currentDraggedGroup.parent.position().x + GridSizes.flowboard_cell) * (this.zoomInPercent / 100) ? (this.currentDraggedGroup.parent.position().x + GridSizes.flowboard_cell) * (this.zoomInPercent / 100) : pos.x <= (this.currentDraggedGroup.parent.position().x + this.currentDraggedGroup.parent.attrs.width - this.currentDraggedGroup.attrs.width) * (this.zoomInPercent / 100) ? pos.x : (this.currentDraggedGroup.parent.position().x + this.currentDraggedGroup.parent.attrs.width - this.currentDraggedGroup.attrs.width) * (this.zoomInPercent / 100),
+                y: pos.y <= (this.currentDraggedGroup.parent.position().y + GridSizes.flowboard_cell * 2) * (this.zoomInPercent / 100) ? (this.currentDraggedGroup.parent.position().y + GridSizes.flowboard_cell) * (this.zoomInPercent / 100) : pos.y <= (this.currentDraggedGroup.parent.position().y + this.currentDraggedGroup.parent.attrs.height - this.currentDraggedGroup.attrs.height) * (this.zoomInPercent / 100) ? pos.y : (this.currentDraggedGroup.parent.position().y + this.currentDraggedGroup.parent.attrs.height - this.currentDraggedGroup.attrs.height - GridSizes.flowboard_cell) * (this.zoomInPercent / 100)
               };
             });
 
-            // .dragBoundFunc(() => this.canvasService.setDragBoundFunc(this.currentDraggedGroup.absolutePosition()));
-            // this.currentDraggedGroup.setAttr('dragBoundFunction', this.canvasService.setDragBoundFunc(this.currentDraggedGroup.absolutePosition()));
-
-
-            // temp.add(this.currentDraggedGroup);
             flowGroup.children.each(elem => {
               if (elem.className === 'Rect') {
                 elem.setAttr('stroke', theme.line_color);
@@ -893,6 +910,9 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         }
       });
       !temp && this.currentDraggedGroup && this.currentDraggedGroup.destroy();
+      clearInterval(this.interval);
+      this.interval = undefined;
+      this.mainLayer.getStage().draw();
     });
     this.canvasService.flowboardDimensionsChanged.subscribe((value) => {
       let temp_elem = this.blocksService.getFlowboards().find((elem) => {
@@ -921,6 +941,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     this.mainLayer.getStage().add(this.currentLineToDraw.line);
     this.mainLayer.getStage().add(this.currentCopiedGroup);
     this.zoomInPercent = this.stage.getStage().scaleX() * 100;
+    this.canvasService.setCurrentZoom(this.zoomInPercent);
   }
 
   addFlowToLayer() {
@@ -950,6 +971,10 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     this.mainLayer.getStage().add(newFlow);
     this.subTabs[0].layerData = [];
     this.subTabs[0].layerData = this.mainLayer.getStage().children.toArray();
+    setTimeout(() => {
+      this.mainLayer.getStage().draw();
+    }, 100);
+    //this.mainLayer.getStage().draw();
   }
 
   onMainTabBarClick(event) {
@@ -962,6 +987,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         this.mainLayer.getStage().add(elem);
       });
       this.zoomingEvent(1);
+      this.mainLayer.getStage().draw();
     } else {
       if (this.activeTab.layerData.length !== 0) {
         this.oldStageWidth = this.stage.getStage().width();
@@ -983,7 +1009,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     if ((showFlow.attrs.height * 1.25) > KonvaStartSizes.height) {
       this.stage.getStage().height(showFlow.attrs.height * 1.25);
     } else {
-      console.log();
+
       this.stage.getStage().height(KonvaStartSizes.height);
     }
 
@@ -992,6 +1018,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     this.activeTab.startStageSize.oldWidth = this.stage.getStage().width();
     this.activeTab.startStageSize.oldHeight = this.stage.getStage().height();
     this.zoomingEvent(1);
+    this.mainLayer.getStage().draw();
   }
 
   convertMyFlowForView(flowboard) {
@@ -1040,6 +1067,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
   zoomingEvent(event) {
     this.zoomInPercent = event * 100;
+    this.canvasService.setCurrentZoom(event * 100);
     this.stage.getStage().scale({x: event, y: event});
     this.stage.getStage().width(this.activeTab.startStageSize.oldWidth * event < MaxStageSize ? this.activeTab.startStageSize.oldWidth * event : MaxStageSize);
     this.stage.getStage().height(this.activeTab.startStageSize.oldHeight * event < MaxStageSize ? this.activeTab.startStageSize.oldHeight * event : MaxStageSize);
