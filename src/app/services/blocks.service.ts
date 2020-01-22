@@ -9,7 +9,7 @@ import {BehaviorSubject} from 'rxjs';
 export class BlocksService {
   subjectArray: BehaviorSubject<any>;
   private blocks = data;
-  private flowboards: Group[] = [];
+  flowboards: Group[] = [];
 
   constructor() {
     this.subjectArray = new BehaviorSubject<Group[]>(this.flowboards);
@@ -19,7 +19,7 @@ export class BlocksService {
     return this.blocks;
   }
 
-  getFlowboards(){
+  getFlowboards (){
     return this.flowboards;
   }
 

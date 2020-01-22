@@ -29,8 +29,6 @@ import {Stage} from 'konva/types/Stage';
 import {BlocksService} from '../services/blocks.service';
 
 
-
-
 @Component({
   selector: 'luwfy-canvas',
   templateUrl: './luwfy-canvas.component.html',
@@ -366,7 +364,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         action: ActionType.Create, object: this.currentDraggedGroup, parent: this.mainLayer,
       });
     } else {
-        let temp;
+      let temp;
 
       this.blocksService.getFlowboards().forEach((elem) => {
         if (this.checkIsGroupInFlow(elem)) {
@@ -375,40 +373,40 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         }
       });
 
-        this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].setAttr('time', new Date().getTime());
-        this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].position({
-          x: e.layerX / (this.zoomInPercent / 100),
-          y: e.layerY / (this.zoomInPercent / 100)
+      this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].setAttr('time', new Date().getTime());
+      this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].position({
+        x: e.layerX / (this.zoomInPercent / 100),
+        y: e.layerY / (this.zoomInPercent / 100)
+      });
+
+      if (temp) {
+        temp.children.each(elem => {
+          if (elem.className === 'Rect') {
+            elem.setAttr('stroke', 'green');
+          }
+
         });
 
-        if (temp) {
-          temp.children.each(elem => {
+      } else {
+        // @ts-ignore
+        this.canvasService.getAllFlowsFromLayer(this.mainLayer).each(elem => {
+          elem.children.each(elem => {
             if (elem.className === 'Rect') {
-              elem.setAttr('stroke', 'green');
+              elem.setAttr('stroke', theme.line_color);
             }
-
           });
 
-        } else {
-          // @ts-ignore
-          this.canvasService.getAllFlowsFromLayer(this.mainLayer).each(elem => {
-            elem.children.each(elem => {
-              if (elem.className === 'Rect') {
-                elem.setAttr('stroke', theme.line_color);
-              }
-            });
+        });
+      }
+      // this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].move({x: 10, y: 10});
+      //
+      // this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].show();
 
-          });
-        }
-        // this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].move({x: 10, y: 10});
-        //
-        // this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].show();
-
-        if (!this.interval) {
-          this.interval = setInterval(() => {
-            this.stage.getStage().add(this.mainLayer.getStage());
-          }, 0);
-        }
+      if (!this.interval) {
+        this.interval = setInterval(() => {
+          this.stage.getStage().add(this.mainLayer.getStage());
+        }, 0);
+      }
     }
 
   };
@@ -446,53 +444,134 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
     }
 
-    let temp = this.mainLayer.getStage().children.length;
-    let temp_arr: any = [];
+
+    if (this.activeWrapperBlock.isDraw) {
+      let temp_arr: any = [];
+
+      for (let i = 0; i < this.blocksService.getFlowboards().length; i++) {
+
+        this.blocksService.getFlowboards()[i].children.each((elem) => {
+          if (elem.attrs.type === GroupTypes.Block) {
+            console.log('[c]before loop', this.activeWrapperBlock);
+            console.log('[c]before loop 1', elem.position());
+            if (this.checkValueBetween(elem.getAbsolutePosition(), elem.attrs.width, elem.attrs.height)) {
+
+              console.log('[c]before loop 2');
+              elem.position({
+                x: elem.position().x - this.currentActiveGroup.position().x,
+                y: elem.position().y - this.currentActiveGroup.position().y
+              });
 
 
+              elem.children.each((elem) => {
+                if (elem.className !== 'Path') {
+                  elem.setAttr('stroke', theme.choose_group_color);
+                }
 
-    for (let i = 0; i < temp; i++) {
-      if (this.mainLayer.getStage().children[i] && this.mainLayer.getStage().children[i].type === GroupTypes.Block) {
-        if (this.checkValueBetween(this.mainLayer.getStage().children[i].position(), this.mainLayer.getStage().children[i].attrs.width, this.mainLayer.getStage().children[i].attrs.height)) {
 
-          this.mainLayer.getStage().children[i].setAttr('x', this.mainLayer.getStage().children[i].position().x - this.currentActiveGroup.position().x);
-          this.mainLayer.getStage().children[i].setAttr('y', this.mainLayer.getStage().children[i].position().y - this.currentActiveGroup.position().y);
+              });
+              elem.setAttr('draggable', false);
+              temp_arr.push(elem);
+              // elem.moveTo(this.currentActiveGroup);
 
-          if (this.mainLayer.getStage().children[i].nodeType === 'Group') {
-            this.mainLayer.getStage().children[i].children.each((elem) => {
-              if (elem.className !== 'Path') {
-                elem.setAttr('stroke', theme.choose_group_color);
-              }
 
-            });
+            }
           }
 
-          this.mainLayer.getStage().children[i].setAttr('draggable', false);
-          temp_arr.push(this.mainLayer.getStage().children[i]);
-          this.mainLayer.getStage().children[i].moveTo(this.currentActiveGroup);
 
-          i--;
+          //
+          // if (this.checkValueBetween(elem.position(), this.mainLayer.getStage().children[i].attrs.width, this.mainLayer.getStage().children[i].attrs.height)) {
+          //
+          //
+          //
+          //
+          //
+          //
+          //
+          //
+          //
+          //   if (elem.attrs.type === GroupTypes.Block) {
+          //     elem.position({
+          //       x: this.mainLayer.getStage().children[i].position().x - this.currentActiveGroup.position().x,
+          //       y: this.mainLayer.getStage().children[i].position().y - this.currentActiveGroup.position().y
+          //     });
+          //
+          //
+          //     elem.children.each((elem) => {
+          //       if (elem.className !== 'Path') {
+          //         elem.setAttr('stroke', theme.choose_group_color);
+          //       }
+          //
+          //
+          //     });
+          //     elem.setAttr('draggable', false);
+          //     elem.moveTo(this.currentActiveGroup);
+          //
+          //   }
+          //
+          // }
 
-        }
+        });
+
+
+        //yyy
+
+        // if (this.blocksService.getFlowboards()[i] && this.mainLayer.getStage().children[i].type === GroupTypes.Block) {
+        //   if (this.checkValueBetween(this.mainLayer.getStage().children[i].position(), this.mainLayer.getStage().children[i].attrs.width, this.mainLayer.getStage().children[i].attrs.height)) {
+        //
+        //     this.mainLayer.getStage().children[i].setAttr('x', this.mainLayer.getStage().children[i].position().x - this.currentActiveGroup.position().x);
+        //     this.mainLayer.getStage().children[i].setAttr('y', this.mainLayer.getStage().children[i].position().y - this.currentActiveGroup.position().y);
+        //
+        //     if (this.mainLayer.getStage().children[i].nodeType === 'Group') {
+        //       this.mainLayer.getStage().children[i].children.each((elem) => {
+        //         if (elem.className !== 'Path') {
+        //           elem.setAttr('stroke', theme.choose_group_color);
+        //         }
+        //
+        //       });
+        //     }
+        //
+        //     this.mainLayer.getStage().children[i].setAttr('draggable', false);
+        //     temp_arr.push(this.mainLayer.getStage().children[i]);
+        //     this.mainLayer.getStage().children[i].moveTo(this.currentActiveGroup);
+        //
+        //     i--;
+        //
+        //   }
+        // }
       }
-    }
 
 
-    if (temp_arr.length > 0) {
-      this.undoRedoService.addAction({
-        action: ActionType.Select,
-        object: this.currentActiveGroup,
+      temp_arr.forEach((elem) => {
+        let temp = elem.position();
+        let temp2 = elem.parent.position();
+
+        this.currentActiveGroup.add(elem);
+        console.log('cccc', temp.x + this.currentActiveGroup.position().x);
+        elem.position({
+          x: temp.x + this.currentActiveGroup.position().x + temp2.x,
+          y: temp.y + this.currentActiveGroup.position().y + temp2.y
+        });
+
+
       });
+
+
+      if (temp_arr.length > 0) {
+        this.undoRedoService.addAction({
+          action: ActionType.Select,
+          object: this.currentActiveGroup,
+        });
+      }
+
+      //
+
+      this.activeWrapperBlock.isActive = true;
+
+      this.activeWrapperBlock.isDraw = false;
+      this.activeWrapperBlock.rectangle.setAttr('visible', false);
+      this.mainLayer.getStage().draw();
     }
-
-    //
-
-    this.activeWrapperBlock.isActive = true;
-
-    this.activeWrapperBlock.isDraw = false;
-    this.activeWrapperBlock.rectangle.setAttr('visible', false);
-    this.mainLayer.getStage().draw();
-
   };
 
   checkValueBetween = (obj: { x: number, y: number }, width, height) => {
@@ -839,6 +918,11 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       });
     }
 
+
+  }
+
+  ngAfterViewInit() {
+
     this.RegistryService.currentDraggableItem.subscribe((data) => {
       this.currentId = data;
       this.idChangedTrigger = true;
@@ -855,11 +939,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     this.canvasService.activeBlock.subscribe((data) => {
       this.activeWrapperBlock = data;
     });
-
-
-  }
-
-  ngAfterViewInit() {
 
     this.stage.getStage().add(this.mainLayer.getStage());
     this.mainLayer.getStage().add(this.activeWrapperBlock.rectangle);
@@ -925,7 +1004,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       temp_elem && this.canvasService.checkIfCollisionBetweenFlowBoards(temp_elem, this.blocksService.getFlowboards(), value.dimension);
     });
 
-    this.blocksService.getFlowboards().forEach(flow => {
+    this.blocksService && this.blocksService.getFlowboards().forEach(flow => {
       this.createGrid(flow);
       this.mainLayer.getStage().add(flow);
     });
