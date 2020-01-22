@@ -848,6 +848,7 @@ export class CanvasService {
     temp_group.add(ShapeCreator.createRect(newBlockVariables.color, height).on('mouseenter', (event) => {
       mouseInsideRectangle = true;
       onChangeHiddenElement(temp_group);
+      mainLayer.getStage().draw();
     }));
     this.createPorts(newBlockVariables, temp_group, height);
     temp_group.add(ShapeCreator.iconGroupCreator(SwitcherSizes.margin_left, (height - SwitcherSizes.iconsFontSize) / 2,
@@ -868,6 +869,7 @@ export class CanvasService {
     temp_group.on('mouseleave', (event) => {
       mouseInsideRectangle = false;
       onChangeHiddenElement(temp_group);
+      mainLayer.getStage().draw();
     });
 
     temp_group.setAttrs({
@@ -896,6 +898,7 @@ export class CanvasService {
         headImage.show();
         iconGroup.hide();
       }
+
     };
 
     let circles_collection = this.getAllCirclesFromGroup(temp_group);
