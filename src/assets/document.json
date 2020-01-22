@@ -3,8 +3,8 @@
     "name": "switch",
     "label": "new switch",
     "inputs": 1,
-    "outputs": 2,
-    "output_errors": 1,
+    "outputs": 1,
+    "output_errors": 0,
     "color": "orange",
     "setting_icons": {
       "edit_icon": "\uf040",
@@ -18,7 +18,7 @@
     "name": "inject",
     "label": "new inject",
     "inputs": 1,
-    "outputs": 3,
+    "outputs": 1,
     "output_errors": 0,
     "color": "#4fd0d6",
     "setting_icons": {
@@ -39,8 +39,8 @@
     "name": "debug",
     "label": "new debug",
     "inputs": 1,
-    "outputs": 2,
-    "output_errors": 1,
+    "outputs": 1,
+    "output_errors": 0,
     "color": "#1fce43",
     "setting_icons": {
       "edit_icon": "\uf040",
