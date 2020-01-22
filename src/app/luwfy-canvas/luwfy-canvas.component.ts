@@ -365,9 +365,8 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       });
     } else {
 
-      console.log('[c] cc', new Date().getTime() - this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].attrs.time);
 
-      if (true && new Date().getTime() - this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].attrs.time > 10) {
+      if (new Date().getTime() - this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].attrs.time > 10) {
 
         let temp;
 
@@ -406,8 +405,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         // this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].move({x: 10, y: 10});
         //
         // this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].show();
-        console.log('[c] vvvv', !this.interval);
-
         if (!this.interval) {
           this.interval = setInterval(() => {
             this.stage.getStage().add(this.mainLayer.getStage());
@@ -980,6 +977,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   onMainTabBarClick(event) {
     this.activeTab = this.subTabs.find(tab => tab.label === event.tab.textLabel);
     this.mainLayer.getStage().removeChildren();
+    this.mainLayer.getStage().draw();
     if (this.activeTab.label === this.subTabs[0].label) {
       this.stage.getStage().width(this.oldStageWidth);
       this.stage.getStage().height(this.oldStageHeight);
@@ -993,6 +991,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         this.oldStageWidth = this.stage.getStage().width();
         this.oldStageHeight = this.stage.getStage().height();
         this.showSubView(this.activeTab.layerData[0]);
+
       }
     }
   }
@@ -1000,6 +999,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
   onFlowTabBarClick(event) {
     this.showSubView(this.activeTab.layerData[event]);
+    this.mainLayer.getStage().draw();
   }
 
   showSubView(id) {

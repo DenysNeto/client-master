@@ -34,8 +34,14 @@ export class LuwfySidebarComponent implements OnInit {
   focusOnBlock(block: Group) {
     let oldStrokeColor = block.findOne('Rect').attrs.stroke;
     block.findOne('Rect').attrs.stroke = 'red';
+    block.getStage().setPointersPositions({
+      x: 10,
+      y:10
+    });
+    block.getLayer().draw();
     setTimeout(() => {
       block.findOne('Rect').attrs.stroke = oldStrokeColor;
+      block.getLayer().draw();
     }, 200);
 
   }
