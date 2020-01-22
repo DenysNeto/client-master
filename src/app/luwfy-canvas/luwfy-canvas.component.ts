@@ -27,6 +27,9 @@ import ShapeCreator from './ShapesCreator';
 import {FlowboardSizes} from './sizes';
 import {Stage} from 'konva/types/Stage';
 
+
+
+
 @Component({
   selector: 'luwfy-canvas',
   templateUrl: './luwfy-canvas.component.html',
