@@ -897,18 +897,13 @@ export class CanvasComponent implements OnInit, AfterViewInit {
             });
             temp.add(this.currentDraggedGroup);
 
-            this.currentDraggedGroup.dragBoundFunc(function(pos) {
+            this.currentDraggedGroup.dragBoundFunc((pos) => {
               return {
-                x: pos.x <= this.parent.position().x + GridSizes.flowboard_cell ? this.parent.position().x + GridSizes.flowboard_cell : pos.x <= (this.parent.position().x + this.parent.attrs.width - this.attrs.width) ? pos.x : this.parent.position().x + this.parent.attrs.width - this.attrs.width,
-                y: pos.y <= this.parent.position().y + GridSizes.flowboard_cell * 2 ? this.parent.position().y + GridSizes.flowboard_cell : pos.y <= (this.parent.position().y + this.parent.attrs.height - this.attrs.height) ? pos.y : this.parent.position().y + this.parent.attrs.height - this.attrs.height - GridSizes.flowboard_cell
+                x: pos.x <= (this.currentDraggedGroup.parent.position().x + GridSizes.flowboard_cell) * (this.zoomInPercent / 100) ? (this.currentDraggedGroup.parent.position().x + GridSizes.flowboard_cell) * (this.zoomInPercent / 100) : pos.x <= (this.currentDraggedGroup.parent.position().x + this.currentDraggedGroup.parent.attrs.width - this.currentDraggedGroup.attrs.width) * (this.zoomInPercent / 100) ? pos.x : (this.currentDraggedGroup.parent.position().x + this.currentDraggedGroup.parent.attrs.width - this.currentDraggedGroup.attrs.width) * (this.zoomInPercent / 100),
+                y: pos.y <= (this.currentDraggedGroup.parent.position().y + GridSizes.flowboard_cell * 2) * (this.zoomInPercent / 100) ? (this.currentDraggedGroup.parent.position().y + GridSizes.flowboard_cell) * (this.zoomInPercent / 100) : pos.y <= (this.currentDraggedGroup.parent.position().y + this.currentDraggedGroup.parent.attrs.height - this.currentDraggedGroup.attrs.height) * (this.zoomInPercent / 100) ? pos.y : (this.currentDraggedGroup.parent.position().y + this.currentDraggedGroup.parent.attrs.height - this.currentDraggedGroup.attrs.height - GridSizes.flowboard_cell) * (this.zoomInPercent / 100)
               };
             });
 
-            // .dragBoundFunc(() => this.canvasService.setDragBoundFunc(this.currentDraggedGroup.absolutePosition()));
-            // this.currentDraggedGroup.setAttr('dragBoundFunction', this.canvasService.setDragBoundFunc(this.currentDraggedGroup.absolutePosition()));
-
-
-            // temp.add(this.currentDraggedGroup);
             flowGroup.children.each(elem => {
               if (elem.className === 'Rect') {
                 elem.setAttr('stroke', theme.line_color);
