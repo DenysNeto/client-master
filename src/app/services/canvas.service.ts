@@ -557,21 +557,22 @@ export class CanvasService {
 
       let isPathInGroup = this.isPathInGroup(event.target as Group);
 
-      let input_paths: Array<IPathCustom> = this.getAllInputLinesFromGroup(mainLayer, event.target as Group | IGroupCustom);
+      let input_paths: Array<IPathCustom> = this.getAllInputLinesFromGroup(event.target.parent, event.target as Group | IGroupCustom);
       if (isPathInGroup || input_paths) {
 
         let output_paths: Collection<IPathCustom> = this.getAllOutputLinesFromGroup(event.target as Group | IGroupCustom);
+
 
         if (output_paths) {
 
           output_paths.each((elem) => {
 
             //start point
-            let currentFlowboard = this.getGroupById(elem.attrs.end_info.end_flowboard_id, mainLayer.getStage());
-            let temp_start_point_group = this.getGroupById(elem.attrs.end_info.end_group_id, currentFlowboard);
-            let temp_end_point_circle = this.getCircleFromGroupById(event.target.getStage(), elem.attrs.start_info.start_circle_id);
+            let currentFlowboard = this.getGroupById(elem.attrs.end_info.end_flowboard_id, mainLayer);
+            let temp_start_point_group = this.getGroupById(elem.attrs.end_info.end_group_id, currentFlowboard as Group);
+            let temp_end_point_circle = this.getCircleFromGroupById(event.target as Group, elem.attrs.start_info.start_circle_id);
 
-            let temp_start_circle = this.getCircleFromGroupById(temp_start_point_group, elem.attrs.end_info.end_circle_id);
+            let temp_start_circle = this.getCircleFromGroupById(temp_start_point_group as Group, elem.attrs.end_info.end_circle_id);
 
             //end point
 
@@ -606,12 +607,8 @@ export class CanvasService {
                 return elem;
               }
             });
-            console.log('[c] i', event.target);
-
             let deltaX = event.target.attrs.x - temp_start_point_group.attrs.x;
             let deltaY = temp_start_point_group.getAbsolutePosition().y - temp_start_point_group.attrs.y + temp_start_circle.attrs.y;
-            // this.setParamForLine (deltaX, deltaY );
-
 
             elem.setAttr('data',
               KonvaUtil.generateLinkPath(temp_start_point_group.getAbsolutePosition().x / (this._currentZoom / 100) - temp_start_point_group.attrs.x + temp_start_circle.attrs.x - event.target.parent.attrs.x,
@@ -634,20 +631,17 @@ export class CanvasService {
   }
 
 
-  getAllInputLinesFromGroup(component: Layer, group: Group | IGroupCustom): Array<IPathCustom> {
+  getAllInputLinesFromGroup(component: Group | IGroupCustom | any, group: Group | IGroupCustom): Array<IPathCustom> {
     let collection_ports: Array<IPathCustom> = [];
-    let all_groups = component.getStage().find((elem) => {
-      if (!elem.className) {
+    let all_groups = component.find((elem) => {
+      if (elem.attrs.type === GroupTypes.Block) {
         return elem;
-        // return elem.find((elem) => {
-        //   if (elem.className === 'Path' && elem.attrs.end_info.group_id === group._id) {
-        //     return elem;
-        //   }
-        // });
       }
     });
+
+
     all_groups.each((elem) => {
-      elem.getStage().find((elem) => {
+      elem.find((elem) => {
         if (elem.className === 'Path' && elem.attrs.end_info && elem.attrs.end_info.end_group_id === group._id) {
           collection_ports.push(elem);
         }
@@ -668,7 +662,6 @@ export class CanvasService {
 
   getAllOutputLinesFromGroup(group: Group | IGroupCustom): Collection<IPathCustom> {
     return group.find((elem) => {
-      console.log('[c] elem ppp', elem);
       if (elem.className === 'Path') {
         return elem;
       }
@@ -879,7 +872,7 @@ export class CanvasService {
 
     // Function hide face image and show to us icons (edit, wizard, settings)
     const onHoverEffect = (group: Group) => {
-      if(!this.currentLineToDraw.isLineDrawable){
+      if (!this.currentLineToDraw.isLineDrawable) {
         let iconGroup = group.findOne(elem => elem.attrs.type === 'iconGroup');
         let headImage = group.findOne(elem => elem.attrs.type === 'headImage');
         if (mouseInsideRectangle) {
@@ -917,7 +910,7 @@ export class CanvasService {
 
   }
 
-  getGroupById(id: number, component: StageComponent) {
+  getGroupById(id: number, component: Group) {
     if (component) {
       console.log('[c] current group id', id);
       return component.getStage().findOne((elem) => {
