@@ -353,7 +353,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       this.currentDraggedGroup = this.canvasService.createDefaultGroup(this.mainLayer, this.activeWrapperBlock, this.currentActiveGroup, this.currentId);
       this.idChangedTrigger = false;
       this.setClickEventForGroup(this.currentDraggedGroup);
-      //todo
       this.mainLayer.getStage().add(this.currentDraggedGroup);
       this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].setAttr('time', new Date().getTime());
       this.mainLayer.getStage().draw();
@@ -362,13 +361,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         action: ActionType.Create, object: this.currentDraggedGroup, parent: this.mainLayer,
       });
     } else {
-
-      console.log('[c] cc', new Date().getTime() - this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].attrs.time);
-
-      if (true && new Date().getTime() - this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].attrs.time > 10) {
-
         let temp;
-
         this.flowboards.forEach((elem) => {
           if (this.checkIsGroupInFlow(elem)) {
             temp = this.checkIsGroupInFlow(elem, true);
@@ -401,23 +394,12 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
           });
         }
-        // this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].move({x: 10, y: 10});
-        //
-        // this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].show();
-        console.log('[c] vvvv', !this.interval);
 
         if (!this.interval) {
           this.interval = setInterval(() => {
             this.stage.getStage().add(this.mainLayer.getStage());
           }, 0);
         }
-
-
-        //
-
-      }
-
-
     }
 
   };
@@ -455,14 +437,13 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
     }
 
-
-    let elem = this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1];
-    let i = this.mainLayer.getStage().children.length;
-
     let temp = this.mainLayer.getStage().children.length;
     let temp_arr: any = [];
+
+
+
     for (let i = 0; i < temp; i++) {
-      if (this.mainLayer.getStage().children[i] && this.mainLayer.getStage().children[i]._id > 100) {
+      if (this.mainLayer.getStage().children[i] && this.mainLayer.getStage().children[i].type === GroupTypes.Block) {
         if (this.checkValueBetween(this.mainLayer.getStage().children[i].position(), this.mainLayer.getStage().children[i].attrs.width, this.mainLayer.getStage().children[i].attrs.height)) {
 
           this.mainLayer.getStage().children[i].setAttr('x', this.mainLayer.getStage().children[i].position().x - this.currentActiveGroup.position().x);
@@ -479,7 +460,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
           this.mainLayer.getStage().children[i].setAttr('draggable', false);
           temp_arr.push(this.mainLayer.getStage().children[i]);
-          console.log('[c]');
           this.mainLayer.getStage().children[i].moveTo(this.currentActiveGroup);
 
           i--;
@@ -487,6 +467,8 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         }
       }
     }
+
+
     if (temp_arr.length > 0) {
       this.undoRedoService.addAction({
         action: ActionType.Select,
@@ -500,6 +482,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
     this.activeWrapperBlock.isDraw = false;
     this.activeWrapperBlock.rectangle.setAttr('visible', false);
+    this.mainLayer.getStage().draw();
 
   };
 
@@ -759,6 +742,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
     if (this.activeWrapperBlock.isDraw) {
       this.updateDragWrapper({x: e.layerX, y: e.layerY});
+      this.mainLayer.getStage().draw();
 
     }
   };
