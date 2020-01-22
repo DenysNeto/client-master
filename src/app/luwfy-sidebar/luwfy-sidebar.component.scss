@@ -13,6 +13,15 @@
     box-sizing: border-box;
     border: 1px silver solid;
     padding: 5px 2px;
+    margin: 5px;
+
+    a{
+      cursor: pointer;
+      color: gray;
+      &:hover{
+        color: darkgreen;
+      }
+    }
   }
 }
 

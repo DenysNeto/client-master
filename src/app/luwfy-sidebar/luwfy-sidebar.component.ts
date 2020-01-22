@@ -10,24 +10,33 @@ import {Group} from 'konva/types/Group';
 })
 export class LuwfySidebarComponent implements OnInit {
 
-  private flowboards;
   blocksArr: Group[] = [];
 
   constructor(private blocksService: BlocksService) {
   }
 
   ngOnInit() {
-    this.flowboards = this.blocksService.getFlowboards();
-  }
-
-  getBlocks() {
-    this.flowboards.forEach(flow => {
+    this.blocksService.subjectArray.subscribe(data => data.forEach(flow => {
       flow.children.forEach(elem => {
         if (elem.attrs.type === GroupTypes.Block && elem.attrs.name === 'debug') {
-          this.blocksArr.push(elem);
+          if (!this.getBlock(elem._id)) {
+            this.blocksArr.push(elem);
+          }
         }
       });
-    });
+    }));
   }
 
+  getBlock(id) {
+    return this.blocksArr.find(block => block._id === id);
+  }
+
+  focusOnBlock(block: Group) {
+    let oldStrokeColor = block.findOne('Rect').attrs.stroke;
+    block.findOne('Rect').attrs.stroke = 'red';
+    setTimeout(() => {
+      block.findOne('Rect').attrs.stroke = oldStrokeColor;
+    }, 200);
+
+  }
 }

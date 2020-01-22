@@ -15,11 +15,7 @@ import {StageComponent} from 'ng2-konva';
 export class UndoRedoService {
 
 
-  constructor() {
-
-
-  }
-
+  constructor() {}
 
   private _undoRedoArr: IStackUndoRedo[] = [];
 
@@ -27,18 +23,13 @@ export class UndoRedoService {
     return this._undoRedoArr;
   }
 
-
   addAction(action: IStackUndoRedo) {
-    console.log('action', action);
     this._undoRedoArr.push(action);
-
   }
 
   deleteLastAction() {
     this._undoRedoArr.pop();
-    console.log('[c] undoRedo', this.undoRedoArr);
   }
-
 
   deleteAction(action: ActionType, object_id: number) {
     console.log('[c] delete action');
@@ -46,7 +37,6 @@ export class UndoRedoService {
       if (elem.action === action && (elem.object as IGroupCustom)._id === object_id) {
         return elem;
       }
-
     });
 
     if (index_temp !== undefined) {

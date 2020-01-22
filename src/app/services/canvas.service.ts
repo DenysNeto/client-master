@@ -817,7 +817,8 @@ export class CanvasService {
       draggable: true,
       type: GroupTypes.Block,
       name: newBlockVariables.name,
-      date: Date.now()
+      date: Date.now(),
+      label: newBlockVariables.label
     }) as IGroupCustom;
     // mouseInsideRectangle is flag set true when mouse inside rectangle
     // and will changes when mouse leave rectangle

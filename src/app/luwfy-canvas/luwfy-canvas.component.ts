@@ -462,7 +462,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
           this.mainLayer.getStage().children[i].setAttr('draggable', false);
           temp_arr.push(this.mainLayer.getStage().children[i]);
-          console.log('[c]');
           this.mainLayer.getStage().children[i].moveTo(this.currentActiveGroup);
 
           i--;
@@ -847,7 +846,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     setInterval(() => {
       this.stage.getStage().add(this.mainLayer.getStage());
       this.mainLayer.getStage().add(this.activeWrapperBlock.rectangle);
-      // this.mainLayer.getStage().draw();
     }, 0);
   }
 
@@ -867,6 +865,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
               y: Math.abs(this.currentDraggedGroup.position().y - temp.position().y),
             });
             temp.add(this.currentDraggedGroup);
+            this.blocksService.pushFlowboardsChanges();
 
             this.currentDraggedGroup.dragBoundFunc(function(pos) {
               return {

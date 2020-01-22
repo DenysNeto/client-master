@@ -1,5 +1,4 @@
 import {Group} from 'konva/types/Group';
-import {Path} from 'konva/types/shapes/Path';
 import {Collection} from 'konva/types/Util';
 import {Shape, ShapeConfig} from 'konva/types/Shape';
 import {ICoordinates, IGroupCustom, IPathCustom} from './shapes-interface';
