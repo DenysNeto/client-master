@@ -107,6 +107,9 @@ export class CanvasService {
   fileNameDialogRef: MatDialogRef<ModalPropComponent>;
   blocksArr: InputBlocksInterface[];
 
+  temp: any;
+
+
   isElem() {
     return this.activePathsArr.length > 0;
   }
@@ -161,12 +164,12 @@ export class CanvasService {
       if (this.currentLineToDraw.isLineDrawable && event.target._id !== this.currentLineToDraw.groupId && event.target.parent._id !== this.currentLineToDraw.groupId && this.currentLineToDraw.groupId !== 0) {
         let input_circle = this.getInputCircleFromGroup(event.target.parent as Group);
         let current_flowboard = this.getGroupById(this.currentLineToDraw.flowboardId, mainLayer.getStage());
-        let current_path_group = this.getGroupById(this.currentLineToDraw.groupId, current_flowboard);
+        let current_path_group = this.getGroupById(this.currentLineToDraw.groupId, current_flowboard as Group);
 
 
         current_path_group.setAttr('draggable', 'true');
 
-        let current_path = current_path_group.findOne((elem) => {
+        let current_path = (current_path_group as Group).findOne((elem: any) => {
           if (elem.className === 'Path' && elem.attrs.start_info.start_group_id === this.currentLineToDraw.groupId && elem._id === this.currentLineToDraw.lineId) {
             return elem;
           }
@@ -176,7 +179,6 @@ export class CanvasService {
         let start_circle = current_path_group.findOne((elem) => {
           if (current_path && current_path.attrs.start_info && elem._id === current_path.attrs.start_info.start_circle_id) {
             return elem;
-
           }
 
         });
@@ -202,7 +204,7 @@ export class CanvasService {
 
         this.undoRedoService.addAction({
           action: ActionType.Create,
-          object: current_path,
+          object: current_path as any,
           parent: event.target.parent as Group,
         });
 
@@ -259,21 +261,55 @@ export class CanvasService {
 
 
     if (group.attrs.type === GroupTypes.Block) {
+      group.on('dragstart', (e) => {
+        console.log('[c] dd', e.evt.clientX);
+        this.temp = {
+          x: e.evt.clientX,
+          y: e.evt.clientY,
+        };
+
+        //this.temp = this.stage.getStage().getPointerPosition().x;
+
+      });
       group.on('dragmove', (event) => {
-        this.checkTheGroupNearBorder(event.target as IGroupCustom);
+        if (Math.abs(this.temp.x - event.evt.clientX) > 20 || Math.abs(this.temp.y - event.evt.clientY) > 20) {
 
 
-        let temp_blocks = this.getAllBlocksFromFlowBoard(event.target.parent as IGroupCustom, event.target._id);
-        if (temp_blocks && this.checkIfCollision(temp_blocks, event.target as IGroupCustom)) {
-          event.target.setAttr('collision', true);
-        } else {
-          event.target.setAttr('collision', false);
+          this.blocksService.getFlowboards().forEach(elem => {
+            // || elem.getAbsolutePosition().y -  50 > e.clientY  + window.innerHeight
+
+            if (elem.getAbsolutePosition().x + 130 > event.evt.clientX + (window.innerWidth) * this._currentZoom / 100 || elem.getAbsolutePosition().y + 50 > event.evt.clientY + (window.innerHeight) * this._currentZoom / 100
+              || event.evt.clientX - (window.innerWidth) * this._currentZoom / 100 > elem.getAbsolutePosition().x + 130 || event.evt.clientY - (window.innerHeight) * this._currentZoom / 100 > elem.getAbsolutePosition().y + 50) {
+              elem.hide();
+            } else {
+              elem.show();
+            }
+          });
+
+
+          this.temp = {
+            x: event.evt.clientX, y: event.evt.clientY,
+          };
+          this.temp = new Date().getTime();
+
+          // this.checkTheGroupNearBorder(event.target as IGroupCustom);
+          // let temp_blocks = this.getAllBlocksFromFlowBoard(event.target.parent as IGroupCustom, event.target._id);
+          // if (temp_blocks && this.checkIfCollision(temp_blocks, event.target as IGroupCustom)) {
+          //   event.target.setAttr('collision', true);
+          // } else {
+          //   event.target.setAttr('collision', false);
+          // }
         }
-
-
       });
 
       group.on('dragend', (event) => {
+
+
+        this.blocksService.getFlowboards().forEach(elem => {
+          elem.show();
+        });
+
+
         if (event.target.attrs.collision) {
 
           event.target.position(event.target.attrs.drag_start_position);
@@ -551,18 +587,23 @@ export class CanvasService {
 
     });
     group.on('dragmove', (event) => {
+
+
       if (!event) {
         return 0;
       }
 
       let isPathInGroup = this.isPathInGroup(event.target as Group);
+      if (!isPathInGroup) {
+        return 0;
+      }
 
       let input_paths: Array<IPathCustom> = this.getAllInputLinesFromGroup(event.target.parent, event.target as Group | IGroupCustom);
-      if (isPathInGroup || input_paths) {
+
+
+      if (!(isPathInGroup || input_paths)) {
 
         let output_paths: Collection<IPathCustom> = this.getAllOutputLinesFromGroup(event.target as Group | IGroupCustom);
-
-
         if (output_paths) {
 
           output_paths.each((elem) => {

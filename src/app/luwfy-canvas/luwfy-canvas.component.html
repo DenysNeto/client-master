@@ -24,11 +24,18 @@
   <!--  Konva window-->
   <div class="container">
     <ko-stage #stage [config]="KonvaUtil.createStage({width: konvaSize.width, height: konvaSize.height})"
+
               (dragover)="handleDragOver($event)"
               (click)="handleClickEvent($event)"
               (mouseup)="handleMouseUp($event)"
               (mousedown)="handleMouseDown($event)"
-              (mousemove)="handleMouseMove($event)">
+              (mousemove)="handleMouseMove($event)"
+    >
+
+
+
+
+
       <!--    Layer where created our block schemas-->
       <ko-layer #mainLayer>
       </ko-layer>
