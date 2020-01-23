@@ -45,9 +45,11 @@
 }
 
 .container {
-  max-width: 1500px !important;
+  position: relative;
+  max-width: 1500px;
   height: 888px;
   overflow: auto;
+  scroll-behavior: smooth;
 }
 
 #flowTabs{

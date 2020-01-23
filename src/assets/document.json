@@ -15,6 +15,21 @@
     "btn_event_block": "null"
   },
   {
+    "name": "connect",
+    "label": "new connect",
+    "inputs": 1,
+    "outputs": 1,
+    "output_errors": 0,
+    "color": "#8e05ff",
+    "setting_icons": {
+      "edit_icon": "\uf040",
+      "wizard_icon": "\uf1de",
+      "settings_icon": "\uf013",
+      "face_image": "\uf061"
+    },
+    "btn_event_block": "null"
+  },
+  {
     "name": "inject",
     "label": "new inject",
     "inputs": 1,

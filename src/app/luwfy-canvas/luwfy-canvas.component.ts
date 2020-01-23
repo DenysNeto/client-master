@@ -2,7 +2,6 @@ import {AfterViewInit, Component, ElementRef, HostListener, OnInit, ViewChild} f
 import {RegistryService} from '../services/registry.service';
 import KonvaUtil from './konva-util';
 import {theme} from './theme';
-
 import Konva from 'konva';
 import {CanvasService} from '../services/canvas.service';
 import {
@@ -11,7 +10,7 @@ import {
   IActiveWrapperBlock,
   ICurrentLineToDraw,
   IGroupCustom,
-  IPathCustom, IRectCustom,
+  IPathCustom,
 } from './shapes-interface';
 import {Collection} from 'konva/types/Util';
 import {MatDialog, MatMenuTrigger} from '@angular/material';
@@ -22,11 +21,12 @@ import {ActionType} from './undo-redo.interface';
 import {Layer} from 'konva/types/Layer';
 import {UndoRedoCanvasService} from '../services/undo-redo-canvas.service';
 import {StageComponent} from 'ng2-konva';
-import {GridSizes, KonvaStartSizes, MaxStageSize, ShapesSizes} from './sizes';
+import {ContainerKonvaSizes, GridSizes, KonvaStartSizes, MaxStageSize, ShapesSizes as sizes, ShapesSizes} from './sizes';
 import ShapeCreator from './ShapesCreator';
 import {FlowboardSizes} from './sizes';
 import {Stage} from 'konva/types/Stage';
 import {BlocksService} from '../services/blocks.service';
+import {TestStartStop} from '../services/testStartStop';
 
 @Component({
   selector: 'luwfy-canvas',
@@ -37,12 +37,13 @@ import {BlocksService} from '../services/blocks.service';
 export class CanvasComponent implements OnInit, AfterViewInit {
   constructor(private RegistryService: RegistryService, private canvasService: CanvasService, private dialog: MatDialog,
               private blocksRedactorService: BlocksRedactorService, private undoRedoService: UndoRedoService,
-              private tempService: UndoRedoCanvasService, private blocksService: BlocksService) {
+              private tempService: UndoRedoCanvasService, private blocksService: BlocksService, private testStartStop: TestStartStop) {
   }
 
   @ViewChild('stage', null) stage: Stage;
   @ViewChild('menuTrigger', null) menuTrigger: MatMenuTrigger;
   @ViewChild('mainLayer', null) mainLayer: any = new Konva.Layer({});
+  @ViewChild('container', {static: true}) container: ElementRef;
 
 
   data = [];
@@ -51,7 +52,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   idChangedTrigger: boolean = false;
   KonvaUtil = KonvaUtil;
   konvaSize = {width: KonvaStartSizes.width, height: KonvaStartSizes.height};
-  // flowboards: Group[] = [];
   interval: any;
   subTabs: dataInTabLayer[] = [];
   menuOfViews: string[] = [];
@@ -114,12 +114,11 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   };
 
   currentDraggedGroup: IGroupCustom;
-
   //todo move to service
 
   currentActiveGroup: Group = new Konva.Group({
     draggable: true,
-    visible: true,
+    visible: true
   }).on('dragstart', (event) => {
     this.activeWrapperBlock.isDraw = false;
     this.activeWrapperBlock.rectangle.setAttr('visible', false);
@@ -130,51 +129,36 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       parent: event.target.parent as Layer,
     });
   }).on('dragmove', (event) => {
-
+    this.testStartStop.startStopTest('dragmove -> currentActiveGroup', Date.now(), true); // test function ----------
     if (!event) {
       return 0;
     }
-
     event.target.children.each((elem) => {
-
       let isPathInGroup = this.canvasService.isPathInGroup(elem.getStage());
       let input_paths: Array<IPathCustom> = this.canvasService.getAllInputLinesFromGroup(this.mainLayer, elem as Group | IGroupCustom);
       if (isPathInGroup || input_paths) {
-
         let output_paths: Collection<IPathCustom> = this.canvasService.getAllOutputLinesFromGroup(elem as Group | IGroupCustom);
-        console.log('[c] test', output_paths);
         if (output_paths) {
-
           output_paths.each((elem) => {
-
             //start point
             let temp_start_point_group = this.canvasService.getGroupById(elem.attrs.end_info.end_group_id, this.mainLayer.getStage());
             let temp_end_point_group = this.canvasService.getGroupById(elem.attrs.start_info.start_group_id, this.mainLayer.getStage());
             let temp_end_point_circle = this.canvasService.getCircleFromGroupById(elem.getStage(), elem.attrs.start_info.start_circle_id);
             let temp_start_circle = this.canvasService.getCircleFromGroupById(temp_start_point_group, elem.attrs.end_info.end_circle_id);
-
             let temp_input_circle = elem.getStage().findOne((elem) => {
               if (elem.className === 'Circle' && elem.attrs.type === CircleTypes.Input) {
                 return elem;
               }
             });
-
-
             elem.setAttr('data',
               KonvaUtil.generateLinkPath(temp_end_point_circle.attrs.x,
                 temp_end_point_circle.attrs.y,
                 temp_start_point_group.getAbsolutePosition().x - event.target.getAbsolutePosition().x - temp_end_point_group.attrs.x,
                 temp_start_point_group.getAbsolutePosition().y - event.target.getAbsolutePosition().y - temp_end_point_group.attrs.y + temp_start_circle.attrs.y, 1));
-
           });
-
         }
-
         if (input_paths) {
-
-          console.log('[c] input_path');
           input_paths.forEach((elem) => {
-
             //start point
             let temp_start_point_group = this.canvasService.getGroupById(elem.attrs.start_info.start_group_id, this.mainLayer.getStage());
             let temp_end_point_group = this.canvasService.getGroupById(elem.attrs.end_info.end_group_id, this.mainLayer.getStage());
@@ -186,20 +170,16 @@ export class CanvasComponent implements OnInit, AfterViewInit {
                 return elem;
               }
             });
-
             elem.setAttr('data',
               KonvaUtil.generateLinkPath(temp_start_point_circle.attrs.x,
                 temp_start_point_circle.attrs.y,
                 +event.target.getAbsolutePosition().x - temp_start_point_group.getAbsolutePosition().x + temp_end_point_group.attrs.x,
                 event.target.getAbsolutePosition().y - temp_start_point_group.getAbsolutePosition().y + temp_end_point_group.attrs.y + temp_input_circle.attrs.y, 1));
           });
-
         }
-
       }
-
     });
-
+    this.testStartStop.startStopTest('dragmove -> currentActiveGroup', Date.now()); // test function ----------
   });
 
   // mouse rectangle selection
@@ -221,6 +201,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   };
 
   reverseFunction = (r1, r2) => {
+    this.testStartStop.startStopTest('reverseFunction', Date.now(), true); // test function ----------
     let r1x = r1.x,
       r1y = r1.y,
       r2x = r2.x,
@@ -235,14 +216,15 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       r1y = r2y;
       r2y = r1y + d;
     }
+    this.testStartStop.startStopTest('reverseFunction', Date.now()); // test function ----------
     return ({x1: r1x, y1: r1y, x2: r2x, y2: r2y});
   };
 
 
   updateDragWrapper(posIn: { x: number, y: number }) {
+    this.testStartStop.startStopTest('updateDragWrapper', Date.now(), true); // test function ----------
     this.activeWrapperBlock.now_position = {x: posIn.x, y: posIn.y};
     let posRect = this.reverseFunction(this.activeWrapperBlock.initial_position, this.activeWrapperBlock.now_position);
-
     this.activeWrapperBlock.rectangle.setAttrs({
       width: posRect.x2 - posRect.x1,
       height: posRect.y2 - posRect.y1,
@@ -250,13 +232,13 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       x: posRect.x1,
       y: posRect.y1,
     });
+    this.testStartStop.startStopTest('updateDragWrapper', Date.now()); // test function ----------
   }
 
   //delete all objects from the selection rectangle
   deleteShapesFromGroup = () => {
-
+    this.testStartStop.startStopTest('deleteShapesFromGroup', Date.now(), true); // test function ----------
     let group_children_temp = this.currentActiveGroup.children;
-
     if (group_children_temp.length > 0) {
       while (group_children_temp.length) {
         group_children_temp[group_children_temp.length - 1].children.each((elem) => {
@@ -273,40 +255,34 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       }
       this.currentActiveGroup.removeChildren();
       this.mainLayer.getStage().draw();
-
     }
+    this.testStartStop.startStopTest('deleteShapesFromGroup', Date.now()); // test function ----------
   };
 
   setClickEventForGroup = (group: Group) => {
+    this.testStartStop.startStopTest('setClickEventForGroup', Date.now(), true); // test function ----------
     group.on('click', (event) => {
       event.cancelBubble = true;
       if (event.evt.ctrlKey) {
         if (event.target.className === 'Path') {
           return 0;
         }
-
         if (this.canvasService.activePathsArr.length > 0) {
           return 0;
         }
-
         if (this.currentActiveGroup.hasChildren() && this.canvasService.isGroupInGroup(event.target.parent._id, this.currentActiveGroup)) {
           return 0;
         }
-
         if (event.target.className && event.target.className === 'Path') {
           return 0;
         }
-
         event.target.parent.setAttr('x', event.target.parent.position().x - this.currentActiveGroup.position().x);
         event.target.parent.setAttr('y', event.target.parent.position().y - this.currentActiveGroup.position().y);
-
         this.currentActiveGroup.add(event.target.parent as Group);
-
         this.undoRedoService.addAction({
           action: ActionType.Select,
           object: this.currentActiveGroup,
         });
-
         event.target.parent.children.each((elem) => {
           if (elem.className !== 'Path') {
             elem.setAttr('stroke', theme.choose_group_color);
@@ -315,82 +291,63 @@ export class CanvasComponent implements OnInit, AfterViewInit {
           elem.setAttr('draggable', false);
         });
         event.target.parent.setAttr('draggable', false);
-
       }
-
     });
-
-    //todo add switches for different group types
-
+    this.testStartStop.startStopTest('setClickEventForGroup', Date.now()); // test function ----------
   };
 
   handleClickEvent = (event) => {
-
-
+    this.testStartStop.startStopTest('handleClickEvent', Date.now(), true); // test function ------------
     if (this.currentLineToDraw.isLineDrawable) {
       this.currentLineToDraw.isLineDrawable = false;
-
       let current_group = this.mainLayer.getStage().findOne((elem) => {
         if (elem._id === this.currentLineToDraw.groupId) {
           return elem;
         }
-
       });
-
       let current_path = current_group.findOne((elem) => {
         if (elem.attrs.custom_id && elem.attrs.custom_id.includes('line')) {
           return elem;
         }
-
       });
-
       this.canvasService.resetActivePathArr();
       return 0;
     }
-
+    this.testStartStop.startStopTest('handleClickEvent', Date.now()); // test function -------------
   };
 
   handleDragOver = (e) => {
+    this.testStartStop.startStopTest('handleDragOver', Date.now(), true); // test function --------------
     if (this.idChangedTrigger) {
       this.currentDraggedGroup = this.canvasService.createDefaultGroup(this.mainLayer, this.activeWrapperBlock, this.currentActiveGroup, this.currentId);
       this.idChangedTrigger = false;
       this.setClickEventForGroup(this.currentDraggedGroup);
-      //todo
       this.mainLayer.getStage().add(this.currentDraggedGroup);
       this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].setAttr('time', new Date().getTime());
       this.mainLayer.getStage().draw();
-
       this.undoRedoService.addAction({
         action: ActionType.Create, object: this.currentDraggedGroup, parent: this.mainLayer,
       });
     } else {
-
-
-      if (new Date().getTime() - this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].attrs.time > 10) {
-
+      if ((new Date().getTime() - this.currentDraggedGroup.attrs.time) > 20) {
         let temp;
-
-      this.blocksService.getFlowboards().forEach((elem) => {
-        if (this.checkIsGroupInFlow(elem)) {
-          temp = this.checkIsGroupInFlow(elem, true);
-          return 0;
-        }
-      });
-
-        this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].setAttr('time', new Date().getTime());
-        this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].position({
+        this.blocksService.getFlowboards().forEach((elem) => {
+          if (this.checkIsGroupInFlow(elem)) {
+            temp = this.checkIsGroupInFlow(elem, true);
+            return 0;
+          }
+        });
+        this.currentDraggedGroup.setAttr('time', new Date().getTime());
+        this.currentDraggedGroup.position({
           x: e.layerX / (this.zoomInPercent / 100),
           y: e.layerY / (this.zoomInPercent / 100)
         });
-
         if (temp) {
           temp.children.each(elem => {
             if (elem.className === 'Rect') {
               elem.setAttr('stroke', 'green');
             }
-
           });
-
         } else {
           // @ts-ignore
           this.canvasService.getAllFlowsFromLayer(this.mainLayer).each(elem => {
@@ -399,89 +356,53 @@ export class CanvasComponent implements OnInit, AfterViewInit {
                 elem.setAttr('stroke', theme.line_color);
               }
             });
-
           });
         }
-        // this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].move({x: 10, y: 10});
-        //
-        // this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].show();
         if (!this.interval) {
           this.interval = setInterval(() => {
-            this.stage.getStage().add(this.mainLayer.getStage());
-          }, 0);
+            this.mainLayer.getStage().draw();
+          }, 50);
         }
-
-
-        //
-
       }
-
-
     }
-
+    this.testStartStop.startStopTest('handleDragOver', Date.now()); // test function ------------
   };
 
-  //todo uncomment
-
-  getPathFromGroupById(id: number, component: StageComponent | any) {
-    if (component) {
-      return component.findOne((elem) => {
-        if (elem.className === 'Path' && elem._id === id) {
-          return elem;
-        }
-      });
-    } else {
-      return null;
-    }
-  }
-
-
   handleMouseUp = (e) => {
+    this.testStartStop.startStopTest('handleMouseUp', Date.now(), true); // test function
     this.isMouseDown = false;
     if (this.currentLineToDraw.isLineDrawable) {
       let current_group = this.canvasService.getGroupById(this.currentLineToDraw.groupId, this.mainLayer);
       let temp_path = this.canvasService.getPathFromGroupById(this.currentLineToDraw.lineId, current_group);
-
       if (!temp_path) {
         return 0;
       }
-
       if (!temp_path.start_info || !temp_path.end_info) {
         temp_path.remove();
       }
       this.mainLayer.getStage().draw();
       return 0;
-
     }
-
-
     let elem = this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1];
     let i = this.mainLayer.getStage().children.length;
-
     let temp = this.mainLayer.getStage().children.length;
     let temp_arr: any = [];
     for (let i = 0; i < temp; i++) {
       if (this.mainLayer.getStage().children[i] && this.mainLayer.getStage().children[i]._id > 100) {
         if (this.checkValueBetween(this.mainLayer.getStage().children[i].position(), this.mainLayer.getStage().children[i].attrs.width, this.mainLayer.getStage().children[i].attrs.height)) {
-
           this.mainLayer.getStage().children[i].setAttr('x', this.mainLayer.getStage().children[i].position().x - this.currentActiveGroup.position().x);
           this.mainLayer.getStage().children[i].setAttr('y', this.mainLayer.getStage().children[i].position().y - this.currentActiveGroup.position().y);
-
           if (this.mainLayer.getStage().children[i].nodeType === 'Group') {
             this.mainLayer.getStage().children[i].children.each((elem) => {
               if (elem.className !== 'Path') {
                 elem.setAttr('stroke', theme.choose_group_color);
               }
-
             });
           }
-
           this.mainLayer.getStage().children[i].setAttr('draggable', false);
           temp_arr.push(this.mainLayer.getStage().children[i]);
           this.mainLayer.getStage().children[i].moveTo(this.currentActiveGroup);
-
           i--;
-
         }
       }
     }
@@ -491,64 +412,49 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         object: this.currentActiveGroup,
       });
     }
-
-    //
-
     this.activeWrapperBlock.isActive = true;
-
     this.activeWrapperBlock.isDraw = false;
     this.activeWrapperBlock.rectangle.setAttr('visible', false);
-
+    this.testStartStop.startStopTest('handleMouseUp', Date.now()); // test function ------------
   };
 
   checkValueBetween = (obj: { x: number, y: number }, width, height) => {
+    this.testStartStop.startStopTest('checkValueBetween', Date.now(), true); // test function ---------
     // up and left
-
     let condition_up_and_left = (
-
       ((obj.x < this.activeWrapperBlock.initial_position.x
         && obj.x > this.activeWrapperBlock.now_position.x
         ||
         obj.x + width < this.activeWrapperBlock.initial_position.x
         && obj.x + width > this.activeWrapperBlock.now_position.x)
-
         &&
-
         (this.activeWrapperBlock.initial_position.y >= obj.y
           && this.activeWrapperBlock.now_position.y <= obj.y
           ||
           this.activeWrapperBlock.initial_position.y >= obj.y + height
           && this.activeWrapperBlock.now_position.y <= obj.y + height
         ))
-
     );
-
     let condition_up_and_right = (
       (obj.x >= this.activeWrapperBlock.initial_position.x
         && obj.x <= this.activeWrapperBlock.now_position.x
         ||
         obj.x + width >= this.activeWrapperBlock.initial_position.x
         && obj.x + width <= this.activeWrapperBlock.now_position.x)
-
       &&
-
       (this.activeWrapperBlock.initial_position.y >= obj.y
         && this.activeWrapperBlock.now_position.y <= obj.y
         ||
         height && this.activeWrapperBlock.initial_position.y >= obj.y + height
         && this.activeWrapperBlock.now_position.y <= obj.y + height)
-
     );
-
     let condition_down_and_right = (
       obj.x >= this.activeWrapperBlock.initial_position.x
       && obj.x <= this.activeWrapperBlock.now_position.x
       ||
       width && obj.x >= this.activeWrapperBlock.initial_position.x + width
       && obj.x <= this.activeWrapperBlock.now_position.x + width
-
       &&
-
       (this.activeWrapperBlock.initial_position.y >= obj.y
         && this.activeWrapperBlock.now_position.y <= obj.y
         ||
@@ -558,63 +464,46 @@ export class CanvasComponent implements OnInit, AfterViewInit {
           height && this.activeWrapperBlock.initial_position.y >= obj.y + height
           && this.activeWrapperBlock.now_position.y <= obj.y + height)
       ));
-
     let condition_down_and_left = (obj.x <= this.activeWrapperBlock.initial_position.x
         && obj.x >= this.activeWrapperBlock.now_position.x
         ||
         width && obj.x + width <= this.activeWrapperBlock.initial_position.x
         && obj.x + width >= this.activeWrapperBlock.now_position.x
       )
-
       &&
-
       (
         this.activeWrapperBlock.initial_position.y <= obj.y
         && this.activeWrapperBlock.now_position.y >= obj.y
       );
-
     // up and left
     if (this.activeWrapperBlock.initial_position.x >= this.activeWrapperBlock.now_position.x && this.activeWrapperBlock.initial_position.y >= this.activeWrapperBlock.now_position.y) {
       if (condition_up_and_left) {
         return true;
       }
-
     }
-
     // up and right
     if (this.activeWrapperBlock.initial_position.x <= this.activeWrapperBlock.now_position.x && this.activeWrapperBlock.initial_position.y >= this.activeWrapperBlock.now_position.y) {
       if (condition_up_and_right) {
         return true;
       }
     }
-
     // down and left
     if (this.activeWrapperBlock.initial_position.x >= this.activeWrapperBlock.now_position.x && this.activeWrapperBlock.initial_position.y <= this.activeWrapperBlock.now_position.y) {
       if (condition_down_and_left) {
         return true;
       }
-
     }
-
     // down and right
     if (this.activeWrapperBlock.initial_position.x <= this.activeWrapperBlock.now_position.x && this.activeWrapperBlock.initial_position.y <= this.activeWrapperBlock.now_position.y) {
-
       if (condition_down_and_right) {
-
         return true;
-        //todo add elem to group
-
       }
-
     } else {
       return false;
     }
-
+    this.testStartStop.startStopTest('checkValueBetween', Date.now()); // test function ------------
   };
 
-  handleCancelEvent(event) {
-    console.log('[c] cancel');
-  }
 
   @HostListener('document:keydown.backspace') undoBackspace(event: KeyboardEvent) {
     if (this.currentActiveGroup.hasChildren()) {
@@ -623,76 +512,52 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         object: this.currentActiveGroup.children,
         parent: this.currentActiveGroup,
       });
-
       this.currentActiveGroup.removeChildren();
     }
-
     if (this.canvasService.activePathsArr.length > 0) {
-
-      console.log('[c] this.canvasService.activePathsArr', this.canvasService);
       this.canvasService.activePathsArr.forEach((elem) => {
         elem.remove();
       });
-
       this.undoRedoService.addAction({
         action: ActionType.Delete,
         object: this.canvasService.activePathsArr,
       });
       this.canvasService.resetActivePathArr();
     }
-
   }
 
   @HostListener('document:keydown.control.z') undoCtrlZ(event: KeyboardEvent) {
-
     if (this.currentActiveGroup.hasChildren) {
-
       this.deleteShapesFromGroup();
       this.tempService.performUndo(this.mainLayer, this.currentActiveGroup);
     } else {
       this.tempService.performUndo(this.mainLayer, this.currentActiveGroup);
     }
-
-    // responds to control+z
   }
 
   @HostListener('document:keydown.control.c') undoCtrlC(event: KeyboardEvent) {
-
     if (this.currentActiveGroup.hasChildren) {
-      console.log('[c] ooo', this.currentActiveGroup.getAbsolutePosition());
-
       this.currentCopiedGroup.add(this.currentActiveGroup.clone());
-
-      console.log('[c] current_copied_group', this.currentCopiedGroup);
     }
-
     // responds to control+z
   }
 
   @HostListener('document:keydown.control.v') undoCtrlV(event: KeyboardEvent) {
     this.currentCopiedGroup.setAttr('visible', true);
-
-
     this.currentCopiedGroup.setAbsolutePosition(
       {
         x: this.stage.getStage().getPointerPosition().x - this.currentActiveGroup.children[0].attrs.x,
         y: this.stage.getStage().getPointerPosition().y - this.currentActiveGroup.children[0].attrs.y
       }
     );
-
-
     // responds to control+z
   }
 
-
-  //todo uncomment
-
   handleMouseMove = (e) => {
+    this.testStartStop.startStopTest('handleMouseMove', Date.now(), true); // test function -----------
     if (!e) {
       return 0;
     }
-
-
     if (this.stage.getStage().getPointerPosition().x > (this.stage.getStage().width() - 20) && this.isMouseDown) {
       if (this.stage.getStage().width() + 500 <= MaxStageSize) {
         this.stage.getStage().width(this.stage.getStage().width() + 500);
@@ -705,65 +570,49 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         this.activeTab.startStageSize.oldHeight = this.stage.getStage().height();
       }
     }
-
-
     if (this.currentLineToDraw.isLineDrawable) {
       const pos = this.stage.getStage().getPointerPosition();
       if (Math.abs(this.currentLineToDraw.prevMainX - pos.x) > 10 || Math.abs(this.currentLineToDraw.prevMainY - pos.y) > 10) {
-
         const pos = this.stage.getStage().getPointerPosition();
         let current_flowboard = this.mainLayer.getStage().findOne((elem) => {
-
           if (elem._id === this.currentLineToDraw.flowboardId) {
             return elem;
           }
-
         });
         let current_group = current_flowboard.findOne((elem) => {
-
           if (elem._id === this.currentLineToDraw.groupId) {
             return elem;
           }
-
         });
-
         let current_path = current_group.findOne((elem) => {
           if (elem._id === this.currentLineToDraw.lineId) {
             return elem;
           }
-
         });
-
         if (current_path) {
           current_path.setAttr('data', KonvaUtil.generateLinkPath(this.currentLineToDraw.prevX - current_group.getPosition().x - 20, this.currentLineToDraw.prevY - current_group.getPosition().y,
             (Math.ceil((pos.x / (this.zoomInPercent / 100) - current_group.parent.getPosition().x - current_group.getPosition().x) / 5) * 5), (Math.ceil((pos.y / (this.zoomInPercent / 100) - current_group.parent.getPosition().y - current_group.getPosition().y) / 5) * 5), 1));
-
-
         }
         this.mainLayer.getStage().draw();
-
       }
     }
     if (this.canvasService.activePathsArr.length > 0) {
       return 0;
     }
-
     if (this.currentCopiedGroup.hasChildren()) {
       this.currentCopiedGroup.setAbsolutePosition({
         x: this.stage.getStage().getPointerPosition().x - this.currentActiveGroup.children[0].attrs.x,
         y: this.stage.getStage().getPointerPosition().y - this.currentActiveGroup.children[0].attrs.y
       });
     }
-
     if (this.activeWrapperBlock.isDraw) {
       this.updateDragWrapper({x: e.layerX, y: e.layerY});
-
     }
+    this.testStartStop.startStopTest('handleMouseMove', Date.now()); // test function -----------
   };
 
-//todo uncomment
-
   handleMouseDown = (e) => {
+    this.testStartStop.startStopTest('handleMouseDown', Date.now(), true); // test function -----------
     this.isMouseDown = true;
     if (this.currentLineToDraw.isLineDrawable) {
       return 0;
@@ -782,18 +631,17 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         });
       }
       this.deleteShapesFromGroup();
-
     }
-
     this.activeWrapperBlock.initial_position.x = e.layerX;
     this.activeWrapperBlock.initial_position.y = e.layerY;
     this.activeWrapperBlock.now_position.x = e.layerX;
     this.activeWrapperBlock.now_position.y = e.layerY;
     this.activeWrapperBlock.isDraw = true;
-
+    this.testStartStop.startStopTest('handleMouseDown', Date.now()); // test function -----------
   };
 
   createGrid = (flow) => {
+    this.testStartStop.startStopTest('createGrid', Date.now(), true); // test function -----------
     let distBetweenLines = 20;
     let vertLines = flow.attrs.height / distBetweenLines;
     let horLines = flow.attrs.width / distBetweenLines;
@@ -806,9 +654,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         flow.add(ShapeCreator.createLineForGrid([0, distBetweenLines * i, flow.attrs.width, distBetweenLines * i]));
       }
     }
-
     let menuButton = ShapeCreator.createMenuButton();
-    // todo open menu with sub views
     menuButton.on('click', event => {
       let menu = document.getElementById('menuTrigger');
       menu.style.display = '';
@@ -820,15 +666,18 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     });
     flow.add(ShapeCreator.createShadowForGrid(flow.attrs.width, flow.attrs.height), ShapeCreator.createDrugPoint(),
       ShapeCreator.createNameOfFlowboard(this.blocksService.getFlowboards().length), menuButton);
+    this.testStartStop.startStopTest('createGrid', Date.now()); // test function -----------
   };
 
 
   checkIsGroupInFlow(flowGroup, returnFlow?: boolean) {
+    this.testStartStop.startStopTest('checkIsGroupInFlow', Date.now(), true); // test function -----------
     if (flowGroup && flowGroup.attrs.x < this.currentDraggedGroup.attrs.x - ShapesSizes.circle_radius && flowGroup.attrs.x + flowGroup.attrs.width > this.currentDraggedGroup.attrs.x + this.currentDraggedGroup.width() - ShapesSizes.circle_radius
       &&
       flowGroup.attrs.y < this.currentDraggedGroup.attrs.y && flowGroup.attrs.y + flowGroup.attrs.height > this.currentDraggedGroup.attrs.y + this.currentDraggedGroup.height()) {
       return returnFlow ? flowGroup : true;
     }
+    this.testStartStop.startStopTest('checkIsGroupInFlow', Date.now()); // test function -----------
   }
 
   ngOnInit() {
@@ -843,35 +692,26 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         }
       });
     }
-
     this.RegistryService.currentDraggableItem.subscribe((data) => {
       this.currentId = data;
       this.idChangedTrigger = true;
     });
-
     this.RegistryService.currentTabBlocks.subscribe(blocks => {
       this.data = blocks;
     });
-
     this.canvasService.lineToDraw.subscribe((data) => {
       this.currentLineToDraw = data;
     });
-
     this.canvasService.activeBlock.subscribe((data) => {
       this.activeWrapperBlock = data;
     });
-
-
   }
 
   ngAfterViewInit() {
-
     this.stage.getStage().add(this.mainLayer.getStage());
     this.mainLayer.getStage().add(this.activeWrapperBlock.rectangle);
-
     this.activeTab.startStageSize.oldWidth = this.stage.getStage().width();
     this.activeTab.startStageSize.oldHeight = this.stage.getStage().height();
-
     this.canvasService.dragFinished.subscribe(() => {
       let temp;
       // @ts-ignore
@@ -885,14 +725,12 @@ export class CanvasComponent implements OnInit, AfterViewInit {
             });
             temp.add(this.currentDraggedGroup);
             this.blocksService.pushFlowboardsChanges();
-
             this.currentDraggedGroup.dragBoundFunc((pos) => {
               return {
                 x: pos.x <= (this.currentDraggedGroup.parent.position().x + GridSizes.flowboard_cell) * (this.zoomInPercent / 100) ? (this.currentDraggedGroup.parent.position().x + GridSizes.flowboard_cell) * (this.zoomInPercent / 100) : pos.x <= (this.currentDraggedGroup.parent.position().x + this.currentDraggedGroup.parent.attrs.width - this.currentDraggedGroup.attrs.width) * (this.zoomInPercent / 100) ? pos.x : (this.currentDraggedGroup.parent.position().x + this.currentDraggedGroup.parent.attrs.width - this.currentDraggedGroup.attrs.width) * (this.zoomInPercent / 100),
                 y: pos.y <= (this.currentDraggedGroup.parent.position().y + GridSizes.flowboard_cell * 2) * (this.zoomInPercent / 100) ? (this.currentDraggedGroup.parent.position().y + GridSizes.flowboard_cell) * (this.zoomInPercent / 100) : pos.y <= (this.currentDraggedGroup.parent.position().y + this.currentDraggedGroup.parent.attrs.height - this.currentDraggedGroup.attrs.height) * (this.zoomInPercent / 100) ? pos.y : (this.currentDraggedGroup.parent.position().y + this.currentDraggedGroup.parent.attrs.height - this.currentDraggedGroup.attrs.height - GridSizes.flowboard_cell) * (this.zoomInPercent / 100)
               };
             });
-
             flowGroup.children.each(elem => {
               if (elem.className === 'Rect') {
                 elem.setAttr('stroke', theme.line_color);
@@ -919,17 +757,14 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       });
       this.canvasService.checkIfCollisionBetweenFlowBoards(temp_elem, this.blocksService.getFlowboards(), value.dimension);
     });
-
     this.canvasService.flowboardPositionChanged.subscribe((value) => {
       let temp_elem = this.blocksService.getFlowboards().find((elem) => {
         if (elem._id === value.id) {
           return elem;
         }
       });
-
       temp_elem && this.canvasService.checkIfCollisionBetweenFlowBoards(temp_elem, this.blocksService.getFlowboards(), value.dimension);
     });
-
     this.blocksService.getFlowboards().forEach(flow => {
       this.createGrid(flow);
       this.mainLayer.getStage().add(flow);
@@ -942,11 +777,12 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   }
 
   addFlowToLayer() {
+    this.testStartStop.startStopTest('addFlowToLayer', Date.now(), true); // test function -----------
     let newX, newY;
     if (this.blocksService.getFlowboards().length === 0) {
       newX = newY = FlowboardSizes.sizeBetweenFlowblock;
     } else {
-      let lastFlowboard = this.blocksService.getFlowboards()[this.blocksService.getFlowboards().length - 1]; // todo VIKTOR - here maybe problem with flowboard
+      let lastFlowboard = this.blocksService.getFlowboards()[this.blocksService.getFlowboards().length - 1];
       if (lastFlowboard.attrs.x + lastFlowboard.attrs.width + FlowboardSizes.newFlowWidth < this.stage.getStage().width()) {
         newX = lastFlowboard.attrs.x + lastFlowboard.attrs.width + FlowboardSizes.sizeBetweenFlowblock;
         newY = lastFlowboard.attrs.y;
@@ -971,10 +807,11 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     setTimeout(() => {
       this.mainLayer.getStage().draw();
     }, 100);
-    //this.mainLayer.getStage().draw();
+    this.testStartStop.startStopTest('addFlowToLayer', Date.now()); // test function -----------
   }
 
   onMainTabBarClick(event) {
+    this.testStartStop.startStopTest('onMainTabBarClick', Date.now(), true); // test function -----------
     this.activeTab = this.subTabs.find(tab => tab.label === event.tab.textLabel);
     this.mainLayer.getStage().removeChildren();
     this.mainLayer.getStage().draw();
@@ -991,39 +828,40 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         this.oldStageWidth = this.stage.getStage().width();
         this.oldStageHeight = this.stage.getStage().height();
         this.showSubView(this.activeTab.layerData[0]);
-
       }
     }
+    this.testStartStop.startStopTest('onMainTabBarClick', Date.now()); // test function -----------
+
   }
 
 
   onFlowTabBarClick(event) {
     this.showSubView(this.activeTab.layerData[event]);
-    this.mainLayer.getStage().draw();
   }
 
   showSubView(id) {
+    this.testStartStop.startStopTest('showSubView', Date.now(), true); // test function -----------
     this.mainLayer.getStage().removeChildren();
     let showFlow = this.blocksService.getFlowboards().find(flow => flow._id === id).clone();
     this.stage.getStage().width(KonvaStartSizes.width);
     if ((showFlow.attrs.height * 1.25) > KonvaStartSizes.height) {
       this.stage.getStage().height(showFlow.attrs.height * 1.25);
     } else {
-
       this.stage.getStage().height(KonvaStartSizes.height);
     }
-
     this.convertMyFlowForView(showFlow);
     this.mainLayer.getStage().add(showFlow);
     this.activeTab.startStageSize.oldWidth = this.stage.getStage().width();
     this.activeTab.startStageSize.oldHeight = this.stage.getStage().height();
     this.zoomingEvent(1);
     this.mainLayer.getStage().draw();
+    this.testStartStop.startStopTest('showSubView', Date.now()); // test function -----------
   }
 
   convertMyFlowForView(flowboard) {
+    this.testStartStop.startStopTest('convertMyFlowForView', Date.now(), true); // test function -----------
     if (flowboard.attrs.type === GroupTypes.Flowboard) {
-      this.draggingOnOff(flowboard);
+      //this.draggingOnOff(flowboard);
       this.setPositionInView(flowboard);
       flowboard.children.toArray().forEach(obj => {
         if (obj.attrs.type === GroupTypes.Block) {
@@ -1034,20 +872,20 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         }
       });
     }
+    this.testStartStop.startStopTest('convertMyFlowForView', Date.now()); // test function -----------
   }
 
   setPositionInView(flowboard) {
-    flowboard.attrs.x = (window.screen.width - flowboard.attrs.width) / 2 - 100;
-    flowboard.attrs.y = (window.screen.height - flowboard.attrs.height) / 2 - 50;
+    flowboard.attrs.x = (ContainerKonvaSizes.width - flowboard.attrs.width) / 2;
+    flowboard.attrs.y = (ContainerKonvaSizes.height - flowboard.attrs.height) / 2;
   }
 
   // Turn off dragging when flowboard show in sub view and on dragging in main tab
   draggingOnOff(elem) {
-    elem.draggable(elem.draggable());
+    elem.draggable(!elem.draggable());
   }
 
   // Hide buttons when flowboard show in sub view and show in main tab
-
   showOrHide(elem) {
     if (elem.isVisible()) {
       elem.hide();

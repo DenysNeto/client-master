@@ -18,19 +18,24 @@ import KonvaUtil from '../luwfy-canvas/konva-util';
 import {Layer} from 'konva/types/Layer';
 import {BehaviorSubject, Subject} from 'rxjs';
 import {Collection} from 'konva/types/Util';
-import {Path} from 'konva/types/shapes/Path';
 import {ActionType} from '../luwfy-canvas/undo-redo.interface';
 import {MatDialog, MatDialogRef} from '@angular/material';
 import {ModalPropComponent} from '../popups/modal-prop/modal-prop.component';
 import {UndoRedoService} from './undo-redo.service';
 import {BlocksRedactorService} from '../popups/blocks-redactor.service';
 import {BlocksService} from './blocks.service';
-import {main} from '@angular/compiler-cli/src/main';
+import {TestStartStop} from './testStartStop';
 
 @Injectable({
   providedIn: 'root',
 })
 export class CanvasService {
+
+  constructor(private dialog: MatDialog, private undoRedoService: UndoRedoService, private blocksRedactorService: BlocksRedactorService,
+              private blocksService: BlocksService, private testStartStop: TestStartStop) {
+    this.blocksArr = this.blocksService.getBlocks() as InputBlocksInterface[];
+  }
+
   currentLineToDraw: ICurrentLineToDraw = {
     isLineDrawable: false,
     groupId: 0,
@@ -57,12 +62,14 @@ export class CanvasService {
     },
 
     swapOrientation: () => {
+      this.testStartStop.startStopTest('swapOrientation', Date.now(), true); // test function ------------
       this.currentLineToDraw.positionStart = {x: this.currentLineToDraw.prevX, y: this.currentLineToDraw.prevY};
       this.currentLineToDraw.positionEnd = {
         x: this.currentLineToDraw.prevMainX,
         y: this.currentLineToDraw.prevMainY,
       };
-    },
+      this.testStartStop.startStopTest('swapOrientation', Date.now()); // test function --------------
+    }
   };
 
   _currentZoom: number;
@@ -75,7 +82,6 @@ export class CanvasService {
   activePathsArr: IPathCustom[] = [];
 
   activeWrapperBlock: IActiveWrapperBlock = {
-
     initial_position: {
       x: 0,
       y: 0,
@@ -83,7 +89,6 @@ export class CanvasService {
     now_position: {
       x: 0, y: 0,
     },
-
     isActive: false,
     isDraw: false,
     rectangle: new Konva.Rect({
@@ -91,7 +96,6 @@ export class CanvasService {
       draggable: false,
       isActive_block: true,
     }),
-
   };
   flowboardDimensionsChanged: BehaviorSubject<{ dimension: 'width' | 'height' | '', id: number }> = new BehaviorSubject<{ dimension: 'width' | 'height' | '', id: number }>({
     dimension: '',
@@ -107,18 +111,9 @@ export class CanvasService {
   fileNameDialogRef: MatDialogRef<ModalPropComponent>;
   blocksArr: InputBlocksInterface[];
 
-  isElem() {
-    return this.activePathsArr.length > 0;
-  }
-
-  constructor(private dialog: MatDialog, private undoRedoService: UndoRedoService, private blocksRedactorService: BlocksRedactorService, private blocksService: BlocksService) {
-    this.blocksArr = this.blocksService.getBlocks() as InputBlocksInterface[];
-  }
-
   deleteShapesFromGroup = (mainLayer: Layer, currentActiveGroup: any) => {
-
+    this.testStartStop.startStopTest('deleteShapesFromGroup', Date.now(), true); // test function ---------
     let group_children_temp = currentActiveGroup.children;
-
     if (group_children_temp.length > 0) {
       while (group_children_temp.length) {
         group_children_temp[group_children_temp.length - 1].children.each((elem) => {
@@ -133,153 +128,104 @@ export class CanvasService {
           group_children_temp[group_children_temp.length - 1].position().y + currentActiveGroup.position().y);
         mainLayer.getStage().add(group_children_temp[group_children_temp.length - 1]);
       }
-
       currentActiveGroup.removeChildren();
       mainLayer.getStage().draw();
-
     }
-
+    this.testStartStop.startStopTest('deleteShapesFromGroup', Date.now()); // test function
   };
 
   setRegularGroupHandlers(group: IGroupCustom, mainLayer: Layer, activeWrapperBlock: IActiveWrapperBlock, currentActiveGroup: Group) {
     this.setDragGroupEvents(group, mainLayer, currentActiveGroup);
     this.setMouseMoveEvents(group, mainLayer, activeWrapperBlock);
-    //  this.setClickEvent(group, mainLayer, activeWrapperBlock, this.currentActiveGroup)
   }
 
   setMouseMoveEvents(group: IGroupCustom, mainLayer: Layer, activeWrapperBlock: IActiveWrapperBlock) {
-
+    this.testStartStop.startStopTest('setMouseMoveEvents', Date.now(), true); // test function ------------------
     //todo add switch for different types of groups
-
     group.on('mousedown', (event) => {
       activeWrapperBlock.isActive = false;
       activeWrapperBlock.isDraw = false;
       activeWrapperBlock.rectangle.setAttr('visible', false);
     });
-
     group.on('mouseup', (event) => {
+      this.testStartStop.startStopTest('mouseup -> setMouseMoveEvents', Date.now(), true); // test function ------------------
       if (this.currentLineToDraw.isLineDrawable && event.target._id !== this.currentLineToDraw.groupId && event.target.parent._id !== this.currentLineToDraw.groupId && this.currentLineToDraw.groupId !== 0) {
         let input_circle = this.getInputCircleFromGroup(event.target.parent as Group);
         let current_flowboard = this.getGroupById(this.currentLineToDraw.flowboardId, mainLayer.getStage());
         let current_path_group = this.getGroupById(this.currentLineToDraw.groupId, current_flowboard);
-
-
         current_path_group.setAttr('draggable', 'true');
-
         let current_path = current_path_group.findOne((elem) => {
           if (elem.className === 'Path' && elem.attrs.start_info.start_group_id === this.currentLineToDraw.groupId && elem._id === this.currentLineToDraw.lineId) {
             return elem;
           }
         });
-
-
         let start_circle = current_path_group.findOne((elem) => {
           if (current_path && current_path.attrs.start_info && elem._id === current_path.attrs.start_info.start_circle_id) {
             return elem;
-
           }
-
         });
-
-
         let deltaX = event.target.parent.attrs.x - current_path_group.attrs.x;
         let deltaY = event.target.parent.attrs.y - current_path_group.attrs.y;
-
-
         current_path.setAttr('data', KonvaUtil.generateLinkPath(start_circle.attrs.x, start_circle.attrs.y,
           event.target.parent.attrs.x - current_path_group.attrs.x,
           event.target.parent.attrs.y - current_path_group.attrs.y + input_circle.attrs.y, this.setParamForLine(deltaX, deltaY)));
-
-
         current_path.setAttr('custom_id_output', event.target._id);
-
         current_path.setAttr('end_info', {
           end_group_id: event.target.parent._id,
           end_circle_id: input_circle._id,
           end_flowboard_id: event.target.parent.parent._id
         });
         current_path.setAttr('zIndex', 1);
-
         this.undoRedoService.addAction({
           action: ActionType.Create,
           object: current_path,
           parent: event.target.parent as Group,
         });
-
         // add start and end points for gradient for path
-
         current_path.strokeLinearGradientStartPoint({
           x: start_circle.attrs.x,
           y: start_circle.attrs.y,
         });
-
         current_path.strokeLinearGradientEndPoint({
           x: event.target.parent.attrs.x - current_path_group.attrs.x,
           y: event.target.parent.attrs.y - current_path_group.attrs.y + input_circle.attrs.y,
         });
-
         let startColor = current_path.parent.parent.findOne(elem => elem._id === current_path.attrs.start_info.start_circle_id).attrs.stroke;
-
-        console.log('[c] erty 5', startColor);
-        console.log('[c] erty 5[6]', current_path.attrs.end_info.end_circle_id);
-
         let endColor = current_path.parent.parent.findOne(elem => elem._id === current_path.attrs.end_info.end_circle_id).attrs.fill;
         current_path.strokeLinearGradientColorStops([0, startColor, 1, endColor]);
-
-        console.log('[c] erty 6', endColor);
-
         if (!current_path.attrs.end_info || current_path.attrs.start_info.start_group_id === current_path.attrs.end_info.end_group_id) {
-          console.log('[c] removing');
           current_path.remove();
         }
-
         this.currentLineToDraw.isLineDrawable = false;
         this.lineToDraw.next(this.currentLineToDraw);
-        // event.target.parent.draw();
         mainLayer.getStage().draw();
         return 0;
-
       }
-
-
+      this.testStartStop.startStopTest('mouseup -> setMouseMoveEvents', Date.now()); // test function ------------------
     });
-
     group.on('mouseenter', (event) => {
       if (this.currentLineToDraw.isLineDrawable) {
-        // event.target.setAttr('zIndex', 60);
       }
-
     });
-
     group.on('mouseleave', (event) => {
       if (event.target.parent.attrs.type && event.target.parent.attrs.type.includes('output')) {
-
       }
     });
-
-
     if (group.attrs.type === GroupTypes.Block) {
       group.on('dragmove', (event) => {
         this.checkTheGroupNearBorder(event.target as IGroupCustom);
-
-
         let temp_blocks = this.getAllBlocksFromFlowBoard(event.target.parent as IGroupCustom, event.target._id);
         if (temp_blocks && this.checkIfCollision(temp_blocks, event.target as IGroupCustom)) {
           event.target.setAttr('collision', true);
         } else {
           event.target.setAttr('collision', false);
         }
-
-
       });
 
       group.on('dragend', (event) => {
         if (event.target.attrs.collision) {
-
           event.target.position(event.target.attrs.drag_start_position);
-
           let temp_blocks = this.getAllBlocksFromFlowBoard(event.target.parent as IGroupCustom, event.target._id);
-
           if (temp_blocks) {
             temp_blocks.each((elem) => {
               elem.children.each((elem) => {
@@ -291,22 +237,11 @@ export class CanvasService {
           }
         }
       });
-
-
     }
-
-
   }
-
-  setDragBoundFunc(pos: { x: number, y: number }) {
-    return {
-      x: 0,
-      y: 0
-    };
-  }
-
 
   checkTheGroupNearBorder(current_group: IGroupCustom) {
+    this.testStartStop.startStopTest('checkTheGroupNearBorder', Date.now(), true); // test function ------------------
     let temp_changes: boolean = false;
     if (current_group.parent.attrs.width - current_group.attrs.x - current_group.attrs.width < GridSizes.flowboard_cell && current_group.parent.attrs.width + GridSizes.flowboard_cell < GridSizes.flowboard_max_width) {
       current_group.parent.children.each((elem) => {
@@ -316,7 +251,6 @@ export class CanvasService {
         }
       });
       current_group.parent.setAttr('width', current_group.parent.attrs.width + GridSizes.flowboard_cell);
-      console.log('[c] err', current_group.parent);
       this.flowboardDimensionsChanged.next({dimension: 'width', id: current_group.parent._id});
       current_group.parent.findOne((elem) => {
         if (elem.attrs.type === ButtonsTypes.DrugPoint || elem.attrs.type === ButtonsTypes.MenuButton) {
@@ -325,7 +259,6 @@ export class CanvasService {
         }
       });
       temp_changes = true;
-
     } else if (current_group.parent.attrs.height - current_group.attrs.y - current_group.attrs.height < GridSizes.flowboard_cell * 2 && current_group.parent.attrs.height + GridSizes.flowboard_cell < GridSizes.flowboard_max_height) {
       current_group.parent.children.each((elem) => {
         if (elem.className === 'Rect') {
@@ -337,17 +270,14 @@ export class CanvasService {
       this.flowboardDimensionsChanged.next({dimension: 'height', id: current_group.parent._id});
       temp_changes = true;
     }
-
     if (temp_changes) {
       current_group.find((elem) => {
         if (elem.className === 'Line') {
           return elem;
         }
-
       }).each((elem) => {
         elem.remove();
       });
-
       let vertLines = current_group.parent.attrs.height / GridSizes.flowboard_cell;
       let horLines = current_group.parent.attrs.width / GridSizes.flowboard_cell;
       let maxLines = vertLines > horLines ? vertLines : horLines;
@@ -365,90 +295,61 @@ export class CanvasService {
         }
       }
     }
-
-
+    this.testStartStop.startStopTest('checkTheGroupNearBorder', Date.now()); // test function ------------------
   }
 
 
   setMouseDownEventForSwitchCircle(circle: ICircleCustom, mainLayer: Layer, currentActiveGroup: Group) {
-
     circle.on('mousedown', (event) => {
-
       if (event.target.attrs.type === CircleTypes.Output && !currentActiveGroup.hasChildren()) {
-        console.log('[c] circle mousedown', event.target.parent);
         let line_temp: IPathCustom = ShapeCreator.createLine({
           start_circle_id: event.target._id,
           start_group_id: event.target.parent._id,
           start_flowboard_id: event.target.parent.parent._id,
-
-
         }) as IPathCustom;
-
         this.setClickEventForPath(line_temp, mainLayer, currentActiveGroup);
-
         event.target.parent.add(line_temp);
         event.target.parent.setAttr('draggable', false);
-
         this.currentLineToDraw.isLineDrawable = true;
         this.currentLineToDraw.lineId = line_temp._id;
         this.currentLineToDraw.groupId = event.target.parent._id;
         this.currentLineToDraw.flowboardId = event.target.parent.parent._id;
         this.currentLineToDraw.prevX = event.target.parent.attrs.x + event.target.attrs.x + 20;
         this.currentLineToDraw.prevY = event.target.parent.attrs.y + event.target.attrs.y;
-
         this.lineToDraw.next(this.currentLineToDraw);
       }
-
     });
   }
 
   setClickEventForPath(path: IPathCustom, mainLayer: Layer, currentActiveGroup: Group) {
     path.on('mousedown', (event) => {
-
       if (event.evt.ctrlKey) {
-
       }
-
-      //todo add chooser
-      //
-
     });
-
     path.on('mouseup', (event) => {
       if (this.currentLineToDraw.isLineDrawable) {
         event.cancelBubble = true;
       }
-
     });
-
-
     path.on('mouseenter', (event) => {
-      console.log('[c] mouse enter path');
-
     });
-
     path.on('click', (event) => {
       if (event.evt.ctrlKey) {
         if (currentActiveGroup.hasChildren()) {
           event.cancelBubble = true;
           return 0;
         }
-
         this.activePathsArr.push(event.target as IPathCustom);
         event.cancelBubble = true;
         this.activeWrapperBlock.isDraw = false;
-
         this.undoRedoService.addAction({
           action: ActionType.Select,
           object: event.target as IPathCustom,
           parent: event.target.parent as IGroupCustom,
         });
-
         event.target.setAttr('stroke', theme.choose_group_color);
       }
-
     });
-
   }
 
   resetActivePathArr() {
@@ -461,12 +362,8 @@ export class CanvasService {
 
   removeLastElementFromPathArr() {
     this.activePathsArr.pop();
-    console.log('[c] rrr', this.activePathsArr);
   }
 
-  handleOnCancelEvent(event) {
-    console.log('[c] ON_CANCEL_EVENT', event);
-  }
 
   getInputCircleFromGroup(component: Group | IGroupCustom) {
     if (component) {
@@ -474,176 +371,112 @@ export class CanvasService {
         if (elem.className == 'Circle' && elem.attrs.type === CircleTypes.Input && !elem.attrs.switcher_circle) {
           return elem;
         }
-
       });
-
     } else {
       return null;
     }
-
   }
 
   setClickEvent(group: IGroupCustom, mainLayer: Layer, activeWrapperBlock: IActiveWrapperBlock, currentActiveGroup: Group) {
-
     group.on('click', (event) => {
-
       event.cancelBubble = true;
-
       if (event.evt.ctrlKey) {
-
         event.target.parent.setAttr('x', event.target.parent.position().x - currentActiveGroup.position().x);
         event.target.parent.setAttr('y', event.target.parent.position().y - currentActiveGroup.position().y);
-
         currentActiveGroup.add(event.target.parent as Group);
         event.target.parent.children.each((elem) => {
           elem.setAttr('stroke', 'yellow');
           elem.setAttr('draggable', false);
-
         });
         event.target.parent.setAttr('draggable', false);
-
       }
-
     });
-
   }
 
   setParamForLine(deltaX: number, deltaY: number) {
-
     if (deltaX < 0) {
       return 3;
     }
-
-    // if ( deltaX < 180 ) {
-    //     return 1;
-    // }
-
     if (deltaX < 280) {
       return 1;
     } else {
       return 3;
     }
-
   }
 
   setDragGroupEvents(group: IGroupCustom, mainLayer: Layer, currentActiveGroup) {
-    //todo add switch for different types of groups
-
     group.on('dragstart', (event) => {
       event.target.setAttr('drag_start_position', {x: event.target.attrs.x, y: event.target.attrs.y});
       if (this.currentLineToDraw.isLineDrawable) {
         return 0;
       }
-
       this.undoRedoService.addAction({
         action: ActionType.Move,
         object: event.target,
         coordinates: {x: event.target.attrs.x, y: event.target.attrs.y},
         parent: event.target.parent as Layer,
       });
-
       if (currentActiveGroup.isDraw) {
         this.deleteShapesFromGroup(mainLayer, currentActiveGroup);
       }
       this.activeWrapperBlock.isDraw = false;
       this.activeWrapperBlock.rectangle.setAttr('visible', false);
       this.activeBlock.next(this.activeWrapperBlock);
-
     });
     group.on('dragmove', (event) => {
       if (!event) {
         return 0;
       }
-
       let isPathInGroup = this.isPathInGroup(event.target as Group);
-
       let input_paths: Array<IPathCustom> = this.getAllInputLinesFromGroup(mainLayer, event.target as Group | IGroupCustom);
       if (isPathInGroup || input_paths) {
-
         let output_paths: Collection<IPathCustom> = this.getAllOutputLinesFromGroup(event.target as Group | IGroupCustom);
-
         if (output_paths) {
-
           output_paths.each((elem) => {
-
             //start point
             let currentFlowboard = this.getGroupById(elem.attrs.end_info.end_flowboard_id, mainLayer.getStage());
             let temp_start_point_group = this.getGroupById(elem.attrs.end_info.end_group_id, currentFlowboard);
             let temp_end_point_circle = this.getCircleFromGroupById(event.target.getStage(), elem.attrs.start_info.start_circle_id);
-
             let temp_start_circle = this.getCircleFromGroupById(temp_start_point_group, elem.attrs.end_info.end_circle_id);
-
             //end point
-
             let deltaX = temp_start_point_group.getAbsolutePosition().x - event.target.attrs.x + temp_start_circle.attrs.x - temp_end_point_circle.attrs.x;
             let deltaY = temp_start_point_group.getAbsolutePosition().y - event.target.attrs.y + temp_start_circle.attrs.y - temp_end_point_circle.attrs.y;
-
             elem.setAttr('data',
               KonvaUtil.generateLinkPath((
                 temp_start_point_group.getAbsolutePosition().x / (this._currentZoom / 100) - event.target.attrs.x + temp_start_circle.attrs.x - event.target.parent.attrs.x),
                 temp_start_point_group.getAbsolutePosition().y / (this._currentZoom / 100) - event.target.attrs.y + temp_start_circle.attrs.y - event.target.parent.attrs.y,
                 temp_end_point_circle.attrs.x, temp_end_point_circle.attrs.y, (-1) * this.setParamForLine(deltaX, deltaY)));
-
           });
-
         }
-
         if (input_paths) {
-
-          console.log('[c] input_path');
           input_paths.forEach((elem) => {
-
             //start point
             let temp_start_point_group = this.getGroupById(elem.attrs.start_info.start_group_id, mainLayer.getStage());
             let temp_end_point_circle = this.getCircleFromGroupById(event.target.getStage(), elem.attrs.end_info.end_circle_id);
-
             let temp_start_point_circle = this.getCircleFromGroupById(event.target.getStage(), elem.attrs.start_info.start_circle_id);
-
             let temp_start_circle = this.getCircleFromGroupById(temp_start_point_group, elem.attrs.start_info.start_circle_id);
-
             let temp_input_circle = event.target.getStage().findOne((elem) => {
               if (elem.className === 'Circle' && elem.attrs.type === CircleTypes.Input) {
                 return elem;
               }
             });
-            console.log('[c] i', event.target);
-
             let deltaX = event.target.attrs.x - temp_start_point_group.attrs.x;
             let deltaY = temp_start_point_group.getAbsolutePosition().y - temp_start_point_group.attrs.y + temp_start_circle.attrs.y;
-            // this.setParamForLine (deltaX, deltaY );
-
-
             elem.setAttr('data',
               KonvaUtil.generateLinkPath(temp_start_point_group.getAbsolutePosition().x / (this._currentZoom / 100) - temp_start_point_group.attrs.x + temp_start_circle.attrs.x - event.target.parent.attrs.x,
                 temp_start_point_group.getAbsolutePosition().y / (this._currentZoom / 100) - temp_start_point_group.attrs.y + temp_start_circle.attrs.y - event.target.parent.attrs.y,
                 event.target.attrs.x - temp_start_point_group.attrs.x, event.target.attrs.y - temp_start_point_group.attrs.y + temp_input_circle.attrs.y, this.setParamForLine(deltaX, deltaY)));
           });
-
         }
-
       }
-
     });
-
   }
-
-  setRegularGroupEvents(group: IGroupCustom) {
-
-    //group
-
-  }
-
 
   getAllInputLinesFromGroup(component: Layer, group: Group | IGroupCustom): Array<IPathCustom> {
     let collection_ports: Array<IPathCustom> = [];
     let all_groups = component.getStage().find((elem) => {
       if (!elem.className) {
         return elem;
-        // return elem.find((elem) => {
-        //   if (elem.className === 'Path' && elem.attrs.end_info.group_id === group._id) {
-        //     return elem;
-        //   }
-        // });
       }
     });
     all_groups.each((elem) => {
@@ -653,7 +486,6 @@ export class CanvasService {
         }
       });
     });
-    console.log('[c] ppp', collection_ports);
     return collection_ports;
   }
 
@@ -663,12 +495,10 @@ export class CanvasService {
         return elem;
       }
     });
-
   }
 
   getAllOutputLinesFromGroup(group: Group | IGroupCustom): Collection<IPathCustom> {
     return group.find((elem) => {
-      console.log('[c] elem ppp', elem);
       if (elem.className === 'Path') {
         return elem;
       }
@@ -677,6 +507,7 @@ export class CanvasService {
 
 // function add all ports (input, output, error)
   createPorts(blockVariables: InputBlocksInterface, temp_group: Group, height: number) {
+    this.testStartStop.startStopTest('createPorts', Date.now(), true); // test function ------------------
     let inputPorts = blockVariables.inputs;
     let outputPorts = blockVariables.outputs;
     let errorPorts = blockVariables.output_errors;
@@ -696,6 +527,7 @@ export class CanvasService {
         errorPorts--;
       }
     }
+    this.testStartStop.startStopTest('createPorts', Date.now()); // test function ------------------
   }
 
   switcherAnimation(event, colorActive, colorDisabled, blockColor) {
@@ -743,19 +575,21 @@ export class CanvasService {
   }
 
   haveIntersection(r1, r2) {
+    this.testStartStop.startStopTest('haveIntersection', Date.now(), true); // test function ------------------
     return !(
       r2.x > r1.x + r1.width ||
       r2.x + r2.width < r1.x ||
       r2.y > r1.y + r1.height ||
       r2.y + r2.height < r1.y
     );
+    this.testStartStop.startStopTest('haveIntersection', Date.now()); // test function ------------------
   }
 
   checkIfCollisionBetweenFlowBoards(current_flowboard, flowBoards_arr, filter: 'width' | 'height' | '') {
+    this.testStartStop.startStopTest('checkIfCollisionBetweenFlowBoards', Date.now(), true); // test function ------------------
     let temp;
     flowBoards_arr.forEach((elem) => {
       if (this.haveIntersection(current_flowboard.attrs, elem.attrs)) {
-        console.log('interception', elem.attrs.x);
         if (filter === 'width') {
           if (elem.attrs.x < current_flowboard.attrs.x + FlowboardSizes.flowboard_padding + current_flowboard.attrs.width + ButtonSizes.plusBtn * 2 && elem.attrs.x > current_flowboard.attrs.x) {
             elem.setAttr('x', current_flowboard.attrs.x + FlowboardSizes.flowboard_padding + current_flowboard.attrs.width + ButtonSizes.plusBtn * 2);
@@ -771,22 +605,21 @@ export class CanvasService {
         return true;
       }
     });
+    this.testStartStop.startStopTest('checkIfCollisionBetweenFlowBoards', Date.now()); // test function ------------------
     return temp;
   }
 
 
   checkIfCollision(children: any, current_group: IGroupCustom) {
+    this.testStartStop.startStopTest('checkIfCollision', Date.now(), true); // test function ------------------
     let temp;
     children.each((elem) => {
       if (elem.attrs.type === GroupTypes.Block) {
         if (this.haveIntersection(current_group.attrs, elem.attrs)) {
-
           elem.children.each((elem) => {
             if (elem.className == 'Rect') {
               elem.setAttr('stroke', 'red');
-
             }
-
           });
           temp = true;
           return true;
@@ -795,26 +628,18 @@ export class CanvasService {
             if (elem.className == 'Rect' && elem.attrs.stroke !== elem.attrs.main_stroke) {
               elem.setAttr('stroke', elem.attrs.main_stroke);
             }
-
           });
         }
-
-
       }
     });
-
+    this.testStartStop.startStopTest('checkIfCollision', Date.now()); // test function ------------------
     return temp;
-
-
-    // (current_group as any).getIntersection(current_group.getPosition());
-    // (current_group as any).getIntersection({x: current_group.getPosition().x + current_group.attrs.width, y: current_group.getPosition().y + current_group.attrs.height });
-    // (current_group as any).getIntersection({x: current_group.getPosition().x + current_group.attrs.width, y: current_group.getPosition().y + current_group.attrs.height });
-
   }
 
 
   // TODO create universal block creator using data from JSON with properties for block
   createDefaultGroup(mainLayer: Layer, activeWrapperBlock, currentActiveGroup: Group, blockName) {
+    this.testStartStop.startStopTest('createDefaultGroup', Date.now(), true); // test function ------------------
     let newBlockVariables = this.blocksArr.find(block => block.name === blockName);
     let temp_group = new Konva.Group({
       draggable: true,
@@ -861,7 +686,6 @@ export class CanvasService {
       onHoverEffect(temp_group);
       mainLayer.getStage().draw();
     });
-
     temp_group.setAttrs({
       'width': sizes.block_width + sizes.circle_radius * 2,
       'height': height,
@@ -876,10 +700,9 @@ export class CanvasService {
         this.fileNameDialogRef = this.dialog.open(ModalPropComponent, {data: elem._id});
       });
     });
-
     // Function hide face image and show to us icons (edit, wizard, settings)
     const onHoverEffect = (group: Group) => {
-      if(!this.currentLineToDraw.isLineDrawable){
+      if (!this.currentLineToDraw.isLineDrawable) {
         let iconGroup = group.findOne(elem => elem.attrs.type === 'iconGroup');
         let headImage = group.findOne(elem => elem.attrs.type === 'headImage');
         if (mouseInsideRectangle) {
@@ -892,13 +715,13 @@ export class CanvasService {
 
       }
     };
-
     let circles_collection = this.getAllCirclesFromGroup(temp_group);
     circles_collection && circles_collection.each((elem: ICircleCustom) => {
       elem.setAttr('zIndex', 1000);
       this.setMouseDownEventForSwitchCircle(elem, mainLayer, currentActiveGroup);
     });
     this.setRegularGroupHandlers(temp_group, mainLayer, activeWrapperBlock, currentActiveGroup);
+    this.testStartStop.startStopTest('createDefaultGroup', Date.now()); // test function ------------------
     return temp_group;
   }
 
@@ -908,30 +731,22 @@ export class CanvasService {
         if (elem.className == 'Circle') {
           return elem;
         }
-
       });
-
     } else {
       return null;
     }
-
   }
 
   getGroupById(id: number, component: StageComponent) {
     if (component) {
-      console.log('[c] current group id', id);
       return component.getStage().findOne((elem) => {
-
         if (elem._id === id) {
           return elem;
         }
-
       });
-
     } else {
       return null;
     }
-
   }
 
   getPathFromGroupById(id: number, component: StageComponent | any) {
@@ -947,19 +762,15 @@ export class CanvasService {
   }
 
   getLastPathFromGroup = (component: Group) => {
-
     if (component) {
       return component.find((elem) => {
         if (elem.className == 'Path' && elem.attrs.last_path) {
           return elem;
         }
-
       });
-
     } else {
       return null;
     }
-
   };
 
   getAllPathsFromGroup = (component: Group) => {
@@ -984,7 +795,6 @@ export class CanvasService {
     } else {
       return null;
     }
-
   }
 
   getRectFromGroup(component: IGroupCustom) {
@@ -1014,7 +824,6 @@ export class CanvasService {
   getCircleFromGroup(component: Group) {
     if (component) {
       return component.findOne((elem) => {
-        console.log('[c]', elem.className === 'Circle');
         if (elem.className === 'Circle') {
           return elem;
         }
@@ -1026,7 +835,6 @@ export class CanvasService {
 
   isGroupInGroup(group_id: number, search_group: IGroupCustom) {
     if (search_group) {
-
       return search_group.findOne((elem) => {
         if (elem._id === group_id) {
           return elem;
@@ -1035,10 +843,6 @@ export class CanvasService {
     } else {
       return null;
     }
-  }
-
-  getAllPathsConnectedWithBlock() {
-
   }
 
   getPathFromGroup(component: StageComponent | any) {

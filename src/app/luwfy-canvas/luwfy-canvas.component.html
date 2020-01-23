@@ -22,7 +22,7 @@
   </mat-tab-group>
 
   <!--  Konva window-->
-  <div class="container">
+  <div class="container" #container>
     <ko-stage #stage [config]="KonvaUtil.createStage({width: konvaSize.width, height: konvaSize.height})"
               (dragover)="handleDragOver($event)"
               (click)="handleClickEvent($event)"

@@ -2,6 +2,7 @@ import {Component, OnInit} from '@angular/core';
 import {BlocksService} from '../services/blocks.service';
 import {GroupTypes} from '../luwfy-canvas/shapes-interface';
 import {Group} from 'konva/types/Group';
+import {ContainerKonvaSizes} from '../luwfy-canvas/sizes';
 
 @Component({
   selector: 'app-luwfy-sidebar',
@@ -33,16 +34,14 @@ export class LuwfySidebarComponent implements OnInit {
 
   focusOnBlock(block: Group) {
     let oldStrokeColor = block.findOne('Rect').attrs.stroke;
+    let newX = block.getAbsolutePosition().x - (ContainerKonvaSizes.width / 2);
+    let newY = block.getAbsolutePosition().y - (ContainerKonvaSizes.height / 2);
+    block.getStage().content.parentElement.parentElement.scroll(newX, newY);
     block.findOne('Rect').attrs.stroke = 'red';
-    block.getStage().setPointersPositions({
-      x: 10,
-      y:10
-    });
     block.getLayer().draw();
     setTimeout(() => {
       block.findOne('Rect').attrs.stroke = oldStrokeColor;
       block.getLayer().draw();
-    }, 200);
-
+    }, 300);
   }
 }

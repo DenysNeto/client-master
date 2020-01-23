@@ -77,7 +77,6 @@ export default {
   createImage: (options) => {
     var image = new Image();
     image.src = options.path || 'https://developer.mozilla.org/static/img/favicon72.cc65d1d762a0.png';
-
     return of({
       width: options.width,
       height: options.height,

@@ -39,8 +39,13 @@ export const FlowboardSizes = {
 };
 
 export const KonvaStartSizes = {
-  width: 1800,
-  height: 900
+  width: 4000,
+  height: 3000
 };
 
-export const MaxStageSize = 10000;
+export const ContainerKonvaSizes = {
+  width: 1500,
+  height: 888
+};
+
+export const MaxStageSize = 8000;
