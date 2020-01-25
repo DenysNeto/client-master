@@ -300,7 +300,12 @@ export class CanvasComponent implements OnInit, AfterViewInit {
                 event.target.parent.setAttr ( 'x', event.target.parent.position ().x + event.target.parent.parent.position ().x - this.currentActiveGroup.position ().x );
                 event.target.parent.setAttr ( 'y', event.target.parent.position ().y + event.target.parent.parent.position ().y - this.currentActiveGroup.position ().y );
                 
-                this.currentActiveGroup.add ( event.target.parent as Group );
+                this.currentActiveGroup.dragBoundFunc ( ( pos ) => {
+                    return {
+                        x: pos.x <= (this.currentDraggedGroup.parent.position ().x + GridSizes.flowboard_cell) * (this.zoomInPercent / 100) ? (this.currentDraggedGroup.parent.position ().x + GridSizes.flowboard_cell) * (this.zoomInPercent / 100) : pos.x <= (this.currentDraggedGroup.parent.position ().x + this.currentDraggedGroup.parent.attrs.width - this.currentDraggedGroup.attrs.width) * (this.zoomInPercent / 100) ? pos.x : (this.currentDraggedGroup.parent.position ().x + this.currentDraggedGroup.parent.attrs.width - this.currentDraggedGroup.attrs.width) * (this.zoomInPercent / 100),
+                        y: pos.y <= (this.currentDraggedGroup.parent.position ().y + GridSizes.flowboard_cell * 2) * (this.zoomInPercent / 100) ? (this.currentDraggedGroup.parent.position ().y + GridSizes.flowboard_cell) * (this.zoomInPercent / 100) : pos.y <= (this.currentDraggedGroup.parent.position ().y + this.currentDraggedGroup.parent.attrs.height - this.currentDraggedGroup.attrs.height) * (this.zoomInPercent / 100) ? pos.y : (this.currentDraggedGroup.parent.position ().y + this.currentDraggedGroup.parent.attrs.height - this.currentDraggedGroup.attrs.height - GridSizes.flowboard_cell) * (this.zoomInPercent / 100),
+                    };
+                } );
                 
                 this.undoRedoService.addAction ( {
                     action: ActionType.Select,
@@ -468,6 +473,40 @@ export class CanvasComponent implements OnInit, AfterViewInit {
                             currentSelectedArrayOfBlocks.length === 0 && this.currentActiveGroup.setAttr ( 'currentFlowboardId', elem.parent._id );
                             currentSelectedArrayOfBlocks.push ( elem );
                             
+                            let currentFlowboard = this.blocksService.getFlowboards ().find ( ( elem ) => {
+                                if ( elem._id === this.currentActiveGroup.attrs.currentFlowboardId ) {
+                                    return elem;
+                                }
+                            } );
+                            
+                            //todo add
+                            
+                            console.log ( '[c] ddd', this.currentActiveGroup );
+                            
+                            this.currentActiveGroup.dragBoundFunc ( ( pos ) => {
+                                let tempX           = (this.currentActiveGroup.children[ 0 ] ? this.currentActiveGroup.children[ 0 ].attrs.x : 0);
+                                let tempY           = (this.currentActiveGroup.children[ 0 ] ? this.currentActiveGroup.children[ 0 ].attrs.y : 0);
+                                let conditionXLeft  = (currentFlowboard.position ().x - tempX + GridSizes.flowboard_cell) * (this.zoomInPercent / 100);
+                                let conditionXRight = (currentFlowboard.position ().x + currentFlowboard.attrs.width - this.currentActiveGroup.attrs.width - GridSizes.flowboard_cell) * (this.zoomInPercent / 100);
+                                let conditionYLeft  = (currentFlowboard.position ().y - tempY + GridSizes.flowboard_cell) * (this.zoomInPercent / 100);
+                                let conditionYRight = (currentFlowboard.position ().y + currentFlowboard.attrs.height - this.currentActiveGroup.attrs.height - GridSizes.flowboard_cell) * (this.zoomInPercent / 100);
+                                
+                                return {
+                                    x: pos.x <= conditionXLeft
+                                        ?
+                                        (conditionXLeft)
+                                        :
+                                        pos.x <= conditionXRight
+                                            ?
+                                            pos.x
+                                            :
+                                            conditionXRight,
+                                    
+                                    y: pos.y <= conditionYLeft ? conditionYLeft
+                                        : pos.y <= conditionYRight ? pos.y : conditionYRight,
+                                };
+                            } );
+                            
                         }
                     }
                     this.currentActiveGroup.setAttr ( 'zIndex', 1001 );
@@ -475,12 +514,31 @@ export class CanvasComponent implements OnInit, AfterViewInit {
                 } );
                 
             }
+            let minX = 0, maxX = 0, maxXGroupWidth = 0;
+            let minY = 0, maxY = 0, maxYGroupHeight = 0;
             
             currentSelectedArrayOfBlocks.forEach ( ( elem ) => {
-                elem.position ().x + elem.attrs.width > this.currentActiveGroup.attrs.width && this.currentActiveGroup.setAttr ( 'width', elem.position ().x + elem.attrs.width );
-                elem.position ().y + elem.attrs.height > this.currentActiveGroup.attrs.height && this.currentActiveGroup.setAttr ( 'height', elem.position ().x + elem.attrs.height );
+                minX > elem.attrs.x ? minX = elem.attrs.x : null;
+                if ( maxX < elem.attrs.x ) {
+                    maxX           = elem.attrs.x;
+                    maxXGroupWidth = elem.attrs.width;
+                }
+                if ( minX > elem.attrs.x ) {
+                    minX = elem.attrs.x;
+                }
+                
+                if ( maxY < elem.attrs.y ) {
+                    maxY            = elem.attrs.y;
+                    maxYGroupHeight = elem.attrs.height;
+                }
+                if ( minY > elem.attrs.y ) {
+                    minY = elem.attrs.y;
+                }
                 this.currentActiveGroup.add ( elem );
             } );
+            
+            this.currentActiveGroup.setAttr ( 'width', maxX + maxXGroupWidth - minX );
+            this.currentActiveGroup.setAttr ( 'height', maxY + maxYGroupHeight - minY );
             this.currentActiveGroup.draggable ( true );
             
             if ( currentSelectedArrayOfBlocks.length > 0 ) {

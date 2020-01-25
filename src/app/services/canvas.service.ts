@@ -740,9 +740,9 @@ export class CanvasService {
   haveIntersection(group1, group2){
     return !(
       group2.x > group1.x + group1.width ||
-      group2.x + r2.width < group1.x ||
+      group2.x + group2.width < group1.x ||
       group2.y > group1.y + group1.height ||
-      group2.y + r2.height < group1.y
+      group2.y + group2.height < group1.y
     );
   }
 
