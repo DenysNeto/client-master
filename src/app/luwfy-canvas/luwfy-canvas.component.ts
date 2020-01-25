@@ -112,15 +112,15 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     
     currentDraggedGroup: IGroupCustom;
     
-    //todo move to service
-    
     currentActiveGroup: Group = new Konva.Group ( {
-        draggable       : true,
-        currentFlowboard: 0,
-        height          : 0,
-        width           : 0,
-        visible         : true,
-        type            : GroupTypes.SelectedGroup,
+        draggable         : true,
+        minX              : 0,
+        minY              : 0,
+        currentFlowboardId: 0,
+        height            : 0,
+        width             : 0,
+        visible           : true,
+        type              : GroupTypes.SelectedGroup,
         
     } ).on ( 'dragstart', ( event ) => {
         this.activeWrapperBlock.isDraw = false;
@@ -136,9 +136,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         if ( !event ) {
             return 0;
         }
-        
-        console.log ( '[c] ertyu', event );
-        
         event.target.children.each ( ( elem ) => {
             
             let isPathInGroup = this.canvasService.isPathInGroup ( elem );
@@ -277,10 +274,11 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         }
     };
     
+    //TODO CHANGE BEHAVIOR FOR SELECTION
     setClickEventForGroup = ( group: Group ) => {
         group.on ( 'click', ( event ) => {
-            console.log ( '[c] click fff' );
             event.cancelBubble = true;
+            console.log ( '[c] clickPath', event );
             if ( event.evt.ctrlKey ) {
                 if ( event.target.className === 'Path' ) {
                     return 0;
@@ -297,15 +295,18 @@ export class CanvasComponent implements OnInit, AfterViewInit {
                 if ( event.target.className && event.target.className === 'Path' ) {
                     return 0;
                 }
-                event.target.parent.setAttr ( 'x', event.target.parent.position ().x + event.target.parent.parent.position ().x - this.currentActiveGroup.position ().x );
-                event.target.parent.setAttr ( 'y', event.target.parent.position ().y + event.target.parent.parent.position ().y - this.currentActiveGroup.position ().y );
+                this.currentActiveGroup.add ( event.target.parent );
+                event.target.parent.setAttr ( 'x', event.target.position ().x + event.target.parent.position ().x - this.currentActiveGroup.position ().x );
+                event.target.parent.setAttr ( 'y', event.target.position ().y + event.target.parent.position ().y - this.currentActiveGroup.position ().y );
                 
-                this.currentActiveGroup.dragBoundFunc ( ( pos ) => {
-                    return {
-                        x: pos.x <= (this.currentDraggedGroup.parent.position ().x + GridSizes.flowboard_cell) * (this.zoomInPercent / 100) ? (this.currentDraggedGroup.parent.position ().x + GridSizes.flowboard_cell) * (this.zoomInPercent / 100) : pos.x <= (this.currentDraggedGroup.parent.position ().x + this.currentDraggedGroup.parent.attrs.width - this.currentDraggedGroup.attrs.width) * (this.zoomInPercent / 100) ? pos.x : (this.currentDraggedGroup.parent.position ().x + this.currentDraggedGroup.parent.attrs.width - this.currentDraggedGroup.attrs.width) * (this.zoomInPercent / 100),
-                        y: pos.y <= (this.currentDraggedGroup.parent.position ().y + GridSizes.flowboard_cell * 2) * (this.zoomInPercent / 100) ? (this.currentDraggedGroup.parent.position ().y + GridSizes.flowboard_cell) * (this.zoomInPercent / 100) : pos.y <= (this.currentDraggedGroup.parent.position ().y + this.currentDraggedGroup.parent.attrs.height - this.currentDraggedGroup.attrs.height) * (this.zoomInPercent / 100) ? pos.y : (this.currentDraggedGroup.parent.position ().y + this.currentDraggedGroup.parent.attrs.height - this.currentDraggedGroup.attrs.height - GridSizes.flowboard_cell) * (this.zoomInPercent / 100),
-                    };
-                } );
+               
+                this.currentActiveGroup.draggable ( true );
+                // this.currentActiveGroup.dragBoundFunc ( ( pos ) => {
+                //     return {
+                //         x: pos.x <= (this.currentDraggedGroup.parent.position ().x + GridSizes.flowboard_cell) * (this.zoomInPercent / 100) ? (this.currentDraggedGroup.parent.position ().x + GridSizes.flowboard_cell) * (this.zoomInPercent / 100) : pos.x <= (this.currentDraggedGroup.parent.position ().x + this.currentDraggedGroup.parent.attrs.width - this.currentDraggedGroup.attrs.width) * (this.zoomInPercent / 100) ? pos.x : (this.currentDraggedGroup.parent.position ().x + this.currentDraggedGroup.parent.attrs.width - this.currentDraggedGroup.attrs.width) * (this.zoomInPercent / 100),
+                //         y: pos.y <= (this.currentDraggedGroup.parent.position ().y + GridSizes.flowboard_cell * 2) * (this.zoomInPercent / 100) ? (this.currentDraggedGroup.parent.position ().y + GridSizes.flowboard_cell) * (this.zoomInPercent / 100) : pos.y <= (this.currentDraggedGroup.parent.position ().y + this.currentDraggedGroup.parent.attrs.height - this.currentDraggedGroup.attrs.height) * (this.zoomInPercent / 100) ? pos.y : (this.currentDraggedGroup.parent.position ().y + this.currentDraggedGroup.parent.attrs.height - this.currentDraggedGroup.attrs.height - GridSizes.flowboard_cell) * (this.zoomInPercent / 100),
+                //     };
+                // } );
                 
                 this.undoRedoService.addAction ( {
                     action: ActionType.Select,
@@ -451,62 +452,23 @@ export class CanvasComponent implements OnInit, AfterViewInit {
             
             for ( let i = 0; i < this.blocksService.getFlowboards ().length; i++ ) {
                 this.blocksService.getFlowboards ()[ i ].children.each ( ( elem ) => {
-                    
                     if ( this.currentActiveGroup.attrs.currentFlowboardId && this.currentActiveGroup.attrs.currentFlowboardId !== elem.parent._id ) {
                         return 0;
                     }
-                    
                     if ( elem.attrs.type === GroupTypes.Block ) {
                         if ( this.checkValueBetween ( elem.getAbsolutePosition (), elem.attrs.width, elem.attrs.height ) ) {
                             elem.position ( {
                                 x: elem.position ().x - this.currentActiveGroup.position ().x + elem.parent.position ().x,
                                 y: elem.position ().y - this.currentActiveGroup.position ().y + elem.parent.position ().y,
                             } );
-                            
                             elem.children.each ( ( elem ) => {
                                 if ( elem.className !== 'Path' ) {
                                     elem.setAttr ( 'stroke', theme.choose_group_color );
                                 }
-                                
                             } );
                             elem.setAttr ( 'draggable', false );
                             currentSelectedArrayOfBlocks.length === 0 && this.currentActiveGroup.setAttr ( 'currentFlowboardId', elem.parent._id );
                             currentSelectedArrayOfBlocks.push ( elem );
-                            
-                            let currentFlowboard = this.blocksService.getFlowboards ().find ( ( elem ) => {
-                                if ( elem._id === this.currentActiveGroup.attrs.currentFlowboardId ) {
-                                    return elem;
-                                }
-                            } );
-                            
-                            //todo add
-                            
-                            console.log ( '[c] ddd', this.currentActiveGroup );
-                            
-                            this.currentActiveGroup.dragBoundFunc ( ( pos ) => {
-                                let tempX           = (this.currentActiveGroup.children[ 0 ] ? this.currentActiveGroup.children[ 0 ].attrs.x : 0);
-                                let tempY           = (this.currentActiveGroup.children[ 0 ] ? this.currentActiveGroup.children[ 0 ].attrs.y : 0);
-                                let conditionXLeft  = (currentFlowboard.position ().x - tempX + GridSizes.flowboard_cell) * (this.zoomInPercent / 100);
-                                let conditionXRight = (currentFlowboard.position ().x + currentFlowboard.attrs.width - this.currentActiveGroup.attrs.width - GridSizes.flowboard_cell) * (this.zoomInPercent / 100);
-                                let conditionYLeft  = (currentFlowboard.position ().y - tempY + GridSizes.flowboard_cell) * (this.zoomInPercent / 100);
-                                let conditionYRight = (currentFlowboard.position ().y + currentFlowboard.attrs.height - this.currentActiveGroup.attrs.height - GridSizes.flowboard_cell) * (this.zoomInPercent / 100);
-                                
-                                return {
-                                    x: pos.x <= conditionXLeft
-                                        ?
-                                        (conditionXLeft)
-                                        :
-                                        pos.x <= conditionXRight
-                                            ?
-                                            pos.x
-                                            :
-                                            conditionXRight,
-                                    
-                                    y: pos.y <= conditionYLeft ? conditionYLeft
-                                        : pos.y <= conditionYRight ? pos.y : conditionYRight,
-                                };
-                            } );
-                            
                         }
                     }
                     this.currentActiveGroup.setAttr ( 'zIndex', 1001 );
@@ -519,26 +481,62 @@ export class CanvasComponent implements OnInit, AfterViewInit {
             
             currentSelectedArrayOfBlocks.forEach ( ( elem ) => {
                 minX > elem.attrs.x ? minX = elem.attrs.x : null;
-                if ( maxX < elem.attrs.x ) {
+                if ( maxX === 0 || maxX < elem.attrs.x ) {
                     maxX           = elem.attrs.x;
                     maxXGroupWidth = elem.attrs.width;
                 }
-                if ( minX > elem.attrs.x ) {
+                if ( minX === 0 || minX > elem.attrs.x ) {
                     minX = elem.attrs.x;
                 }
                 
-                if ( maxY < elem.attrs.y ) {
+                if ( maxY === 0 || maxY < elem.attrs.y ) {
                     maxY            = elem.attrs.y;
                     maxYGroupHeight = elem.attrs.height;
                 }
-                if ( minY > elem.attrs.y ) {
+                if ( minY === 0 || minY > elem.attrs.y ) {
                     minY = elem.attrs.y;
                 }
                 this.currentActiveGroup.add ( elem );
             } );
             
             this.currentActiveGroup.setAttr ( 'width', maxX + maxXGroupWidth - minX );
+            this.currentActiveGroup.setAttr ( 'minX', minX );
+            this.currentActiveGroup.setAttr ( 'minY', minY );
             this.currentActiveGroup.setAttr ( 'height', maxY + maxYGroupHeight - minY );
+            
+            let currentFlowboard = this.blocksService.getFlowboards ().find ( ( elem ) => {
+                if ( elem._id === this.currentActiveGroup.attrs.currentFlowboardId ) {
+                    return elem;
+                }
+            } );
+            if(currentFlowboard)
+            {
+    
+                this.currentActiveGroup.dragBoundFunc ( ( pos ) => {
+                    let conditionXLeft  = (currentFlowboard.position ().x - this.currentActiveGroup.attrs.minX + GridSizes.flowboard_cell) * (this.zoomInPercent / 100);
+                    let conditionXRight = (currentFlowboard.position ().x + currentFlowboard.attrs.width - this.currentActiveGroup.attrs.minX - this.currentActiveGroup.attrs.width - GridSizes.flowboard_cell) * (this.zoomInPercent / 100);
+                    let conditionYLeft  = (currentFlowboard.position ().y - this.currentActiveGroup.attrs.minY + GridSizes.flowboard_cell) * (this.zoomInPercent / 100);
+                    let conditionYRight = (currentFlowboard.position ().y + currentFlowboard.attrs.height - this.currentActiveGroup.attrs.minY - this.currentActiveGroup.attrs.height - GridSizes.flowboard_cell) * (this.zoomInPercent / 100);
+        
+                    return {
+                        x: pos.x <= conditionXLeft
+                            ?
+                            (conditionXLeft)
+                            :
+                            pos.x <= conditionXRight
+                                ?
+                                pos.x
+                                :
+                                conditionXRight,
+            
+                        y: pos.y <= conditionYLeft ? conditionYLeft
+                            : pos.y <= conditionYRight ? pos.y : conditionYRight,
+                    };
+                } );
+                
+            }
+        
+            
             this.currentActiveGroup.draggable ( true );
             
             if ( currentSelectedArrayOfBlocks.length > 0 ) {
