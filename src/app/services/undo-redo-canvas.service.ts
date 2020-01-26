@@ -26,16 +26,6 @@ export class UndoRedoCanvasService {
       let last_action_obj = this.undoRedoService.undoRedoArr[this.undoRedoService.undoRedoArr.length - 1];
       switch (last_action_obj.action) {
         case ActionType.Move : {
-          // if(last_action_obj.object.hasChildren() && last_action_obj.object.length> 0 )
-          // {
-          //
-          //
-          //   (last_action_obj.object as IGroupCustom).x(last_action_obj.coordinates.x);
-          //   (last_action_obj.object as IGroupCustom).y(last_action_obj.coordinates.y);
-          //
-          // }
-
-
           (last_action_obj.object as IGroupCustom).x(last_action_obj.coordinates.x);
           (last_action_obj.object as IGroupCustom).y(last_action_obj.coordinates.y);
           (last_action_obj.object as IGroupCustom).fire('dragmove', () => {
@@ -46,7 +36,7 @@ export class UndoRedoCanvasService {
         }
         case ActionType.Delete : {
           if (!last_action_obj.parent) {
-            let temp_parent: IGroupCustom;
+            let temp_parent: any;
             (last_action_obj.object as IPathCustom[]).forEach((elem) => {
               temp_parent = this.canvasService.getGroupById(elem.attrs.start_info.start_group_id, mainLayer.getStage());
               temp_parent.add(elem);
