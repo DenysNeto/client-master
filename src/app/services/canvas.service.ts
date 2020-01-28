@@ -62,7 +62,7 @@ export class CanvasService {
     },
 
     swapOrientation: () => {
-      this.testStartStop.startStopTest('swapOrientation', Date.now(), true); // test function ------------
+      this.testStartStop.startStopTest('swapOrientation', Date.now(), false); // test function ------------
       this.currentLineToDraw.positionStart = {x: this.currentLineToDraw.prevX, y: this.currentLineToDraw.prevY};
       this.currentLineToDraw.positionEnd = {
         x: this.currentLineToDraw.prevMainX,
@@ -112,7 +112,7 @@ export class CanvasService {
   blocksArr: InputBlocksInterface[];
 
   deleteShapesFromGroup = (mainLayer: Layer, currentActiveGroup: any) => {
-    this.testStartStop.startStopTest('deleteShapesFromGroup', Date.now(), true); // test function ---------
+    this.testStartStop.startStopTest('deleteShapesFromGroup', Date.now(), false); // test function ---------
     let group_children_temp = currentActiveGroup.children;
     if (group_children_temp.length > 0) {
       while (group_children_temp.length) {
@@ -140,7 +140,7 @@ export class CanvasService {
   }
 
   setMouseMoveEvents(group: IGroupCustom, mainLayer: Layer, activeWrapperBlock: IActiveWrapperBlock) {
-    this.testStartStop.startStopTest('setMouseMoveEvents', Date.now(), true); // test function ------------------
+    this.testStartStop.startStopTest('setMouseMoveEvents', Date.now(), false); // test function ------------------
     //todo add switch for different types of groups
     group.on('mousedown', (event) => {
       activeWrapperBlock.isActive = false;
@@ -148,7 +148,7 @@ export class CanvasService {
       activeWrapperBlock.rectangle.setAttr('visible', false);
     });
     group.on('mouseup', (event) => {
-      this.testStartStop.startStopTest('mouseup -> setMouseMoveEvents', Date.now(), true); // test function ------------------
+      this.testStartStop.startStopTest('mouseup -> setMouseMoveEvents', Date.now(), false); // test function ------------------
       if (this.currentLineToDraw.isLineDrawable && event.target._id !== this.currentLineToDraw.groupId && event.target.parent._id !== this.currentLineToDraw.groupId && this.currentLineToDraw.groupId !== 0) {
         let input_circle = this.getInputCircleFromGroup(event.target.parent as Group);
         let current_flowboard = this.getGroupById(this.currentLineToDraw.flowboardId, mainLayer.getStage());
@@ -241,7 +241,7 @@ export class CanvasService {
   }
 
   checkTheGroupNearBorder(current_group: IGroupCustom) {
-    this.testStartStop.startStopTest('checkTheGroupNearBorder', Date.now(), true); // test function ------------------
+    this.testStartStop.startStopTest('checkTheGroupNearBorder', Date.now(), false); // test function ------------------
     let temp_changes: boolean = false;
     if (current_group.parent.attrs.width - current_group.attrs.x - current_group.attrs.width < GridSizes.flowboard_cell && current_group.parent.attrs.width + GridSizes.flowboard_cell < GridSizes.flowboard_max_width) {
       current_group.parent.children.each((elem) => {
@@ -507,7 +507,7 @@ export class CanvasService {
 
 // function add all ports (input, output, error)
   createPorts(blockVariables: InputBlocksInterface, temp_group: Group, height: number) {
-    this.testStartStop.startStopTest('createPorts', Date.now(), true); // test function ------------------
+    this.testStartStop.startStopTest('createPorts', Date.now(), false); // test function ------------------
     let inputPorts = blockVariables.inputs;
     let outputPorts = blockVariables.outputs;
     let errorPorts = blockVariables.output_errors;
@@ -575,7 +575,7 @@ export class CanvasService {
   }
 
   haveIntersection(r1, r2) {
-    this.testStartStop.startStopTest('haveIntersection', Date.now(), true); // test function ------------------
+    this.testStartStop.startStopTest('haveIntersection', Date.now(), false); // test function ------------------
     return !(
       r2.x > r1.x + r1.width ||
       r2.x + r2.width < r1.x ||
@@ -586,7 +586,7 @@ export class CanvasService {
   }
 
   checkIfCollisionBetweenFlowBoards(current_flowboard, flowBoards_arr, filter: 'width' | 'height' | '') {
-    this.testStartStop.startStopTest('checkIfCollisionBetweenFlowBoards', Date.now(), true); // test function ------------------
+    this.testStartStop.startStopTest('checkIfCollisionBetweenFlowBoards', Date.now(), false); // test function ------------------
     let temp;
     flowBoards_arr.forEach((elem) => {
       if (this.haveIntersection(current_flowboard.attrs, elem.attrs)) {
@@ -611,7 +611,7 @@ export class CanvasService {
 
 
   checkIfCollision(children: any, current_group: IGroupCustom) {
-    this.testStartStop.startStopTest('checkIfCollision', Date.now(), true); // test function ------------------
+    this.testStartStop.startStopTest('checkIfCollision', Date.now(), false); // test function ------------------
     let temp;
     children.each((elem) => {
       if (elem.attrs.type === GroupTypes.Block) {
@@ -639,17 +639,16 @@ export class CanvasService {
 
   // TODO create universal block creator using data from JSON with properties for block
   createDefaultGroup(mainLayer: Layer, activeWrapperBlock, currentActiveGroup: Group, blockName) {
-    this.testStartStop.startStopTest('createDefaultGroup', Date.now(), true); // test function ------------------
+    this.testStartStop.startStopTest('createDefaultGroup', Date.now(), false); // test function ------------------
     let newBlockVariables = this.blocksArr.find(block => block.name === blockName);
     let temp_group = new Konva.Group({
       draggable: true,
       type: GroupTypes.Block,
       name: newBlockVariables.name,
       date: Date.now(),
-      label: newBlockVariables.label
+      label: newBlockVariables.label,
+      blockData: newBlockVariables
     }) as IGroupCustom;
-    // mouseInsideRectangle is flag set true when mouse inside rectangle
-    // and will changes when mouse leave rectangle
     let mouseInsideRectangle: boolean;
     let height;
     if ((newBlockVariables.outputs + newBlockVariables.output_errors) > 2 || newBlockVariables.inputs > 2) {

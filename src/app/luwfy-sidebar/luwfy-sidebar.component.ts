@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnInit, ViewChild} from '@angular/core';
 import {BlocksService} from '../services/blocks.service';
 import {GroupTypes} from '../luwfy-canvas/shapes-interface';
 import {Group} from 'konva/types/Group';

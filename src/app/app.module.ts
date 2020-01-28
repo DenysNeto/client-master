@@ -9,7 +9,9 @@ import {LuwfyVerticalTabComponent} from './luwfy-vertical-tab/luwfy-vertical-tab
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {PopupsModule} from './popups/popups.module';
 import {MatButtonModule, MatMenuModule, MatTabsModule} from '@angular/material';
-import { LuwfySidebarComponent } from './luwfy-sidebar/luwfy-sidebar.component';
+import {LuwfySidebarComponent} from './luwfy-sidebar/luwfy-sidebar.component';
+import {ClipboardModule} from 'ngx-clipboard';
+import {LuwfyJsonEditorComponent} from './luwfy-sidebar/json-editor/luwfy-json-editor.component';
 
 @NgModule({
   declarations: [
@@ -17,18 +19,20 @@ import { LuwfySidebarComponent } from './luwfy-sidebar/luwfy-sidebar.component';
     CanvasComponent,
     LufyTabsComponent,
     LuwfyVerticalTabComponent,
-    LuwfySidebarComponent
+    LuwfySidebarComponent,
+    LuwfyJsonEditorComponent
   ],
-    imports: [
-        BrowserModule,
-        AppRoutingModule,
-        KonvaModule,
-        BrowserAnimationsModule,
-        PopupsModule,
-        MatButtonModule,
-        MatTabsModule,
-        MatMenuModule
-    ],
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    KonvaModule,
+    BrowserAnimationsModule,
+    PopupsModule,
+    MatButtonModule,
+    MatTabsModule,
+    MatMenuModule,
+    ClipboardModule
+  ],
   providers: [],
   bootstrap: [AppComponent]
 })

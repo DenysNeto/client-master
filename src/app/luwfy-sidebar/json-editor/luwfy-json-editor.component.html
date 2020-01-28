@@ -1,0 +1,30 @@
+<section class="ngx-json-viewer">
+  <section
+    *ngFor="let segment of segments"
+    [ngClass]="['segment', 'segment-type-' + segment.type]">
+    <section
+      [ngClass]="{
+            'segment-main': true,
+            'expandable': isExpandable(segment),
+            'expanded': segment.expanded
+          }">
+      <div *ngIf="isExpandable(segment)" class="toggler" (click)="toggle(segment)"></div>
+      <span class="segment-key" (click)="toggle(segment)">{{ segment.key }}</span>
+      <span class="segment-separator">: </span>
+      <span *ngIf="!segment.expanded || !isExpandable(segment)" class="segment-value">{{ segment.description }}  </span>
+
+<!--      Buttons for copy path with copy value-->
+      <a title="Copy path" style="margin-right: 5px; color: #8dc0c2; cursor: pointer"
+         (click)="onCopyPath(segment.key, segment.description)"
+      ><i class="fa fa-reply" aria-hidden="true"></i></a>
+
+      <a title="Copy value" style="margin-right: 5px; color: #3f51b5; cursor: pointer"
+         (click)="onCopyValue(segment.description)"
+      ><i class="fa fa-dot-circle-o" aria-hidden="true"></i></a>
+
+    </section>
+    <section *ngIf="segment.expanded && isExpandable(segment)" class="children">
+      <app-json-editor [json]="segment.value" [expanded]="expanded"></app-json-editor>
+    </section>
+  </section>
+</section>

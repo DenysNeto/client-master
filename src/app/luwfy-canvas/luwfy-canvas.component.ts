@@ -20,8 +20,7 @@ import {UndoRedoService} from '../services/undo-redo.service';
 import {ActionType} from './undo-redo.interface';
 import {Layer} from 'konva/types/Layer';
 import {UndoRedoCanvasService} from '../services/undo-redo-canvas.service';
-import {StageComponent} from 'ng2-konva';
-import {ContainerKonvaSizes, GridSizes, KonvaStartSizes, MaxStageSize, ShapesSizes as sizes, ShapesSizes} from './sizes';
+import {ContainerKonvaSizes, GridSizes, KonvaStartSizes, MaxStageSize, ShapesSizes} from './sizes';
 import ShapeCreator from './ShapesCreator';
 import {FlowboardSizes} from './sizes';
 import {Stage} from 'konva/types/Stage';
@@ -129,7 +128,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       parent: event.target.parent as Layer,
     });
   }).on('dragmove', (event) => {
-    this.testStartStop.startStopTest('dragmove -> currentActiveGroup', Date.now(), true); // test function ----------
+    this.testStartStop.startStopTest('dragmove -> currentActiveGroup', Date.now(), false); // test function ----------
     if (!event) {
       return 0;
     }
@@ -201,7 +200,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   };
 
   reverseFunction = (r1, r2) => {
-    this.testStartStop.startStopTest('reverseFunction', Date.now(), true); // test function ----------
+    this.testStartStop.startStopTest('reverseFunction', Date.now(), false); // test function ----------
     let r1x = r1.x,
       r1y = r1.y,
       r2x = r2.x,
@@ -222,7 +221,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
 
   updateDragWrapper(posIn: { x: number, y: number }) {
-    this.testStartStop.startStopTest('updateDragWrapper', Date.now(), true); // test function ----------
+    this.testStartStop.startStopTest('updateDragWrapper', Date.now(), false); // test function ----------
     this.activeWrapperBlock.now_position = {x: posIn.x, y: posIn.y};
     let posRect = this.reverseFunction(this.activeWrapperBlock.initial_position, this.activeWrapperBlock.now_position);
     this.activeWrapperBlock.rectangle.setAttrs({
@@ -237,7 +236,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
   //delete all objects from the selection rectangle
   deleteShapesFromGroup = () => {
-    this.testStartStop.startStopTest('deleteShapesFromGroup', Date.now(), true); // test function ----------
+    this.testStartStop.startStopTest('deleteShapesFromGroup', Date.now(), false); // test function ----------
     let group_children_temp = this.currentActiveGroup.children;
     if (group_children_temp.length > 0) {
       while (group_children_temp.length) {
@@ -260,7 +259,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   };
 
   setClickEventForGroup = (group: Group) => {
-    this.testStartStop.startStopTest('setClickEventForGroup', Date.now(), true); // test function ----------
+    this.testStartStop.startStopTest('setClickEventForGroup', Date.now(), false); // test function ----------
     group.on('click', (event) => {
       event.cancelBubble = true;
       if (event.evt.ctrlKey) {
@@ -297,7 +296,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   };
 
   handleClickEvent = (event) => {
-    this.testStartStop.startStopTest('handleClickEvent', Date.now(), true); // test function ------------
+    this.testStartStop.startStopTest('handleClickEvent', Date.now(), false); // test function ------------
     if (this.currentLineToDraw.isLineDrawable) {
       this.currentLineToDraw.isLineDrawable = false;
       let current_group = this.mainLayer.getStage().findOne((elem) => {
@@ -317,7 +316,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   };
 
   handleDragOver = (e) => {
-    this.testStartStop.startStopTest('handleDragOver', Date.now(), true); // test function --------------
+    this.testStartStop.startStopTest('handleDragOver', Date.now(), false); // test function --------------
     if (this.idChangedTrigger) {
       this.currentDraggedGroup = this.canvasService.createDefaultGroup(this.mainLayer, this.activeWrapperBlock, this.currentActiveGroup, this.currentId);
       this.idChangedTrigger = false;
@@ -369,7 +368,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   };
 
   handleMouseUp = (e) => {
-    this.testStartStop.startStopTest('handleMouseUp', Date.now(), true); // test function
+    this.testStartStop.startStopTest('handleMouseUp', Date.now(), false); // test function ----------
     this.isMouseDown = false;
     if (this.currentLineToDraw.isLineDrawable) {
       let current_group = this.canvasService.getGroupById(this.currentLineToDraw.groupId, this.mainLayer);
@@ -419,7 +418,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   };
 
   checkValueBetween = (obj: { x: number, y: number }, width, height) => {
-    this.testStartStop.startStopTest('checkValueBetween', Date.now(), true); // test function ---------
+    this.testStartStop.startStopTest('checkValueBetween', Date.now(), false); // test function ---------
     // up and left
     let condition_up_and_left = (
       ((obj.x < this.activeWrapperBlock.initial_position.x
@@ -554,7 +553,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   }
 
   handleMouseMove = (e) => {
-    this.testStartStop.startStopTest('handleMouseMove', Date.now(), true); // test function -----------
+    this.testStartStop.startStopTest('handleMouseMove', Date.now(), false); // test function -----------
     if (!e) {
       return 0;
     }
@@ -612,7 +611,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   };
 
   handleMouseDown = (e) => {
-    this.testStartStop.startStopTest('handleMouseDown', Date.now(), true); // test function -----------
+    this.testStartStop.startStopTest('handleMouseDown', Date.now(), false); // test function -----------
     this.isMouseDown = true;
     if (this.currentLineToDraw.isLineDrawable) {
       return 0;
@@ -641,7 +640,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   };
 
   createGrid = (flow) => {
-    this.testStartStop.startStopTest('createGrid', Date.now(), true); // test function -----------
+    this.testStartStop.startStopTest('createGrid', Date.now(), false); // test function -----------
     let distBetweenLines = 20;
     let vertLines = flow.attrs.height / distBetweenLines;
     let horLines = flow.attrs.width / distBetweenLines;
@@ -671,7 +670,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
 
   checkIsGroupInFlow(flowGroup, returnFlow?: boolean) {
-    this.testStartStop.startStopTest('checkIsGroupInFlow', Date.now(), true); // test function -----------
+    this.testStartStop.startStopTest('checkIsGroupInFlow', Date.now(), false); // test function -----------
     if (flowGroup && flowGroup.attrs.x < this.currentDraggedGroup.attrs.x - ShapesSizes.circle_radius && flowGroup.attrs.x + flowGroup.attrs.width > this.currentDraggedGroup.attrs.x + this.currentDraggedGroup.width() - ShapesSizes.circle_radius
       &&
       flowGroup.attrs.y < this.currentDraggedGroup.attrs.y && flowGroup.attrs.y + flowGroup.attrs.height > this.currentDraggedGroup.attrs.y + this.currentDraggedGroup.height()) {
@@ -777,7 +776,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   }
 
   addFlowToLayer() {
-    this.testStartStop.startStopTest('addFlowToLayer', Date.now(), true); // test function -----------
+    this.testStartStop.startStopTest('addFlowToLayer', Date.now(), false); // test function -----------
     let newX, newY;
     if (this.blocksService.getFlowboards().length === 0) {
       newX = newY = FlowboardSizes.sizeBetweenFlowblock;
@@ -811,7 +810,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   }
 
   onMainTabBarClick(event) {
-    this.testStartStop.startStopTest('onMainTabBarClick', Date.now(), true); // test function -----------
+    this.testStartStop.startStopTest('onMainTabBarClick', Date.now(), false); // test function -----------
     this.activeTab = this.subTabs.find(tab => tab.label === event.tab.textLabel);
     this.mainLayer.getStage().removeChildren();
     this.mainLayer.getStage().draw();
@@ -840,7 +839,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   }
 
   showSubView(id) {
-    this.testStartStop.startStopTest('showSubView', Date.now(), true); // test function -----------
+    this.testStartStop.startStopTest('showSubView', Date.now(), false); // test function -----------
     this.mainLayer.getStage().removeChildren();
     let showFlow = this.blocksService.getFlowboards().find(flow => flow._id === id).clone();
     this.stage.getStage().width(KonvaStartSizes.width);
@@ -859,7 +858,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   }
 
   convertMyFlowForView(flowboard) {
-    this.testStartStop.startStopTest('convertMyFlowForView', Date.now(), true); // test function -----------
+    this.testStartStop.startStopTest('convertMyFlowForView', Date.now(), false); // test function -----------
     if (flowboard.attrs.type === GroupTypes.Flowboard) {
       //this.draggingOnOff(flowboard);
       this.setPositionInView(flowboard);

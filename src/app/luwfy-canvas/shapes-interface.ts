@@ -128,7 +128,8 @@ export interface InputBlocksInterface {
   output_errors: number,
   color: string,
   setting_icons: SettingIcons,
-  btn_event_block: BtnEventBlock
+  btn_event_block: BtnEventBlock,
+  blockData: any
 }
 
 export interface dataInTabLayer {

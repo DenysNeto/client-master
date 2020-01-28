@@ -10,6 +10,7 @@ export class BlocksService {
   subjectArray: BehaviorSubject<any>;
   private blocks = data;
   private flowboards: Group[] = [];
+  dataInBlock: any;
 
   constructor() {
     this.subjectArray = new BehaviorSubject<Group[]>(this.flowboards);
