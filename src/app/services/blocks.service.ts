@@ -12,12 +12,21 @@ export class BlocksService {
   private flowboards: Group[] = [];
   dataInBlock: any;
 
+  private codData = {
+    codLanguage: 'javascript',
+    codText: 'some code'
+  };
+
   constructor() {
     this.subjectArray = new BehaviorSubject<Group[]>(this.flowboards);
   }
 
   getBlocks() {
     return this.blocks;
+  }
+
+  getCodData(){
+    return this.codData;
   }
 
   getFlowboards(){

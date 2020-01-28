@@ -12,6 +12,8 @@ import {MatButtonModule, MatMenuModule, MatTabsModule} from '@angular/material';
 import {LuwfySidebarComponent} from './luwfy-sidebar/luwfy-sidebar.component';
 import {ClipboardModule} from 'ngx-clipboard';
 import {LuwfyJsonEditorComponent} from './luwfy-sidebar/json-editor/luwfy-json-editor.component';
+import { EditorCodeComponent } from './editor-code/editor-code.component';
+import {CodemirrorModule} from '@ctrl/ngx-codemirror';
 
 @NgModule({
   declarations: [
@@ -20,7 +22,8 @@ import {LuwfyJsonEditorComponent} from './luwfy-sidebar/json-editor/luwfy-json-e
     LufyTabsComponent,
     LuwfyVerticalTabComponent,
     LuwfySidebarComponent,
-    LuwfyJsonEditorComponent
+    LuwfyJsonEditorComponent,
+    EditorCodeComponent
   ],
   imports: [
     BrowserModule,
@@ -31,7 +34,8 @@ import {LuwfyJsonEditorComponent} from './luwfy-sidebar/json-editor/luwfy-json-e
     MatButtonModule,
     MatTabsModule,
     MatMenuModule,
-    ClipboardModule
+    ClipboardModule,
+    CodemirrorModule
   ],
   providers: [],
   bootstrap: [AppComponent]

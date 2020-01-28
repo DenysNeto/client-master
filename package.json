@@ -23,6 +23,8 @@
     "@angular/platform-browser": "~8.2.13",
     "@angular/platform-browser-dynamic": "~8.2.13",
     "@angular/router": "~8.2.13",
+    "@ctrl/ngx-codemirror": "^2.2.1",
+    "codemirror": "^5.51.0",
     "d3": "^5.12.0",
     "font-awesome": "^4.7.0",
     "hammerjs": "^2.0.8",
