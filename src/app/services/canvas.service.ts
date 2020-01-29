@@ -111,6 +111,14 @@ export class CanvasService {
   fileNameDialogRef: MatDialogRef<ModalPropComponent>;
   blocksArr: InputBlocksInterface[];
 
+  isElem() {
+    return this.activePathsArr.length > 0;
+  }
+
+  constructor(private dialog: MatDialog, private undoRedoService: UndoRedoService, private blocksRedactorService: BlocksRedactorService, private blocksService: BlocksService) {
+    this.blocksArr = this.blocksService.getBlocks() as InputBlocksInterface[];
+  }
+
   deleteShapesFromGroup = (mainLayer: Layer, currentActiveGroup: any) => {
     this.testStartStop.startStopTest('deleteShapesFromGroup', Date.now(), false); // test function ---------
     let group_children_temp = currentActiveGroup.children;
@@ -152,7 +160,9 @@ export class CanvasService {
       if (this.currentLineToDraw.isLineDrawable && event.target._id !== this.currentLineToDraw.groupId && event.target.parent._id !== this.currentLineToDraw.groupId && this.currentLineToDraw.groupId !== 0) {
         let input_circle = this.getInputCircleFromGroup(event.target.parent as Group);
         let current_flowboard = this.getGroupById(this.currentLineToDraw.flowboardId, mainLayer.getStage());
-        let current_path_group = this.getGroupById(this.currentLineToDraw.groupId, current_flowboard);
+        let current_path_group = this.getGroupById(this.currentLineToDraw.groupId, current_flowboard as Group);
+
+
         current_path_group.setAttr('draggable', 'true');
         let current_path = current_path_group.findOne((elem) => {
           if (elem.className === 'Path' && elem.attrs.start_info.start_group_id === this.currentLineToDraw.groupId && elem._id === this.currentLineToDraw.lineId) {
@@ -178,7 +188,7 @@ export class CanvasService {
         current_path.setAttr('zIndex', 1);
         this.undoRedoService.addAction({
           action: ActionType.Create,
-          object: current_path,
+          object: current_path as IPathCustom,
           parent: event.target.parent as Group,
         });
         // add start and end points for gradient for path
@@ -423,8 +433,6 @@ export class CanvasService {
       this.activeWrapperBlock.rectangle.setAttr('visible', false);
       this.activeBlock.next(this.activeWrapperBlock);
     });
-
-    // TODO: here create logic for grid position
     group.on('dragmove', (event) => {
       if (!event) {
         return 0;
@@ -476,15 +484,15 @@ export class CanvasService {
     });
   }
 
-  getAllInputLinesFromGroup(component: Layer, group: Group | IGroupCustom): Array<IPathCustom> {
+  getAllInputLinesFromGroup(component: Group | IGroupCustom | any, group: Group | IGroupCustom): Array<IPathCustom> {
     let collection_ports: Array<IPathCustom> = [];
-    let all_groups = component.getStage().find((elem) => {
-      if (!elem.className) {
+    let all_groups = component.find((elem) => {
+      if (elem.attrs.type === GroupTypes.Block) {
         return elem;
       }
     });
     all_groups.each((elem) => {
-      elem.getStage().find((elem) => {
+      elem.find((elem) => {
         if (elem.className === 'Path' && elem.attrs.end_info && elem.attrs.end_info.end_group_id === group._id) {
           collection_ports.push(elem);
         }
@@ -578,18 +586,18 @@ export class CanvasService {
     }, 50);
   }
 
-  haveIntersection(r1, r2) {
-    this.testStartStop.startStopTest('haveIntersection', Date.now(), false); // test function ------------------
+  // detects intersection between two group(blocks / flowboards)
+  haveIntersection(group1, group2){
     return !(
-      r2.x > r1.x + r1.width ||
-      r2.x + r2.width < r1.x ||
-      r2.y > r1.y + r1.height ||
-      r2.y + r2.height < r1.y
+      group2.x > group1.x + group1.width ||
+      group2.x + group2.width < group1.x ||
+      group2.y > group1.y + group1.height ||
+      group2.y + group2.height < group1.y
     );
-    this.testStartStop.startStopTest('haveIntersection', Date.now()); // test function ------------------
   }
 
   checkIfCollisionBetweenFlowBoards(current_flowboard, flowBoards_arr, filter: 'width' | 'height' | '') {
+    let isCollisionBetweenFlowboards = false;
     this.testStartStop.startStopTest('checkIfCollisionBetweenFlowBoards', Date.now(), false); // test function ------------------
     let temp;
     flowBoards_arr.forEach((elem) => {
@@ -605,18 +613,18 @@ export class CanvasService {
             this.flowboardPositionChanged.next({dimension: 'height', id: elem._id});
           }
         }
-        temp = true;
+        isCollisionBetweenFlowboards = true;
         return true;
       }
     });
     this.testStartStop.startStopTest('checkIfCollisionBetweenFlowBoards', Date.now()); // test function ------------------
-    return temp;
+    return isCollisionBetweenFlowboards;
   }
 
-
+//checks the collision between draggable group and all other children groups inside flowboard
   checkIfCollision(children: any, current_group: IGroupCustom) {
+    let isCollisionDetected = false;
     this.testStartStop.startStopTest('checkIfCollision', Date.now(), false); // test function ------------------
-    let temp;
     children.each((elem) => {
       if (elem.attrs.type === GroupTypes.Block) {
         if (this.haveIntersection(current_group.attrs, elem.attrs)) {
@@ -625,8 +633,7 @@ export class CanvasService {
               elem.setAttr('stroke', 'red');
             }
           });
-          temp = true;
-          return true;
+          isCollisionDetected = true;
         } else {
           elem.children.each((elem) => {
             if (elem.className == 'Rect' && elem.attrs.stroke !== elem.attrs.main_stroke) {
@@ -637,7 +644,7 @@ export class CanvasService {
       }
     });
     this.testStartStop.startStopTest('checkIfCollision', Date.now()); // test function ------------------
-    return temp;
+    return isCollisionDetected;
   }
 
 
@@ -706,7 +713,7 @@ export class CanvasService {
     });
     // Function hide face image and show to us icons (edit, wizard, settings)
     const onHoverEffect = (group: Group) => {
-      if (!this.currentLineToDraw.isLineDrawable) {
+      if(!this.currentLineToDraw.isLineDrawable){
         let iconGroup = group.findOne(elem => elem.attrs.type === 'iconGroup');
         let headImage = group.findOne(elem => elem.attrs.type === 'headImage');
         if (mouseInsideRectangle) {
@@ -741,7 +748,7 @@ export class CanvasService {
     }
   }
 
-  getGroupById(id: number, component: StageComponent) {
+  getGroupById(id: number, component: Group) {
     if (component) {
       return component.getStage().findOne((elem) => {
         if (elem._id === id) {
