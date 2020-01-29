@@ -43,6 +43,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   @ViewChild('menuTrigger', null) menuTrigger: MatMenuTrigger;
   @ViewChild('mainLayer', null) mainLayer: any = new Konva.Layer({});
   @ViewChild('container', {static: true}) container: ElementRef;
+  @ViewChild('scroll_container', {static: true}) scrollContainer: ElementRef;
 
 
   data = [];
@@ -50,7 +51,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   currentId: string;
   idChangedTrigger: boolean = false;
   KonvaUtil = KonvaUtil;
-  konvaSize = {width: KonvaStartSizes.width, height: KonvaStartSizes.height};
+  konvaSize = {width: window.innerWidth + KonvaStartSizes.padding * 5, height: window.innerHeight + KonvaStartSizes.padding * 2};
   interval: any;
   subTabs: dataInTabLayer[] = [];
   menuOfViews: string[] = [];
@@ -622,7 +623,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         this.currentActiveGroup.children.each((elem) => {
           temp_arr.push(elem);
         });
-        console.log('[c] temp_arr', temp_arr);
         this.undoRedoService.addAction({
           action: ActionType.Unselect,
           object: temp_arr,
@@ -771,6 +771,11 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     this.mainLayer.getStage().add(this.currentActiveGroup);
     this.mainLayer.getStage().add(this.currentLineToDraw.line);
     this.mainLayer.getStage().add(this.currentCopiedGroup);
+
+    this.scrollContainer.nativeElement.addEventListener('scroll', event => {
+      this.repositionStage(event);
+    });
+    this.repositionStage();
     this.zoomInPercent = this.stage.getStage().scaleX() * 100;
     this.canvasService.setCurrentZoom(this.zoomInPercent);
   }
@@ -909,6 +914,23 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     this.stage.getStage().scale({x: event, y: event});
     this.stage.getStage().width(this.activeTab.startStageSize.oldWidth * event < MaxStageSize ? this.activeTab.startStageSize.oldWidth * event : MaxStageSize);
     this.stage.getStage().height(this.activeTab.startStageSize.oldHeight * event < MaxStageSize ? this.activeTab.startStageSize.oldHeight * event : MaxStageSize);
+  }
+
+  repositionStage(event?) {
+    let dx;
+    let dy;
+    if (event) {
+      dx = event.target.scrollLeft;
+      dy = event.target.scrollTop;
+    } else {
+      dx = this.scrollContainer.nativeElement.scrollLeft;
+      dy = this.scrollContainer.nativeElement.scrollTop;
+    }
+    this.stage.getStage().container().style.transform =
+      'translate(' + dx + 'px, ' + dy + 'px)';
+    this.stage.getStage().x(-dx);
+    this.stage.getStage().y(-dy);
+    this.stage.getStage().batchDraw();
   }
 }
 

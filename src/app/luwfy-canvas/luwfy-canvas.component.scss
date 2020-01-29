@@ -45,12 +45,27 @@
 }
 
 .container {
-  position: relative;
-  max-width: 1500px;
-  height: 888px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #fff;
   overflow: auto;
-  scroll-behavior: smooth;
 }
+
+#large-container {
+  width: 3000px;
+  height: 3000px;
+  overflow: hidden;
+}
+
+#scroll-container {
+  width: calc(1510px - 22px);
+  height: calc(888px - 22px);
+  overflow: auto;
+  margin: 10px;
+  border: 1px solid grey;
+}
+
 
 #flowTabs{
   position: relative;

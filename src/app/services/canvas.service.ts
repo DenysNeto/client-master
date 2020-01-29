@@ -423,10 +423,14 @@ export class CanvasService {
       this.activeWrapperBlock.rectangle.setAttr('visible', false);
       this.activeBlock.next(this.activeWrapperBlock);
     });
+
+    // TODO: here create logic for grid position
     group.on('dragmove', (event) => {
       if (!event) {
         return 0;
       }
+      event.target.attrs.x = event.target.attrs.x % 20 > 10 ? event.target.attrs.x - (event.target.attrs.x % 20) + 20 : event.target.attrs.x - (event.target.attrs.x % 20);
+      event.target.attrs.y = event.target.attrs.y % 20 > 10 ? event.target.attrs.y - (event.target.attrs.y % 20) + 20 : event.target.attrs.y - (event.target.attrs.y % 20);
       let isPathInGroup = this.isPathInGroup(event.target as Group);
       let input_paths: Array<IPathCustom> = this.getAllInputLinesFromGroup(mainLayer, event.target as Group | IGroupCustom);
       if (isPathInGroup || input_paths) {

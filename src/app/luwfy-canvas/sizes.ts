@@ -39,8 +39,9 @@ export const FlowboardSizes = {
 };
 
 export const KonvaStartSizes = {
-  width: 4000,
-  height: 3000
+  width: 3000,
+  height: 3000,
+  padding: 500
 };
 
 export const ContainerKonvaSizes = {
