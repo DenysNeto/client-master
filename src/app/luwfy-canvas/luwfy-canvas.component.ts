@@ -51,7 +51,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   currentId: string;
   idChangedTrigger: boolean = false;
   KonvaUtil = KonvaUtil;
-  konvaSize = {width: window.innerWidth + KonvaStartSizes.padding * 5, height: window.innerHeight + KonvaStartSizes.padding * 2};
+  konvaSize = {width: window.innerWidth + KonvaStartSizes.padding * 2, height: window.innerHeight + KonvaStartSizes.padding * 2};
   interval: any;
   subTabs: dataInTabLayer[] = [];
   menuOfViews: string[] = [];
