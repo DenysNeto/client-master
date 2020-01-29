@@ -647,7 +647,8 @@ export class CanvasService {
       name: newBlockVariables.name,
       date: Date.now(),
       label: newBlockVariables.label,
-      blockData: newBlockVariables
+      blockData: newBlockVariables,
+      showOnPanel: true
     }) as IGroupCustom;
     let mouseInsideRectangle: boolean;
     let height;

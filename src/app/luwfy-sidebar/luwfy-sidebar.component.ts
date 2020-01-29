@@ -1,4 +1,4 @@
-import {Component, OnInit, ViewChild} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {BlocksService} from '../services/blocks.service';
 import {GroupTypes} from '../luwfy-canvas/shapes-interface';
 import {Group} from 'konva/types/Group';
@@ -11,7 +11,9 @@ import {ContainerKonvaSizes} from '../luwfy-canvas/sizes';
 })
 export class LuwfySidebarComponent implements OnInit {
 
+  flowboardsArr: Group[] = [];
   blocksArr: Group[] = [];
+  debuggingBlock: Group[] = [];
 
   constructor(private blocksService: BlocksService) {
   }
@@ -22,6 +24,7 @@ export class LuwfySidebarComponent implements OnInit {
         if (elem.attrs.type === GroupTypes.Block && elem.attrs.name === 'debug') {
           if (!this.getBlock(elem._id)) {
             this.blocksArr.push(elem);
+            this.addBlockOnDebuggingPanel();
           }
         }
       });
@@ -30,6 +33,15 @@ export class LuwfySidebarComponent implements OnInit {
 
   getBlock(id) {
     return this.blocksArr.find(block => block._id === id);
+  }
+
+  addBlockOnDebuggingPanel() {
+    this.debuggingBlock = [];
+    this.blocksArr.forEach(block => {
+      if (block.attrs.showOnPanel) {
+        this.debuggingBlock.push(block);
+      }
+    });
   }
 
   focusOnBlock(block: Group) {
@@ -43,5 +55,28 @@ export class LuwfySidebarComponent implements OnInit {
       block.findOne('Rect').attrs.stroke = oldStrokeColor;
       block.getLayer().draw();
     }, 300);
+  }
+
+  onShowAllBlocks() {
+    this.flowboardsArr.forEach(flowboard => flowboard.attrs.showOnPanel = true);
+    this.blocksArr.forEach(block => {
+      block.attrs.showOnPanel = true;
+    });
+    this.addBlockOnDebuggingPanel();
+  }
+
+  onShowChoseOfBlock() {
+    this.addBlockOnDebuggingPanel();
+  }
+
+  onShowChoseOfFlowboards(flowboard: Group) {
+    flowboard.children.each(shape => {
+      shape.attrs.showOnPanel = flowboard.attrs.showOnPanel;
+    });
+    this.addBlockOnDebuggingPanel();
+  }
+
+  getAllFlowBoards() {
+    this.flowboardsArr = this.blocksService.getFlowboards();
   }
 }

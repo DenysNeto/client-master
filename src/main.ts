@@ -1,6 +1,6 @@
 import 'hammerjs';
-import './app/editor-code/allCodeEditorModes';
-import './app/editor-code/allCodeEditorHints';
+import './app/editor-code/codeEditorModes';
+import './app/editor-code/codeEditorHints';
 import { enableProdMode } from '@angular/core';
 import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 import { AppModule } from './app/app.module';

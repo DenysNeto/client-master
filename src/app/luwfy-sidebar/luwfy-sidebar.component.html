@@ -1,10 +1,43 @@
 <div class="sidebar_container">
-  <mat-tab-group mat-stretch-tabs class="example-stretched-tabs mat-elevation-z1">
-    <mat-tab label="Debug"></mat-tab>
-  </mat-tab-group>
-  <div class="info_block" *ngFor="let block of blocksArr">
+  <div class="sidebar_title">Debug</div>
+  <div class="sidebar_head_buttons">
+    <!--    Show all blocks on layout-->
+    <button (click)="onShowAllBlocks()">All</button>
+
+    <!--    Menu with checkboxes where can we choose
+            blocks which we want see -->
+    <button [matMenuTriggerFor]="blocksMenu">Blocks</button>
+    <mat-menu #blocksMenu="matMenu">
+      <mat-list (click)="$event.stopPropagation()">
+        <mat-list-item *ngFor="let block of blocksArr">
+          <mat-checkbox
+            [(ngModel)]="block.attrs.showOnPanel"
+            (change)="onShowChoseOfBlock()"
+          >{{block.attrs.label}} : {{block._id}}
+          </mat-checkbox>
+        </mat-list-item>
+      </mat-list>
+    </mat-menu>
+
+    <!--    Menu with checkboxes where can we choose
+        flowboards which we want see -->
+    <button [matMenuTriggerFor]="flowboardsMenu" (onMenuOpen)="getAllFlowBoards()">Flowboards</button>
+    <mat-menu #flowboardsMenu="matMenu">
+      <mat-list (click)="$event.stopPropagation()">
+        <mat-list-item *ngFor="let flowboard of flowboardsArr">
+          <mat-checkbox
+            [(ngModel)]="flowboard.attrs.showOnPanel"
+            (change)="onShowChoseOfFlowboards(flowboard)"
+          >Flowboard: {{flowboard._id}}</mat-checkbox>
+        </mat-list-item>
+      </mat-list>
+    </mat-menu>
+  </div>
+
+  <div class="info_block" *ngFor="let block of debuggingBlock">
     <p>{{block.attrs.date | date: 'medium'}}</p>
     <p><span>Label: {{block.attrs.label}} </span><a (click)="focusOnBlock(block)"> ID: {{block._id}}</a></p>
     <app-json-editor [json]={data:block.attrs.blockData} [fullObject]="block.attrs.blockData"></app-json-editor>
   </div>
+
 </div>

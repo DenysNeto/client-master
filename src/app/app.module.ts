@@ -8,12 +8,13 @@ import {LufyTabsComponent} from './luwfy-tabs/luwfy-tabs.component';
 import {LuwfyVerticalTabComponent} from './luwfy-vertical-tab/luwfy-vertical-tab.component';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {PopupsModule} from './popups/popups.module';
-import {MatButtonModule, MatMenuModule, MatTabsModule} from '@angular/material';
 import {LuwfySidebarComponent} from './luwfy-sidebar/luwfy-sidebar.component';
 import {ClipboardModule} from 'ngx-clipboard';
 import {LuwfyJsonEditorComponent} from './luwfy-sidebar/json-editor/luwfy-json-editor.component';
-import { EditorCodeComponent } from './editor-code/editor-code.component';
+import {EditorCodeComponent} from './editor-code/editor-code.component';
 import {CodemirrorModule} from '@ctrl/ngx-codemirror';
+import {MaterialModule} from 'src/app/material.module';
+import {FormsModule} from '@angular/forms';
 
 @NgModule({
   declarations: [
@@ -31,11 +32,10 @@ import {CodemirrorModule} from '@ctrl/ngx-codemirror';
     KonvaModule,
     BrowserAnimationsModule,
     PopupsModule,
-    MatButtonModule,
-    MatTabsModule,
-    MatMenuModule,
     ClipboardModule,
-    CodemirrorModule
+    CodemirrorModule,
+    MaterialModule,
+    FormsModule
   ],
   providers: [],
   bootstrap: [AppComponent]

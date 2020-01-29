@@ -1,7 +1,7 @@
 import {Component, Input, OnInit} from '@angular/core';
 import * as CodeMirror from 'codemirror';
 import {BlocksService} from '../services/blocks.service';
-import {themesArray} from './allCodeEditorHints';
+import {themesArray} from './codeEditorHints';
 
 @Component({
   selector: 'app-editor-code',

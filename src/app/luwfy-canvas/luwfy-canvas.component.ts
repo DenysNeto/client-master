@@ -797,6 +797,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       height: FlowboardSizes.newFlowHeight,
       //draggable: true,
       type: GroupTypes.Flowboard,
+      showOnPanel: true
     });
     this.blocksService.addFlowboard(newFlow);
     this.createGrid(newFlow);
