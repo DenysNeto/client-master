@@ -16,8 +16,7 @@ export enum GroupTypes {
   Switcher = 'switcher',
   CopiedGroup = 'copied_group',
   IconsGroup = 'iconsGroup',
-  SelectedGroup = 'selectedGroup'
-
+  SelectedGroup = 'SelectedGroup'
 }
 
 export enum ButtonsTypes {

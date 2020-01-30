@@ -187,9 +187,9 @@ const ShapeCreator = {
     });
   },
 
-  createNameOfFlowboard: (num) => {
+  createNameOfFlowboard: (name) => {
     return new Konva.Text({
-      text: `new flow${num}`,
+      text: name,
       y: -20,
       color: 'black'
     });

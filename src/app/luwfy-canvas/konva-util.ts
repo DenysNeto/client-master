@@ -1,4 +1,4 @@
-import { of,Observable } from 'rxjs';
+import { of } from 'rxjs';
 
 
 
@@ -151,9 +151,6 @@ export default {
             }
             cp[2][0] = topX;
         }
-
-
-
 
         return "M "+origX+" "+origY+
             " C "+

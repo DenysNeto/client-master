@@ -49,4 +49,4 @@ export const ContainerKonvaSizes = {
   height: 888
 };
 
-export const MaxStageSize = 8000;
+export const MaxStageSize = 6000;

@@ -48,7 +48,7 @@ export class LuwfySidebarComponent implements OnInit {
     let oldStrokeColor = block.findOne('Rect').attrs.stroke;
     let newX = block.getAbsolutePosition().x - (ContainerKonvaSizes.width / 2);
     let newY = block.getAbsolutePosition().y - (ContainerKonvaSizes.height / 2);
-    block.getStage().content.parentElement.parentElement.scroll(newX, newY);
+    block.getStage().content.parentElement.parentElement.parentElement.scroll(newX, newY);
     block.findOne('Rect').attrs.stroke = 'red';
     block.getLayer().draw();
     setTimeout(() => {

@@ -18,24 +18,22 @@
     *ngIf="activeTab === subTabs[1]"
     (selectedIndexChange)="onFlowTabBarClick($event)"
   >
-    <mat-tab *ngFor="let flow of subTabs[1].layerData" [label]="flow"></mat-tab>
+    <mat-tab *ngFor="let flow of subTabs[1].layerData" [label]="flow.name"></mat-tab>
   </mat-tab-group>
 
   <!--  Konva window-->
   <div id="scroll-container" #scroll_container>
     <div id="large-container">
-      <div class="container" #container>
-        <ko-stage #stage [config]="KonvaUtil.createStage({width: konvaSize.width, height: konvaSize.height})"
-                  (dragover)="handleDragOver($event)"
-                  (click)="handleClickEvent($event)"
-                  (mouseup)="handleMouseUp($event)"
-                  (mousedown)="handleMouseDown($event)"
-                  (mousemove)="handleMouseMove($event)">
-          <!--    Layer where created our block schemas-->
-          <ko-layer #mainLayer>
-          </ko-layer>
-        </ko-stage>
-      </div>
+      <ko-stage #stage [config]="KonvaUtil.createStage({width: konvaSize.width, height: konvaSize.height})"
+                (dragover)="handleDragOver($event)"
+                (click)="handleClickEvent($event)"
+                (mouseup)="handleMouseUp($event)"
+                (mousedown)="handleMouseDown($event)"
+                (mousemove)="handleMouseMove($event)">
+        <!--    Layer where created our block schemas-->
+        <ko-layer #mainLayer>
+        </ko-layer>
+      </ko-stage>
     </div>
   </div>
 

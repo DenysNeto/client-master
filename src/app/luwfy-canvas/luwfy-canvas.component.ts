@@ -26,6 +26,7 @@ import {FlowboardSizes} from './sizes';
 import {Stage} from 'konva/types/Stage';
 import {BlocksService} from '../services/blocks.service';
 import {TestStartStop} from '../services/testStartStop';
+import {StageComponent} from 'ng2-konva';
 
 @Component({
   selector: 'luwfy-canvas',
@@ -42,7 +43,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   @ViewChild('stage', null) stage: Stage;
   @ViewChild('menuTrigger', null) menuTrigger: MatMenuTrigger;
   @ViewChild('mainLayer', null) mainLayer: any = new Konva.Layer({});
-  @ViewChild('container', {static: true}) container: ElementRef;
   @ViewChild('scroll_container', {static: true}) scrollContainer: ElementRef;
 
   data = [];
@@ -138,9 +138,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       return 0;
     }
     event.target.children.each((elem) => {
-
       let isPathInGroup = this.canvasService.isPathInGroup(elem);
-
       let input_paths: Array<IPathCustom> = this.canvasService.getAllInputLinesFromGroup(elem.parent, elem as Group | IGroupCustom);
       if (isPathInGroup || input_paths) {
 
@@ -251,10 +249,8 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       if (elem._id === this.currentActiveGroup.attrs.currentFlowboardId) {
         return elem;
       }
-
     });
 
-    console.log('pppopop', currentFlowboard);
 
     if (group_children_temp.length > 0 && currentFlowboard) {
       while (group_children_temp.length) {
@@ -276,8 +272,8 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     this.testStartStop.startStopTest('deleteShapesFromGroup', Date.now()); // test function ----------
   };
 
-  //TODO CHANGE BEHAVIOR FOR SELECTION
   setClickEventForGroup = (group: Group) => {
+
     this.testStartStop.startStopTest('setClickEventForGroup', Date.now(), false); // test function ----------
     group.on('click', (event) => {
       event.cancelBubble = true;
@@ -294,33 +290,34 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         if (event.target.className && event.target.className === 'Path') {
           return 0;
         }
+
+
         if (!this.currentActiveGroup.attrs.currentFlowboardId) {
           this.currentActiveGroup.setAttr('currentFlowboardId', event.target.parent.parent._id);
         }
+
         if (this.currentActiveGroup.attrs.currentFlowboardId === event.target.parent.parent._id) {
-          this.currentActiveGroup.add(event.target.parent as any);
+
+          // TODO: when we do ctrl + click our block go to currentActiveGroup (is always first flowboard).
+          // this.currentActiveGroup.add(event.target.parent as any);
+
           event.target.parent.setAttr('x', event.target.position().x + event.target.parent.position().x - this.currentActiveGroup.position().x);
           event.target.parent.setAttr('y', event.target.position().y + event.target.parent.position().y - this.currentActiveGroup.position().y);
+
           this.currentActiveGroup.draggable(true);
           this.undoRedoService.addAction({
             action: ActionType.Select,
             object: this.currentActiveGroup,
           });
-
           event.target.parent.children.each((elem) => {
             if (elem.className === 'Rect' && elem.attrs.main_stroke) {
               elem.setAttr('stroke', theme.choose_group_color);
-              //  elem.setAttr ( 'draggable', false );
             }
             elem.setAttr('draggable', false);
           });
           event.target.parent.setAttr('draggable', false);
-
         }
-
-
       }
-
     });
     this.testStartStop.startStopTest('setClickEventForGroup', Date.now()); // test function ----------
   };
@@ -392,9 +389,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
         });
       }
-      // this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].move({x: 10, y: 10});
-      //
-      // this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].show();
 
       if (!this.interval) {
         this.interval = setInterval(() => {
@@ -404,8 +398,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     }
     this.testStartStop.startStopTest('handleDragOver', Date.now()); // test function ------------
   };
-
-  //todo uncomment
 
   getPathFromGroupById(id: number, component: StageComponent | any) {
     if (component) {
@@ -420,6 +412,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   }
 
   handleMouseUp = (e) => {
+    console.log(this.stage.getStage().getPointerPosition());
     this.testStartStop.startStopTest('handleMouseUp', Date.now(), false); // test function ----------
     this.isMouseDown = false;
     if (this.currentLineToDraw.isLineDrawable) {
@@ -532,11 +525,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
           object: this.currentActiveGroup,
         });
       }
-
-      //
-
       this.activeWrapperBlock.isActive = true;
-
       this.activeWrapperBlock.isDraw = false;
       this.activeWrapperBlock.rectangle.setAttr('visible', false);
       this.mainLayer.getStage().draw();
@@ -753,7 +742,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     if (this.currentLineToDraw.isLineDrawable) {
       return 0;
     }
-    if (this.activeWrapperBlock.isActive ) {
+    if (this.activeWrapperBlock.isActive) {
       if (this.currentActiveGroup.hasChildren()) {
         let temp_arr = [];
         this.currentActiveGroup.children.each((elem) => {
@@ -766,7 +755,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         });
       }
 
-     // this.deleteShapesFromGroup();
+      // this.deleteShapesFromGroup();
     }
     this.activeWrapperBlock.initial_position.x = e.layerX;
     this.activeWrapperBlock.initial_position.y = e.layerY;
@@ -800,8 +789,9 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       this.menuTrigger.openMenu();
       this.calledMenuButton = event.target.parent;
     });
+    flow.setAttr('name', `new flow${this.blocksService.getFlowboards().length}`)
     flow.add(ShapeCreator.createShadowForGrid(flow.attrs.width, flow.attrs.height), ShapeCreator.createDrugPoint(),
-      ShapeCreator.createNameOfFlowboard(this.blocksService.getFlowboards().length), menuButton);
+      ShapeCreator.createNameOfFlowboard(flow.attrs.name), menuButton);
     this.testStartStop.startStopTest('createGrid', Date.now()); // test function -----------
   };
 
@@ -845,11 +835,8 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-
     this.stage.getStage().add(this.mainLayer.getStage());
     this.mainLayer.getStage().add(this.activeWrapperBlock.rectangle);
-    this.activeTab.startStageSize.oldWidth = this.stage.getStage().width();
-    this.activeTab.startStageSize.oldHeight = this.stage.getStage().height();
     this.canvasService.dragFinished.subscribe(() => {
       let temp;
       // @ts-ignore
@@ -917,6 +904,8 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       this.repositionStage(event);
     });
     this.repositionStage();
+    this.activeTab.startStageSize.oldWidth = this.stage.getStage().width();
+    this.activeTab.startStageSize.oldHeight = this.stage.getStage().height();
     this.zoomInPercent = this.stage.getStage().scaleX() * 100;
     this.canvasService.setCurrentZoom(this.zoomInPercent);
   }
@@ -973,7 +962,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       if (this.activeTab.layerData.length !== 0) {
         this.oldStageWidth = this.stage.getStage().width();
         this.oldStageHeight = this.stage.getStage().height();
-        this.showSubView(this.activeTab.layerData[0]);
+        this.showSubView(this.activeTab.layerData[0].id);
       }
     }
     this.testStartStop.startStopTest('onMainTabBarClick', Date.now()); // test function -----------
@@ -981,12 +970,13 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   }
 
   onFlowTabBarClick(event) {
-    this.showSubView(this.activeTab.layerData[event]);
+    this.showSubView(this.activeTab.layerData[event].id);
   }
 
   showSubView(id) {
     this.testStartStop.startStopTest('showSubView', Date.now(), false); // test function -----------
     this.mainLayer.getStage().removeChildren();
+    this.stage.getStage().content.parentElement.parentElement.parentElement.scroll(0, 0);
     let showFlow = this.blocksService.getFlowboards().find(flow => flow._id === id).clone();
     this.stage.getStage().width(KonvaStartSizes.width);
     if ((showFlow.attrs.height * 1.25) > KonvaStartSizes.height) {
@@ -1042,9 +1032,9 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   addFlowToSubView(subViewName: string) {
     let tmp = this.subTabs.find(tab => tab.label === subViewName);
     // @ts-ignore
-    if (!tmp.layerData.find(elem => elem === this.calledMenuButton._id)) {
+    if (!tmp.layerData.find(elem => elem.id === this.calledMenuButton._id)) {
       // @ts-ignore
-      tmp.layerData.push(this.calledMenuButton._id);
+      tmp.layerData.push({id: this.calledMenuButton._id, name: this.calledMenuButton.attrs.name});
     }
   }
 
@@ -1060,16 +1050,16 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     let dx;
     let dy;
     if (event) {
-      dx = event.target.scrollLeft;
-      dy = event.target.scrollTop;
+      dx = event.target.scrollLeft - KonvaStartSizes.padding;
+      dy = event.target.scrollTop - KonvaStartSizes.padding;
     } else {
-      dx = this.scrollContainer.nativeElement.scrollLeft;
-      dy = this.scrollContainer.nativeElement.scrollTop;
+      dx = this.scrollContainer.nativeElement.scrollLeft - KonvaStartSizes.padding;
+      dy = this.scrollContainer.nativeElement.scrollTop - KonvaStartSizes.padding;
     }
     this.stage.getStage().container().style.transform =
       'translate(' + dx + 'px, ' + dy + 'px)';
-    this.stage.getStage().x(-dx);
-    this.stage.getStage().y(-dy);
+    // this.stage.getStage().x(-dx);
+    // this.stage.getStage().y(-dy);
     this.stage.getStage().batchDraw();
   }
 }
