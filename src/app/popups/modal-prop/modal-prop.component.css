@@ -1,0 +1,36 @@
+::ng-deep .mat-dialog-container {
+  padding: 0;
+}
+
+.container {
+  width: 935px;
+  height: 770px;
+  position: relative;
+}
+
+.container .head_line {
+  background-color: #1b6580;
+  height: 50px;
+}
+
+.container .head_line span {
+  color: white;
+}
+
+.tabs_list {
+  position: absolute;
+  right: 10px;
+}
+
+.tabs_list a {
+  cursor: pointer;
+}
+
+::ng-deep .mat-tab-label i {
+  padding-right: 20px;
+}
+
+::ng-deep .mat-tab-label i:hover {
+  color: steelblue;
+}
+/*# sourceMappingURL=modal-prop.component.css.map */

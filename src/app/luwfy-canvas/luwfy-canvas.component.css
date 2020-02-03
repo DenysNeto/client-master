@@ -1,0 +1,68 @@
+.red-ui-workspace-chart-grid line {
+  fill: none;
+  shape-rendering: crispEdges;
+  stroke: #eee;
+  stroke-width: 1px;
+}
+
+.red-ui-flow-link-background {
+  stroke: #fff;
+  opacity: 0;
+  stroke-width: 20;
+  cursor: crosshair;
+  fill: none;
+}
+
+.red-ui-flow-link-outline {
+  stroke: #fff;
+  stroke-width: 5;
+  cursor: crosshair;
+  fill: none;
+  pointer-events: none;
+}
+
+.red-ui-flow-link-line {
+  stroke: #999;
+  stroke-width: 3;
+  fill: none;
+  pointer-events: none;
+}
+
+#add_flow {
+  position: fixed;
+  bottom: 30px;
+  right: 330px;
+}
+
+.zoom-buttons-group {
+  position: fixed;
+  bottom: 105px;
+  right: 330px;
+}
+
+.zoom-buttons-group button {
+  background-color: #3f51b5;
+  color: white;
+}
+
+#large-container {
+  width: 4000px;
+  height: 3000px;
+  overflow: hidden;
+}
+
+#scroll-container {
+  width: calc(1510px - 22px);
+  height: calc(888px - 22px);
+  overflow: auto;
+  margin: 10px;
+  border: 1px solid grey;
+  scroll-behavior: smooth;
+}
+
+#flowTabs {
+  position: relative;
+  width: 100%;
+  z-index: 5;
+}
+/*# sourceMappingURL=luwfy-canvas.component.css.map */

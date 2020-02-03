@@ -52,7 +52,7 @@ export interface IActiveWrapperBlock {
   now_position: { x: number, y: number },
   isActive: boolean,
   isDraw: boolean,
-  rectangle: Rect,
+  rectangle: Rect
 }
 
 export interface IGroupCustom extends Group {

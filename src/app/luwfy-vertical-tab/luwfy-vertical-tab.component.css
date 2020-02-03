@@ -1,0 +1,116 @@
+.tab-wrapper {
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+  background-color: #115770;
+  width: 120px;
+  height: 100%;
+  padding: .5rem;
+  border-right: 2px solid silver;
+  overflow: auto;
+}
+
+.block {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.block span {
+  padding: 0;
+  margin: 0;
+  font: 14px Roboto, sans-serif;
+}
+
+.function {
+  width: 80px;
+  height: 80px;
+  border: 2px solid;
+  border-radius: 10px;
+  margin: 0 auto 10px;
+  cursor: pointer;
+}
+
+.function .input-port {
+  position: relative;
+  left: -12px;
+  top: 28px;
+  width: 18px;
+  height: 18px;
+  border: 2px solid;
+  border-radius: 10px;
+  float: left;
+}
+
+.function svg {
+  position: relative;
+  float: right;
+  top: 13px;
+  right: 15px;
+}
+
+.function .output-port {
+  position: relative;
+  left: 70px;
+  top: 28px;
+  width: 18px;
+  height: 18px;
+  background-color: #115770;
+  border: 2px solid;
+  border-radius: 10px;
+}
+
+.function .switcher {
+  display: inline-block;
+  position: relative;
+  top: 18px;
+  width: 45px;
+  height: 18px;
+  border: 2px solid;
+  border-radius: 10px;
+}
+
+.function .switcher .switch-circle {
+  position: relative;
+  float: left;
+  top: 1px;
+  width: 14px;
+  height: 14px;
+  background-color: white;
+  border: 1px solid #8dc0c2;
+  border-radius: 10px;
+}
+
+.function .switcher span {
+  position: relative;
+  top: -2px;
+  font: 400 11px Roboto, sans-serif;
+  color: steelblue;
+}
+
+.function .click_button {
+  display: inline-block;
+  position: relative;
+  top: 18px;
+  width: 45px;
+  height: 18px;
+  border: 2px solid;
+  border-radius: 10px;
+}
+
+.function .click_button .switch-circle {
+  position: relative;
+  float: left;
+  top: 1px;
+  width: 14px;
+  height: 14px;
+  background-color: white;
+  border: 1px solid #8dc0c2;
+  border-radius: 10px;
+}
+
+.function .click_button span {
+  position: relative;
+  top: -2px;
+  font: 400 11px Roboto, sans-serif;
+  color: white;
+}
+/*# sourceMappingURL=luwfy-vertical-tab.component.css.map */

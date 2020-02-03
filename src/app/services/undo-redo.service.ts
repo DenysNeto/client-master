@@ -14,7 +14,6 @@ import {StageComponent} from 'ng2-konva';
 })
 export class UndoRedoService {
 
-
   constructor() {}
 
   private _undoRedoArr: IStackUndoRedo[] = [];
@@ -32,17 +31,14 @@ export class UndoRedoService {
   }
 
   deleteAction(action: ActionType, object_id: number) {
-    console.log('[c] delete action');
     let index_temp = this.undoRedoArr.findIndex((elem) => {
       if (elem.action === action && (elem.object as IGroupCustom)._id === object_id) {
         return elem;
       }
     });
-
     if (index_temp !== undefined) {
       this.undoRedoArr.splice(index_temp, 1);
     }
-
   }
 
 

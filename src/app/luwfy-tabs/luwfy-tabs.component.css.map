@@ -1,0 +1,9 @@
+{
+    "version": 3,
+    "mappings": "AAAA,AAAA,OAAO,CAAC;EACP,UAAU,EAAE,GAAG;CACf",
+    "sources": [
+        "luwfy-tabs.component.scss"
+    ],
+    "names": [],
+    "file": "luwfy-tabs.component.css"
+}

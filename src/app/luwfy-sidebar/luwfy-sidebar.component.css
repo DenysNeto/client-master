@@ -1,0 +1,76 @@
+.sidebar_container {
+  width: 280px;
+  height: 100%;
+  border-left: 2px solid silver;
+}
+
+.sidebar_container .sidebar_title {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  height: 50px;
+  color: white;
+  background-color: #1b6580;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+  border: 2px silver solid;
+  font-size: 25px;
+}
+
+.sidebar_container .sidebar_head_buttons {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+}
+
+.sidebar_container .sidebar_head_buttons button {
+  -webkit-box-flex: 1;
+      -ms-flex-positive: 1;
+          flex-grow: 1;
+  cursor: pointer;
+  background-color: #1b6580;
+  padding: 5px 0;
+  color: white;
+}
+
+.sidebar_container .sidebar_head_buttons button:hover {
+  opacity: .8;
+}
+
+.sidebar_container ::ng-deep .mat-tab-label {
+  height: 30px !important;
+}
+
+.sidebar_container .info_block {
+  width: 100%;
+  background-color: #c6dbe1;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+  border: 1px silver solid;
+  padding: 5px 2px;
+  margin: 5px;
+}
+
+.sidebar_container .info_block a {
+  cursor: pointer;
+  color: gray;
+}
+
+.sidebar_container .info_block a:hover {
+  color: darkgreen;
+}
+
+.sidebar_container p {
+  margin-bottom: 10px;
+}
+/*# sourceMappingURL=luwfy-sidebar.component.css.map */
