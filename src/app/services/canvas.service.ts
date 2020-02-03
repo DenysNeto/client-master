@@ -101,23 +101,23 @@ export class CanvasService {
 
   activePathsArr: IPathCustom[] = [];
 
-  // activeWrapperBlock: IActiveWrapperBlock = {
-  //   initial_position: {
-  //     x: 0,
-  //     y: 0
-  //   },
-  //   now_position: {
-  //     x: 0,
-  //     y: 0
-  //   },
-  //   isActive: false,
-  //   isDraw: false,
-  //   rectangle: new Konva.Rect({
-  //     stroke: 'blue',
-  //     draggable: false,
-  //     isActive_block: true
-  //   })
-  // };
+  activeWrapperBlock: IActiveWrapperBlock = {
+    initial_position: {
+      x: 0,
+      y: 0
+    },
+    now_position: {
+      x: 0,
+      y: 0
+    },
+    isActive: false,
+    isDraw: false,
+    rectangle: new Konva.Rect({
+      stroke: 'blue',
+      draggable: false,
+      isActive_block: true
+    })
+  };
 
   flowboardDimensionsChanged: BehaviorSubject<{
     dimension: 'width' | 'height' | '';
@@ -138,7 +138,7 @@ export class CanvasService {
 
   lineToDraw: Subject<ICurrentLineToDraw> = new BehaviorSubject<ICurrentLineToDraw>(this.currentLineToDraw);
 
-  // activeBlock: Subject<IActiveWrapperBlock> = new BehaviorSubject<IActiveWrapperBlock>(this.activeWrapperBlock);
+  activeBlock: Subject<IActiveWrapperBlock> = new BehaviorSubject<IActiveWrapperBlock>(this.activeWrapperBlock);
 
   fileNameDialogRef: MatDialogRef<ModalPropComponent>;
 
@@ -182,23 +182,17 @@ export class CanvasService {
     }
   };
 
-  setRegularGroupHandlers(
-    group: IGroupCustom,
-    mainLayer: Layer,
-    // activeWrapperBlock: IActiveWrapperBlock,
-    currentActiveGroup: Group
-  ) {
+  setRegularGroupHandlers(group: IGroupCustom, mainLayer: Layer, activeWrapperBlock: IActiveWrapperBlock, currentActiveGroup: Group) {
     this.setDragGroupEvents(group, mainLayer, currentActiveGroup);
-    this.setMouseMoveEvents(group, mainLayer);
-    // this.setMouseMoveEvents(group, mainLayer, activeWrapperBlock);
+    this.setMouseMoveEvents(group, mainLayer, activeWrapperBlock);
   }
 
-  setMouseMoveEvents(group: IGroupCustom, mainLayer: Layer){
-    // group.on('mousedown', event => {
-    //   activeWrapperBlock.isActive = false;
-    //   activeWrapperBlock.isDraw = false;
-    //   activeWrapperBlock.rectangle.setAttr('visible', false);
-    // });
+  setMouseMoveEvents(group: IGroupCustom, mainLayer: Layer, activeWrapperBlock){
+    group.on('mousedown', event => {
+      activeWrapperBlock.isActive = false;
+      activeWrapperBlock.isDraw = false;
+      activeWrapperBlock.rectangle.setAttr('visible', false);
+    });
     group.on('mouseup', event => {
       if (
         this.currentLineToDraw.isLineDrawable &&
@@ -519,7 +513,7 @@ export class CanvasService {
         }
         this.activePathsArr.push(event.target as IPathCustom);
         event.cancelBubble = true;
-        // this.activeWrapperBlock.isDraw = false;
+        this.activeWrapperBlock.isDraw = false;
         this.undoRedoService.addAction({
           action: ActionType.Select,
           object: event.target as IPathCustom,
@@ -626,9 +620,9 @@ export class CanvasService {
       if (currentActiveGroup.isDraw) {
         this.deleteShapesFromGroup(mainLayer, currentActiveGroup);
       }
-      // this.activeWrapperBlock.isDraw = false;
-      // this.activeWrapperBlock.rectangle.setAttr('visible', false);
-      // this.activeBlock.next(this.activeWrapperBlock);
+      this.activeWrapperBlock.isDraw = false;
+      this.activeWrapperBlock.rectangle.setAttr('visible', false);
+      this.activeBlock.next(this.activeWrapperBlock);
     });
     group.on('dragmove', event => {
       if (!event) {
@@ -925,7 +919,7 @@ export class CanvasService {
     return isCollisionDetected;
   }
 
-  createDefaultGroup(mainLayer: Layer, currentActiveGroup: Group, blockName) {
+  createDefaultGroup(mainLayer: Layer, activeWrapperBlock, currentActiveGroup: Group, blockName) {
     let newBlockVariables = this.blocksArr.find(block => block.name === blockName);
     let height;
     let temp_group = new Konva.Group({
@@ -994,9 +988,7 @@ export class CanvasService {
           currentActiveGroup
         );
       });
-
-    this.setRegularGroupHandlers(temp_group, mainLayer, currentActiveGroup);
-    // this.setRegularGroupHandlers(temp_group, mainLayer, activeWrapperBlock, currentActiveGroup);
+    this.setRegularGroupHandlers(temp_group, mainLayer, activeWrapperBlock, currentActiveGroup);
     return temp_group;
   }
 

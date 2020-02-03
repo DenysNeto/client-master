@@ -1,26 +1,10 @@
-import {
-  AfterViewInit,
-  Component,
-  ElementRef,
-  HostListener,
-  OnInit,
-  ViewChild
-} from '@angular/core';
+import { AfterViewInit, Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
 import { RegistryService } from '../services/registry.service';
 import KonvaUtil from './konva-util';
 import { theme } from './theme';
 import Konva from 'konva';
 import { CanvasService } from '../services/canvas.service';
-import {
-  CircleTypes,
-  dataInTabLayer,
-  GroupTypes,
-  ButtonsTypes,
-  IActiveWrapperBlock,
-  ICurrentLineToDraw,
-  IGroupCustom,
-  IPathCustom
-} from './shapes-interface';
+import { CircleTypes, dataInTabLayer, GroupTypes, ButtonsTypes, IActiveWrapperBlock, ICurrentLineToDraw, IGroupCustom, IPathCustom } from './shapes-interface';
 import { Collection } from 'konva/types/Util';
 import { MatDialog, MatMenuTrigger } from '@angular/material';
 import { BlocksRedactorService } from '../popups/blocks-redactor.service';
@@ -29,13 +13,7 @@ import { UndoRedoService } from '../services/undo-redo.service';
 import { ActionType } from './undo-redo.interface';
 import { Layer } from 'konva/types/Layer';
 import { UndoRedoCanvasService } from '../services/undo-redo-canvas.service';
-import {
-  ContainerKonvaSizes,
-  GridSizes,
-  KonvaStartSizes,
-  MaxStageSize,
-  ShapesSizes
-} from './sizes';
+import { ContainerKonvaSizes, GridSizes, KonvaStartSizes, MaxStageSize, ShapesSizes } from './sizes';
 import ShapeCreator from './ShapesCreator';
 import { FlowboardSizes } from './sizes';
 import { Stage } from 'konva/types/Stage';
@@ -48,6 +26,7 @@ import { StageComponent } from 'ng2-konva';
   templateUrl: './luwfy-canvas.component.html',
   styleUrls: ['./luwfy-canvas.component.scss']
 })
+
 export class CanvasComponent implements OnInit, AfterViewInit {
   constructor(
     private RegistryService: RegistryService,
@@ -71,15 +50,15 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   currentId: string;
   idChangedTrigger: boolean = false;
   KonvaUtil = KonvaUtil;
+  subTabs: dataInTabLayer[] = [];
+  menuOfViews: string[] = [];
+  zoomInPercent: number = 100;
   konvaSize = {
     width: window.innerWidth + KonvaStartSizes.padding * 2,
     height: window.innerHeight + KonvaStartSizes.padding * 2
   };
-  interval: any;
-  subTabs: dataInTabLayer[] = [];
-  menuOfViews: string[] = [];
-  zoomInPercent: number = 100;
 
+  private interval: any;
   private isMouseDown: boolean;
   private oldStageWidth: number;
   private oldStageHeight: number;
@@ -126,7 +105,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       y: 0
     }
   };
-
   currentDraggedGroup: IGroupCustom;
 
   currentActiveGroup: Group = new Konva.Group({
@@ -140,8 +118,8 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     type: GroupTypes.SelectedGroup
   })
     .on('dragstart', event => {
-      // this.activeWrapperBlock.isDraw = false;
-      // this.activeWrapperBlock.rectangle.setAttr('visible', false);
+      this.activeWrapperBlock.isDraw = false;
+      this.activeWrapperBlock.rectangle.setAttr('visible', false);
       this.undoRedoService.addAction({
         action: ActionType.Move,
         object: event.target,
@@ -380,18 +358,16 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       this.canvasService.resetActivePathArr();
       return 0;
     }
-       //TODO: if we paste copied block we chose place 
-       if (this.currentCopiedGroup.getChildren().length > 0) {
-        this.pasteOperation();
-      }
+    //TODO: if we paste copied block we chose place 
+    if (this.currentCopiedGroup.getChildren().length > 0) {
+      this.pasteOperation();
+      this.currentCopiedGroup.setAttr('visible', false);
+    }
   };
 
   handleDragOver = e => {
-
     if (this.idChangedTrigger) {
-
-      // this.currentDraggedGroup = this.canvasService.createDefaultGroup(this.mainLayer, this.activeWrapperBlock, this.currentActiveGroup, this.currentId);
-      this.currentDraggedGroup = this.canvasService.createDefaultGroup(this.mainLayer, this.currentActiveGroup, this.currentId);
+      this.currentDraggedGroup = this.canvasService.createDefaultGroup(this.mainLayer, this.activeWrapperBlock, this.currentActiveGroup, this.currentId);
       this.idChangedTrigger = false;
       this.setClickEventForGroup(this.currentDraggedGroup);
       this.mainLayer.getStage().add(this.currentDraggedGroup);
@@ -568,7 +544,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     }
   };
 
-  @HostListener('document:keydown.backspace') undoBackspace(event: KeyboardEvent){
+  @HostListener('document:keydown.backspace') undoBackspace(event: KeyboardEvent) {
     if (this.currentActiveGroup.hasChildren()) {
       this.undoRedoService.addAction({
         action: ActionType.Delete,
@@ -598,16 +574,56 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     }
   }
 
+  // TODO: Ctrl + C
   @HostListener('document:keydown.control.c') undoCtrlC(event: KeyboardEvent) {
     if (this.selectedBlocks.length > 0) {
+      let allElemPaths = [];
+      let allClonedPaths = [];
+      let allElemOutputs = [];
+      let allClonedOutputs = [];
+      let allElemInputs = [];
+      let allClonedInputs = [];
+      let clonedBlocks = [];
+
       this.selectedBlocks.forEach(elem => {
+        elem.find('Path').forEach(path => allElemPaths.push(path));
+        elem.find('Circle').filter(circle => circle.attrs.type === CircleTypes.Output).forEach(output => allElemOutputs.push(output));
+        elem.find('Circle').filter(circle => circle.attrs.type === CircleTypes.Input).forEach(input => allElemInputs.push(input));
         let clone = elem.clone();
-        console.log('Elem', elem);
-        console.log('Clone', clone);
         clone.attrs.flowId = elem.parent._id;
-        this.currentCopiedGroup.add(clone);
+        clonedBlocks.push(clone);
         this.returnColorAfterSelect(elem);
+      });
+
+      clonedBlocks.forEach(elem => {
+        elem.find('Path').forEach(path => allClonedPaths.push(path));
+        elem.find('Circle').filter(circle => circle.attrs.type === CircleTypes.Output).forEach(output => allClonedOutputs.push(output));
+        elem.find('Circle').filter(circle => circle.attrs.type === CircleTypes.Input).forEach(input => allClonedInputs.push(input));
       })
+
+      allElemPaths.forEach((path, indexPath) => {     
+        if (path) {
+          allElemOutputs.forEach((output, indexOutput) => {
+            if (output) {
+              if (path.attrs.start_info.start_circle_id === output._id) {
+                allClonedPaths[indexPath].attrs.start_info.start_circle_id = allClonedOutputs[indexOutput]._id;
+                allClonedPaths[indexPath].attrs.start_info.start_group_id = allClonedOutputs[indexOutput].parent._id;
+              }
+            }
+          })
+          allElemInputs.forEach((input, indexInput) => {
+            if (input) {
+              if (path.attrs.end_info.end_circle_id === input._id) {
+                allClonedPaths[indexPath].attrs.end_info.end_circle_id = allClonedInputs[indexInput]._id;
+                allClonedPaths[indexPath].attrs.end_info.end_group_id = allClonedInputs[indexInput].parent._id;
+              }
+            }
+          })
+        }
+      })
+      if (clonedBlocks.length > 0) {
+        clonedBlocks.forEach(block => this.currentCopiedGroup.add(block))
+      }
       this.selectedBlocks = [];
     }
     // responds to control+z
@@ -630,13 +646,13 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     if (this.currentCopiedGroup.getChildren()) {
       this.mainLayer.getStage().draw();
     }
-    if (this.stage.getStage().getPointerPosition().x > this.stage.getStage().width() - 20 && this.isMouseDown){
+    if (this.stage.getStage().getPointerPosition().x > this.stage.getStage().width() - 20 && this.isMouseDown) {
       if (this.stage.getStage().width() + 500 <= MaxStageSize) {
         this.stage.getStage().width(this.stage.getStage().width() + 500);
         this.activeTab.startStageSize.oldWidth = this.stage.getStage().width();
       }
     }
-    if (this.stage.getStage().getPointerPosition().y > this.stage.getStage().height() - 20 && this.isMouseDown){
+    if (this.stage.getStage().getPointerPosition().y > this.stage.getStage().height() - 20 && this.isMouseDown) {
       if (this.stage.getStage().height() + 500 <= MaxStageSize) {
         this.stage.getStage().height(this.stage.getStage().height() + 500);
         this.activeTab.startStageSize.oldHeight = this.stage.getStage().height();
@@ -692,7 +708,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     }
 
     // TODO: some logic for Ctrl+V
-    if (this.currentCopiedGroup.getChildren().length > 0) {
+    if (this.currentCopiedGroup.hasChildren()) {
       this.currentCopiedGroup.setAbsolutePosition({
         x: this.stage.getStage().getPointerPosition().x - this.currentCopiedGroup.children[0].attrs.x,
         y: this.stage.getStage().getPointerPosition().y - this.currentCopiedGroup.children[0].attrs.y
@@ -700,7 +716,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     }
 
     if (this.activeWrapperBlock.isDraw) {
-      this.updateDragWrapper({x: e.layerX, y: e.layerY});
+      this.updateDragWrapper({ x: e.layerX, y: e.layerY });
       this.mainLayer.getStage().draw();
     }
 
@@ -737,7 +753,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       })
       pasteObj.children[0].setAttr('text', 'copy ' + pasteObj.children[0].attrs.text);
       this.returnColorAfterSelect(pasteObj);
-      flow.add(pasteObj);   
+      flow.add(pasteObj);
     }
     this.blocksService.pushFlowboardsChanges();
   }
@@ -841,9 +857,9 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     this.canvasService.lineToDraw.subscribe(data => {
       this.currentLineToDraw = data;
     });
-    // this.canvasService.activeBlock.subscribe(data => {
-    //   this.activeWrapperBlock = data;
-    // });
+    this.canvasService.activeBlock.subscribe(data => {
+      this.activeWrapperBlock = data;
+    });
   }
 
   ngAfterViewInit() {
@@ -951,8 +967,8 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         this.createGrid(flow);
         this.mainLayer.getStage().add(flow);
       });
-    this.mainLayer.getStage().add(this.currentActiveGroup);
-    this.currentActiveGroup.zIndex(1);
+    // this.mainLayer.getStage().add(this.currentActiveGroup);
+    // this.currentActiveGroup.zIndex(1);
     this.mainLayer.getStage().add(this.currentLineToDraw.line);
     this.mainLayer.getStage().add(this.currentCopiedGroup);
     // TODO: if we have few selected blocks and click on free space 
