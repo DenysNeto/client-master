@@ -20,7 +20,7 @@ import { Stage } from 'konva/types/Stage';
 import { BlocksService } from '../services/blocks.service';
 import { TestStartStop } from '../services/testStartStop';
 import { StageComponent } from 'ng2-konva';
-import {LocalNotificationService, NotificationTypes} from '../popups/local-notification/local-notification.service';
+import { LocalNotificationService, NotificationTypes } from '../popups/local-notification/local-notification.service';
 
 @Component({
   selector: 'luwfy-canvas',
@@ -362,7 +362,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   };
 
   checkIsGroupInFlow(flowboard, block, returnFlow?: boolean) {
-    if (flowboard && flowboard.attrs.x < block.attrs.x - ShapesSizes.circle_radius && 
+    if (flowboard && flowboard.attrs.x < block.attrs.x - ShapesSizes.circle_radius &&
       flowboard.attrs.x + flowboard.attrs.width > block.attrs.x + block.width() - ShapesSizes.circle_radius &&
       flowboard.attrs.y < block.attrs.y &&
       flowboard.attrs.y + flowboard.attrs.height > block.attrs.y + block.height()) {
@@ -370,7 +370,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     }
   }
 
-  checkingBlockInFlowboard(){
+  checkingBlockInFlowboard() {
     let temp;
     this.blocksService.getFlowboards().forEach(elem => {
       if (this.checkIsGroupInFlow(elem, this.currentDraggedGroup)) {
@@ -530,8 +530,8 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     }
   }
 
-  @HostListener('document:keydown.escape') undoEsc(event: KeyboardEvent){
-    if(this.currentCopiedGroup.isVisible() && this.currentCopiedGroup.hasChildren()){
+  @HostListener('document:keydown.escape') undoEsc(event: KeyboardEvent) {
+    if (this.currentCopiedGroup.isVisible() && this.currentCopiedGroup.hasChildren()) {
       this.currentCopiedGroup.setAttr('visible', false);
       this.mainLayer.getStage().draw();
     }
@@ -613,8 +613,26 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       x: this.stage.getStage().getPointerPosition().x - this.currentCopiedGroup.children[0].attrs.x,
       y: this.stage.getStage().getPointerPosition().y - this.currentCopiedGroup.children[0].attrs.y
     });
-    console.log(this.currentCopiedGroup);
-    
+
+    let biggestX = 0;
+    let biggestY = 0;
+    let biggestHeight = 0;
+
+    this.currentCopiedGroup.children.each(block => {
+      if (biggestX < block.attrs.x) {
+        biggestX = block.attrs.x;
+      }
+      if (biggestY < block.attrs.y) {
+        biggestY = block.attrs.y;
+        biggestHeight = block.attrs.height;
+      }
+    })
+
+    this.currentCopiedGroup.setAttrs({
+      width: biggestX + 120,
+      height: biggestY + biggestHeight + 20
+    })
+
     this.mainLayer.getStage().draw();
     // responds to control+z
   }
@@ -696,7 +714,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     }
 
     if (this.activeWrapperBlock.isDraw) {
-      this.updateDragWrapper({x: e.layerX, y: e.layerY});
+      this.updateDragWrapper({ x: e.layerX, y: e.layerY });
       this.mainLayer.getStage().draw();
     }
 
@@ -720,7 +738,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   // from copy group in flowboard 
   pasteOperation(flow) {
     let pasteFlowId = this.currentCopiedGroup.children[0].attrs.flowId;
-    if(flow._id === pasteFlowId){
+    if (flow._id === pasteFlowId) {
       let firstShapeX = this.currentCopiedGroup.children[0].attrs.x;
       let firstShapeY = this.currentCopiedGroup.children[0].attrs.y;
       let pasteObj;
@@ -739,7 +757,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         this.currentCopiedGroup.setAttr('visible', false);
       }
       this.blocksService.pushFlowboardsChanges();
-    }else{
+    } else {
       this.localNotificationService.sendLocalNotification(`Choose place inside ${this.blocksService.getFlowboardName(pasteFlowId)}`, NotificationTypes.ERROR);
     }
   }
@@ -751,23 +769,11 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     let maxLines = vertLines > horLines ? vertLines : horLines;
     for (let i = 1; i <= maxLines; i++) {
       if (vertLines > i) {
-        flow.add(
-          ShapeCreator.createLineForGrid([
-            distBetweenLines * i,
-            0,
-            distBetweenLines * i,
-            flow.attrs.height
-          ])
+        flow.add(ShapeCreator.createLineForGrid([distBetweenLines * i, 0, distBetweenLines * i, flow.attrs.height])
         );
       }
       if (horLines > i) {
-        flow.add(
-          ShapeCreator.createLineForGrid([
-            0,
-            distBetweenLines * i,
-            flow.attrs.width,
-            distBetweenLines * i
-          ])
+        flow.add(ShapeCreator.createLineForGrid([0, distBetweenLines * i, flow.attrs.width, distBetweenLines * i])
         );
       }
     }
@@ -838,14 +844,14 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       let temp;
       this.canvasService.getAllFlowsFromLayer(this.mainLayer).each(flowGroup => {
         if (!temp) {
-          temp = this.checkIsGroupInFlow(flowGroup,this.currentDraggedGroup, true);
+          temp = this.checkIsGroupInFlow(flowGroup, this.currentDraggedGroup, true);
           if (temp) {
             this.currentDraggedGroup.position({
               x: Math.abs(this.currentDraggedGroup.position().x - temp.position().x),
               y: Math.abs(this.currentDraggedGroup.position().y - temp.position().y)
             });
             temp.add(this.currentDraggedGroup);
-            let temp_custom  = temp.findOne(elem => elem._id === this.currentDraggedGroup._id);
+            let temp_custom = temp.findOne(elem => elem._id === this.currentDraggedGroup._id);
             this.blocksService.pushFlowboardsChanges();
 
             // function restrict block in border of flowboard 
@@ -967,11 +973,15 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       showOnPanel: true
     });
     this.blocksService.addFlowboard(newFlow);
-    newFlow.on('click', event =>{
-    //TODO: if we paste copied block we chose place 
-    if (this.currentCopiedGroup.getChildren().length > 0 && this.currentCopiedGroup.isVisible()) {
-      this.pasteOperation(newFlow);
-    }
+    newFlow.on('click', event => {
+      //TODO: if we paste copied block we chose place 
+      if (this.currentCopiedGroup.getChildren().length > 0 && this.currentCopiedGroup.isVisible()) {
+        if (this.checkIsGroupInFlow(newFlow, this.currentCopiedGroup)) {
+          this.pasteOperation(newFlow);
+        } else {
+          this.localNotificationService.sendLocalNotification(`Paste blocks outside`, NotificationTypes.ERROR);
+        }
+      }
     })
     this.createGrid(newFlow);
     this.mainLayer.getStage().add(newFlow);
