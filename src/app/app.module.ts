@@ -15,6 +15,7 @@ import {EditorCodeComponent} from './editor-code/editor-code.component';
 import {CodemirrorModule} from '@ctrl/ngx-codemirror';
 import {MaterialModule} from 'src/app/material.module';
 import {FormsModule} from '@angular/forms';
+import { LocalNotificationComponent } from './popups/local-notification/local-notification.component';
 
 @NgModule({
   declarations: [
@@ -24,7 +25,8 @@ import {FormsModule} from '@angular/forms';
     LuwfyVerticalTabComponent,
     LuwfySidebarComponent,
     LuwfyJsonEditorComponent,
-    EditorCodeComponent
+    EditorCodeComponent,
+    LocalNotificationComponent
   ],
   imports: [
     BrowserModule,

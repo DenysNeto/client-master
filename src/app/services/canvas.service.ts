@@ -187,7 +187,7 @@ export class CanvasService {
     this.setMouseMoveEvents(group, mainLayer, activeWrapperBlock);
   }
 
-  setMouseMoveEvents(group: IGroupCustom, mainLayer: Layer, activeWrapperBlock){
+  setMouseMoveEvents(group: IGroupCustom, mainLayer: Layer, activeWrapperBlock) {
     group.on('mousedown', event => {
       activeWrapperBlock.isActive = false;
       activeWrapperBlock.isDraw = false;
@@ -585,11 +585,7 @@ export class CanvasService {
     }
   }
 
-  setDragGroupEvents(
-    group: IGroupCustom,
-    mainLayer: Layer,
-    currentActiveGroup
-  ) {
+  setDragGroupEvents(group: IGroupCustom, mainLayer: Layer, currentActiveGroup) {
     group.on('dragstart', event => {
       event.target.setAttr('drag_start_position', {
         x: event.target.attrs.x,
@@ -598,8 +594,7 @@ export class CanvasService {
 
       let copyPaths = [];
       event.currentTarget.parent.find('Path').each(path => {
-        if (
-          path.attrs.end_info.end_group_id === event.currentTarget._id ||
+        if (path.attrs.end_info.end_group_id === event.currentTarget._id ||
           path.attrs.start_info.start_group_id === event.currentTarget._id
         ) {
           copyPaths.push({ id: path._id, path: path.clone() });
@@ -979,15 +974,10 @@ export class CanvasService {
     this.setListenerOnIcons(temp_group);
 
     let circles_collection = this.getAllCirclesFromGroup(temp_group);
-    circles_collection &&
-      circles_collection.each((elem: ICircleCustom) => {
-        elem.setAttr('zIndex', 1000);
-        this.setMouseDownEventForSwitchCircle(
-          elem,
-          mainLayer,
-          currentActiveGroup
-        );
-      });
+    circles_collection && circles_collection.each((elem: ICircleCustom) => {
+      elem.setAttr('zIndex', 1000);
+      this.setMouseDownEventForSwitchCircle(elem, mainLayer, currentActiveGroup);
+    });
     this.setRegularGroupHandlers(temp_group, mainLayer, activeWrapperBlock, currentActiveGroup);
     return temp_group;
   }

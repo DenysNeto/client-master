@@ -2,6 +2,7 @@
   width: 280px;
   height: 100%;
   border-left: 2px solid silver;
+  box-sizing: border-box;
 
   .sidebar_title{
     display: flex;
@@ -35,7 +36,7 @@
   }
 
   .info_block{
-    width: 100%;
+    width: calc(100% - 5px);
     background-color: #c6dbe1;
     box-sizing: border-box;
     border: 1px silver solid;
@@ -53,6 +54,11 @@
 
   p{
     margin-bottom: 10px;
+  }
+
+  .blocks_container{
+    height: 855px;
+    overflow: auto;
   }
 }
 

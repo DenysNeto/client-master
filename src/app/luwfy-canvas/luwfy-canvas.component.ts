@@ -20,6 +20,7 @@ import { Stage } from 'konva/types/Stage';
 import { BlocksService } from '../services/blocks.service';
 import { TestStartStop } from '../services/testStartStop';
 import { StageComponent } from 'ng2-konva';
+import {LocalNotificationService, NotificationTypes} from '../popups/local-notification/local-notification.service';
 
 @Component({
   selector: 'luwfy-canvas',
@@ -36,7 +37,8 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     private undoRedoService: UndoRedoService,
     private tempService: UndoRedoCanvasService,
     private blocksService: BlocksService,
-    private testStartStop: TestStartStop
+    private testStartStop: TestStartStop,
+    private localNotificationService: LocalNotificationService
   ) {
   }
 
@@ -133,39 +135,18 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       }
       event.target.children.each(elem => {
         let isPathInGroup = this.canvasService.isPathInGroup(elem);
-        let input_paths: Array<IPathCustom> = this.canvasService.getAllInputLinesFromGroup(
-          elem.parent,
-          elem as Group | IGroupCustom
-        );
+        let input_paths: Array<IPathCustom> = this.canvasService.getAllInputLinesFromGroup(elem.parent, elem as Group | IGroupCustom);
         if (isPathInGroup || input_paths) {
-          let output_paths: Collection<IPathCustom> = this.canvasService.getAllOutputLinesFromGroup(
-            elem.parent as Group | IGroupCustom
-          );
+          let output_paths: Collection<IPathCustom> = this.canvasService.getAllOutputLinesFromGroup(elem.parent as Group | IGroupCustom);
           if (output_paths) {
             output_paths.each(elem => {
               //start point
-              let temp_start_point_group = this.canvasService.getGroupById(
-                elem.attrs.end_info.end_group_id,
-                elem.parent as Group
-              );
-              let temp_end_point_group = this.canvasService.getGroupById(
-                elem.attrs.start_info.start_group_id,
-                elem.parent as Group
-              );
-              let temp_end_point_circle = this.canvasService.getCircleFromGroupById(
-                elem as any,
-                elem.attrs.start_info.start_circle_id
-              );
-              let temp_start_circle = this.canvasService.getCircleFromGroupById(
-                temp_start_point_group as Group,
-                elem.attrs.end_info.end_circle_id
-              );
-
+              let temp_start_point_group = this.canvasService.getGroupById(elem.attrs.end_info.end_group_id, elem.parent as Group);
+              let temp_end_point_group = this.canvasService.getGroupById(elem.attrs.start_info.start_group_id, elem.parent as Group);
+              let temp_end_point_circle = this.canvasService.getCircleFromGroupById(elem as any, elem.attrs.start_info.start_circle_id);
+              let temp_start_circle = this.canvasService.getCircleFromGroupById(temp_start_point_group as Group, elem.attrs.end_info.end_circle_id);
               let temp_input_circle = elem.getStage().findOne(elem => {
-                if (
-                  elem.className === 'Circle' &&
-                  elem.attrs.type === CircleTypes.Input
-                ) {
+                if (elem.className === 'Circle' && elem.attrs.type === CircleTypes.Input) {
                   return elem;
                 }
               });
@@ -268,7 +249,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   }
 
   //delete all objects from the selection rectangle
-  deleteShapesFromGroup = () => {
+  deleteShapesFromGroup() {
     let group_children_temp = this.currentActiveGroup.children;
     let currentFlowboard = this.blocksService.getFlowboards().find(elem => {
       if (elem._id === this.currentActiveGroup.attrs.currentFlowboardId) {
@@ -358,11 +339,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       this.canvasService.resetActivePathArr();
       return 0;
     }
-    //TODO: if we paste copied block we chose place 
-    if (this.currentCopiedGroup.getChildren().length > 0) {
-      this.pasteOperation();
-      this.currentCopiedGroup.setAttr('visible', false);
-    }
   };
 
   handleDragOver = e => {
@@ -375,34 +351,8 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       this.mainLayer.getStage().draw();
       this.undoRedoService.addAction({ action: ActionType.Create, object: this.currentDraggedGroup, parent: this.mainLayer });
     } else {
-      let temp;
-      this.blocksService.getFlowboards().forEach(elem => {
-        if (this.checkIsGroupInFlow(elem)) {
-          temp = this.checkIsGroupInFlow(elem, true);
-          return 0;
-        }
-      });
-
-      this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].setAttr('time', new Date().getTime());
       this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].position({ x: e.layerX / (this.zoomInPercent / 100), y: e.layerY / (this.zoomInPercent / 100) });
-
-      if (temp) {
-        temp.children.each(elem => {
-          if (elem.className === 'Rect') {
-            elem.setAttr('stroke', 'green');
-          }
-        });
-      } else {
-        // @ts-ignore
-        this.canvasService.getAllFlowsFromLayer(this.mainLayer).each(elem => {
-          elem.children.each(elem => {
-            if (elem.className === 'Rect') {
-              elem.setAttr('stroke', theme.line_color);
-            }
-          });
-        });
-      }
-
+      this.checkingBlockInFlowboard();
       if (!this.interval) {
         this.interval = setInterval(() => {
           this.stage.getStage().add(this.mainLayer.getStage());
@@ -410,6 +360,41 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       }
     }
   };
+
+  checkIsGroupInFlow(flowboard, block, returnFlow?: boolean) {
+    if (flowboard && flowboard.attrs.x < block.attrs.x - ShapesSizes.circle_radius && 
+      flowboard.attrs.x + flowboard.attrs.width > block.attrs.x + block.width() - ShapesSizes.circle_radius &&
+      flowboard.attrs.y < block.attrs.y &&
+      flowboard.attrs.y + flowboard.attrs.height > block.attrs.y + block.height()) {
+      return returnFlow ? flowboard : true;
+    }
+  }
+
+  checkingBlockInFlowboard(){
+    let temp;
+    this.blocksService.getFlowboards().forEach(elem => {
+      if (this.checkIsGroupInFlow(elem, this.currentDraggedGroup)) {
+        temp = this.checkIsGroupInFlow(elem, this.currentDraggedGroup, true);
+        return 0;
+      }
+    });
+    if (temp) {
+      temp.children.each(elem => {
+        if (elem.className === 'Rect') {
+          elem.setAttr('stroke', 'green');
+        }
+      });
+    } else {
+      // @ts-ignore
+      this.canvasService.getAllFlowsFromLayer(this.mainLayer).each(elem => {
+        elem.children.each(elem => {
+          if (elem.className === 'Rect') {
+            elem.setAttr('stroke', theme.line_color);
+          }
+        });
+      });
+    }
+  }
 
   getPathFromGroupById(id: number, component: StageComponent | any) {
     if (component) {
@@ -497,45 +482,25 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       this.activeWrapperBlock.initial_position.y <= obj.y &&
       this.activeWrapperBlock.now_position.y >= obj.y;
     // up and left
-    if (
-      this.activeWrapperBlock.initial_position.x >=
-      this.activeWrapperBlock.now_position.x &&
-      this.activeWrapperBlock.initial_position.y >=
-      this.activeWrapperBlock.now_position.y
-    ) {
+    if (this.activeWrapperBlock.initial_position.x >= this.activeWrapperBlock.now_position.x && this.activeWrapperBlock.initial_position.y >= this.activeWrapperBlock.now_position.y) {
       if (condition_up_and_left) {
         return true;
       }
     }
     // up and right
-    if (
-      this.activeWrapperBlock.initial_position.x <=
-      this.activeWrapperBlock.now_position.x &&
-      this.activeWrapperBlock.initial_position.y >=
-      this.activeWrapperBlock.now_position.y
-    ) {
+    if (this.activeWrapperBlock.initial_position.x <= this.activeWrapperBlock.now_position.x && this.activeWrapperBlock.initial_position.y >= this.activeWrapperBlock.now_position.y) {
       if (condition_up_and_right) {
         return true;
       }
     }
     // down and left
-    if (
-      this.activeWrapperBlock.initial_position.x >=
-      this.activeWrapperBlock.now_position.x &&
-      this.activeWrapperBlock.initial_position.y <=
-      this.activeWrapperBlock.now_position.y
-    ) {
+    if (this.activeWrapperBlock.initial_position.x >= this.activeWrapperBlock.now_position.x && this.activeWrapperBlock.initial_position.y <= this.activeWrapperBlock.now_position.y) {
       if (condition_down_and_left) {
         return true;
       }
     }
     // down and right
-    if (
-      this.activeWrapperBlock.initial_position.x <=
-      this.activeWrapperBlock.now_position.x &&
-      this.activeWrapperBlock.initial_position.y <=
-      this.activeWrapperBlock.now_position.y
-    ) {
+    if (this.activeWrapperBlock.initial_position.x <= this.activeWrapperBlock.now_position.x && this.activeWrapperBlock.initial_position.y <= this.activeWrapperBlock.now_position.y) {
       if (condition_down_and_right) {
         return true;
       }
@@ -565,6 +530,13 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     }
   }
 
+  @HostListener('document:keydown.escape') undoEsc(event: KeyboardEvent){
+    if(this.currentCopiedGroup.isVisible() && this.currentCopiedGroup.hasChildren()){
+      this.currentCopiedGroup.setAttr('visible', false);
+      this.mainLayer.getStage().draw();
+    }
+  }
+
   @HostListener('document:keydown.control.z') undoCtrlZ(event: KeyboardEvent) {
     if (this.currentActiveGroup.hasChildren) {
       this.deleteShapesFromGroup();
@@ -577,6 +549,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   // TODO: Ctrl + C
   @HostListener('document:keydown.control.c') undoCtrlC(event: KeyboardEvent) {
     if (this.selectedBlocks.length > 0) {
+      this.currentCopiedGroup.removeChildren();
       let allElemPaths = [];
       let allClonedPaths = [];
       let allElemOutputs = [];
@@ -584,7 +557,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       let allElemInputs = [];
       let allClonedInputs = [];
       let clonedBlocks = [];
-
       this.selectedBlocks.forEach(elem => {
         elem.find('Path').forEach(path => allElemPaths.push(path));
         elem.find('Circle').filter(circle => circle.attrs.type === CircleTypes.Output).forEach(output => allElemOutputs.push(output));
@@ -594,14 +566,12 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         clonedBlocks.push(clone);
         this.returnColorAfterSelect(elem);
       });
-
       clonedBlocks.forEach(elem => {
         elem.find('Path').forEach(path => allClonedPaths.push(path));
         elem.find('Circle').filter(circle => circle.attrs.type === CircleTypes.Output).forEach(output => allClonedOutputs.push(output));
         elem.find('Circle').filter(circle => circle.attrs.type === CircleTypes.Input).forEach(input => allClonedInputs.push(input));
       })
-
-      allElemPaths.forEach((path, indexPath) => {     
+      allElemPaths.forEach((path, indexPath) => {
         if (path) {
           allElemOutputs.forEach((output, indexOutput) => {
             if (output) {
@@ -620,10 +590,17 @@ export class CanvasComponent implements OnInit, AfterViewInit {
             }
           })
         }
+        // if id input cicle original path equal id input cicle clone path
+        // it's mean we don't copy block on end of this path
+        // and don't need copy this path
+        if (path.attrs.end_info.end_circle_id === allClonedPaths[indexPath].attrs.end_info.end_circle_id) {
+          allClonedPaths[indexPath].destroy();
+        }
       })
       if (clonedBlocks.length > 0) {
         clonedBlocks.forEach(block => this.currentCopiedGroup.add(block))
       }
+      this.localNotificationService.sendLocalNotification(`Copied ${this.selectedBlocks.length} blocks`, NotificationTypes.INFO);
       this.selectedBlocks = [];
     }
     // responds to control+z
@@ -636,6 +613,9 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       x: this.stage.getStage().getPointerPosition().x - this.currentCopiedGroup.children[0].attrs.x,
       y: this.stage.getStage().getPointerPosition().y - this.currentCopiedGroup.children[0].attrs.y
     });
+    console.log(this.currentCopiedGroup);
+    
+    this.mainLayer.getStage().draw();
     // responds to control+z
   }
 
@@ -716,7 +696,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     }
 
     if (this.activeWrapperBlock.isDraw) {
-      this.updateDragWrapper({ x: e.layerX, y: e.layerY });
+      this.updateDragWrapper({x: e.layerX, y: e.layerY});
       this.mainLayer.getStage().draw();
     }
 
@@ -738,24 +718,30 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   // at first we take position of first shape for calculation 
   // positions for another objects, after we transer all object
   // from copy group in flowboard 
-  pasteOperation() {
-    let firstShapeX = this.currentCopiedGroup.children[0].attrs.x;
-    let firstShapeY = this.currentCopiedGroup.children[0].attrs.y;
-    let pasteObj;
-    while (this.currentCopiedGroup.getChildren().length > 0) {
-      pasteObj = this.currentCopiedGroup.children[0];
-      this.canvasService.setListenerOnBlock(this.mainLayer, pasteObj);
-      this.canvasService.setListenerOnIcons(pasteObj);
-      let flow = this.blocksService.getFlowboards().find(flow => flow._id === pasteObj.attrs.flowId);
-      pasteObj.setAttrs({
-        x: this.stage.getStage().getPointerPosition().x - flow.attrs.x + 5 + pasteObj.attrs.x - firstShapeX,
-        y: this.stage.getStage().getPointerPosition().y - flow.attrs.y + 5 + pasteObj.attrs.y - firstShapeY,
-      })
-      pasteObj.children[0].setAttr('text', 'copy ' + pasteObj.children[0].attrs.text);
-      this.returnColorAfterSelect(pasteObj);
-      flow.add(pasteObj);
+  pasteOperation(flow) {
+    let pasteFlowId = this.currentCopiedGroup.children[0].attrs.flowId;
+    if(flow._id === pasteFlowId){
+      let firstShapeX = this.currentCopiedGroup.children[0].attrs.x;
+      let firstShapeY = this.currentCopiedGroup.children[0].attrs.y;
+      let pasteObj;
+      while (this.currentCopiedGroup.getChildren().length > 0) {
+        pasteObj = this.currentCopiedGroup.children[0];
+        this.canvasService.setListenerOnBlock(this.mainLayer, pasteObj);
+        this.canvasService.setListenerOnIcons(pasteObj);
+        let flow = this.blocksService.getFlowboards().find(flow => flow._id === pasteObj.attrs.flowId);
+        pasteObj.setAttrs({
+          x: this.stage.getStage().getPointerPosition().x - flow.attrs.x + 5 + pasteObj.attrs.x - firstShapeX,
+          y: this.stage.getStage().getPointerPosition().y - flow.attrs.y + 5 + pasteObj.attrs.y - firstShapeY,
+        })
+        pasteObj.children[0].setAttr('text', 'copy ' + pasteObj.children[0].attrs.text);
+        this.returnColorAfterSelect(pasteObj);
+        flow.add(pasteObj);
+        this.currentCopiedGroup.setAttr('visible', false);
+      }
+      this.blocksService.pushFlowboardsChanges();
+    }else{
+      this.localNotificationService.sendLocalNotification(`Choose place inside ${this.blocksService.getFlowboardName(pasteFlowId)}`, NotificationTypes.ERROR);
     }
-    this.blocksService.pushFlowboardsChanges();
   }
 
   createGrid = flow => {
@@ -809,23 +795,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     );
   };
 
-  checkIsGroupInFlow(flowGroup, returnFlow?: boolean) {
-    if (
-      flowGroup &&
-      flowGroup.attrs.x <
-      this.currentDraggedGroup.attrs.x - ShapesSizes.circle_radius &&
-      flowGroup.attrs.x + flowGroup.attrs.width >
-      this.currentDraggedGroup.attrs.x +
-      this.currentDraggedGroup.width() -
-      ShapesSizes.circle_radius &&
-      flowGroup.attrs.y < this.currentDraggedGroup.attrs.y &&
-      flowGroup.attrs.y + flowGroup.attrs.height >
-      this.currentDraggedGroup.attrs.y + this.currentDraggedGroup.height()
-    ) {
-      return returnFlow ? flowGroup : true;
-    }
-  }
-
   ngOnInit() {
     this.subTabs = [
       {
@@ -869,53 +838,25 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       let temp;
       this.canvasService.getAllFlowsFromLayer(this.mainLayer).each(flowGroup => {
         if (!temp) {
-          temp = this.checkIsGroupInFlow(flowGroup, true);
+          temp = this.checkIsGroupInFlow(flowGroup,this.currentDraggedGroup, true);
           if (temp) {
             this.currentDraggedGroup.position({
               x: Math.abs(this.currentDraggedGroup.position().x - temp.position().x),
               y: Math.abs(this.currentDraggedGroup.position().y - temp.position().y)
             });
             temp.add(this.currentDraggedGroup);
+            let temp_custom  = temp.findOne(elem => elem._id === this.currentDraggedGroup._id);
             this.blocksService.pushFlowboardsChanges();
+
+            // function restrict block in border of flowboard 
             this.currentDraggedGroup.dragBoundFunc(pos => {
               return {
-                x:
-                  pos.x <=
-                    (this.currentDraggedGroup.parent.position().x +
-                      GridSizes.flowboard_cell) *
-                    (this.zoomInPercent / 100)
-                    ? (this.currentDraggedGroup.parent.position().x +
-                      GridSizes.flowboard_cell) *
-                    (this.zoomInPercent / 100)
-                    : pos.x <=
-                      (this.currentDraggedGroup.parent.position().x +
-                        this.currentDraggedGroup.parent.attrs.width -
-                        this.currentDraggedGroup.attrs.width) *
-                      (this.zoomInPercent / 100)
-                      ? pos.x
-                      : (this.currentDraggedGroup.parent.position().x +
-                        this.currentDraggedGroup.parent.attrs.width -
-                        this.currentDraggedGroup.attrs.width) *
-                      (this.zoomInPercent / 100),
-                y:
-                  pos.y <=
-                    (this.currentDraggedGroup.parent.position().y +
-                      GridSizes.flowboard_cell * 2) *
-                    (this.zoomInPercent / 100)
-                    ? (this.currentDraggedGroup.parent.position().y +
-                      GridSizes.flowboard_cell) *
-                    (this.zoomInPercent / 100)
-                    : pos.y <=
-                      (this.currentDraggedGroup.parent.position().y +
-                        this.currentDraggedGroup.parent.attrs.height -
-                        this.currentDraggedGroup.attrs.height) *
-                      (this.zoomInPercent / 100)
-                      ? pos.y
-                      : (this.currentDraggedGroup.parent.position().y +
-                        this.currentDraggedGroup.parent.attrs.height -
-                        this.currentDraggedGroup.attrs.height -
-                        GridSizes.flowboard_cell) *
-                      (this.zoomInPercent / 100)
+                x: pos.x <= (temp_custom.parent.position().x + GridSizes.flowboard_cell) * (this.zoomInPercent / 100) ? (temp_custom.parent.position().x + GridSizes.flowboard_cell) * (this.zoomInPercent / 100)
+                  : pos.x <= (temp_custom.parent.position().x + temp_custom.parent.attrs.width - temp_custom.attrs.width) * (this.zoomInPercent / 100)
+                    ? pos.x : (temp_custom.parent.position().x + temp_custom.parent.attrs.width - temp_custom.attrs.width) * (this.zoomInPercent / 100),
+                y: pos.y <= (temp_custom.parent.position().y + GridSizes.flowboard_cell * 2) * (this.zoomInPercent / 100) ? (temp_custom.parent.position().y + GridSizes.flowboard_cell) * (this.zoomInPercent / 100)
+                  : pos.y <= (temp_custom.parent.position().y + temp_custom.parent.attrs.height - temp_custom.attrs.height) * (this.zoomInPercent / 100)
+                    ? pos.y : (temp_custom.parent.position().y + temp_custom.parent.attrs.height - temp_custom.attrs.height - GridSizes.flowboard_cell) * (this.zoomInPercent / 100)
               };
             });
             flowGroup.children.each(elem => {
@@ -967,8 +908,8 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         this.createGrid(flow);
         this.mainLayer.getStage().add(flow);
       });
-    // this.mainLayer.getStage().add(this.currentActiveGroup);
-    // this.currentActiveGroup.zIndex(1);
+    this.mainLayer.getStage().add(this.currentActiveGroup);
+    this.currentActiveGroup.zIndex(1);
     this.mainLayer.getStage().add(this.currentLineToDraw.line);
     this.mainLayer.getStage().add(this.currentCopiedGroup);
     // TODO: if we have few selected blocks and click on free space 
@@ -1008,23 +949,12 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       let lastFlowboard = this.blocksService.getFlowboards()[
         this.blocksService.getFlowboards().length - 1
       ];
-      if (
-        lastFlowboard.attrs.x +
-        lastFlowboard.attrs.width +
-        FlowboardSizes.newFlowWidth <
-        this.stage.getStage().width()
-      ) {
-        newX =
-          lastFlowboard.attrs.x +
-          lastFlowboard.attrs.width +
-          FlowboardSizes.sizeBetweenFlowblock;
+      if (lastFlowboard.attrs.x + lastFlowboard.attrs.width + FlowboardSizes.newFlowWidth < this.stage.getStage().width()) {
+        newX = lastFlowboard.attrs.x + lastFlowboard.attrs.width + FlowboardSizes.sizeBetweenFlowblock;
         newY = lastFlowboard.attrs.y;
       } else {
         newX = FlowboardSizes.sizeBetweenFlowblock;
-        newY =
-          lastFlowboard.attrs.y +
-          lastFlowboard.attrs.height +
-          FlowboardSizes.sizeBetweenFlowblock;
+        newY = lastFlowboard.attrs.y + lastFlowboard.attrs.height + FlowboardSizes.sizeBetweenFlowblock;
       }
     }
     let newFlow = new Konva.Group({
@@ -1037,6 +967,12 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       showOnPanel: true
     });
     this.blocksService.addFlowboard(newFlow);
+    newFlow.on('click', event =>{
+    //TODO: if we paste copied block we chose place 
+    if (this.currentCopiedGroup.getChildren().length > 0 && this.currentCopiedGroup.isVisible()) {
+      this.pasteOperation(newFlow);
+    }
+    })
     this.createGrid(newFlow);
     this.mainLayer.getStage().add(newFlow);
     this.subTabs[0].layerData = [];

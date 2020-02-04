@@ -41,4 +41,14 @@ export class BlocksService {
   pushFlowboardsChanges(){
     this.subjectArray.next(this.flowboards);
   }
+
+  getFlowboardName(id){
+    let name = '';
+    this.flowboards.forEach(flow =>{
+      if(flow._id === id){
+        name = flow.attrs.name;
+      }
+    });
+    return name;
+  }
 }

@@ -10,10 +10,8 @@
     <mat-menu #blocksMenu="matMenu">
       <mat-list (click)="$event.stopPropagation()">
         <mat-list-item *ngFor="let block of blocksArr">
-          <mat-checkbox
-            [(ngModel)]="block.attrs.showOnPanel"
-            (change)="onShowChoseOfBlock()"
-          >{{block.attrs.label}} : {{block._id}}
+          <mat-checkbox [(ngModel)]="block.attrs.showOnPanel" (change)="onShowChoseOfBlock()">{{block.attrs.label}} :
+            {{block._id}}
           </mat-checkbox>
         </mat-list-item>
       </mat-list>
@@ -25,19 +23,20 @@
     <mat-menu #flowboardsMenu="matMenu">
       <mat-list (click)="$event.stopPropagation()">
         <mat-list-item *ngFor="let flowboard of flowboardsArr">
-          <mat-checkbox
-            [(ngModel)]="flowboard.attrs.showOnPanel"
-            (change)="onShowChoseOfFlowboards(flowboard)"
-          >Flowboard: {{flowboard._id}}</mat-checkbox>
+          <mat-checkbox [(ngModel)]="flowboard.attrs.showOnPanel" (change)="onShowChoseOfFlowboards(flowboard)">
+            Flowboard: {{flowboard._id}}</mat-checkbox>
         </mat-list-item>
       </mat-list>
     </mat-menu>
   </div>
 
-  <div class="info_block" *ngFor="let block of debuggingBlock">
-    <p>{{block.attrs.date | date: 'medium'}}</p>
-    <p><span>Label: {{block.attrs.label}} </span><a (click)="focusOnBlock(block)"> ID: {{block._id}}</a></p>
-    <app-json-editor [json]={data:block.attrs.blockData} [fullObject]="block.attrs.blockData"></app-json-editor>
+  <div class="blocks_container">
+    <div class="info_block" *ngFor="let block of debuggingBlock">
+      <p>{{block.attrs.date | date: 'medium'}}</p>
+      <p><span>Label: {{block.attrs.label}} </span><a (click)="focusOnBlock(block)"> ID: {{block._id}}</a></p>
+      <app-json-editor [json]={data:block.attrs.blockData} [fullObject]="block.attrs.blockData"></app-json-editor>
+    </div>
   </div>
+
 
 </div>

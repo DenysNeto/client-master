@@ -10,9 +10,6 @@ type Theme = {
   rect_border: string;
   rect_selection_border: string;
   group_border_color: string;
-  rect_switch_stroke: string;
-  rect_inject_stroke: string;
-  rect_debug_stroke: string;
   text_color: string;
   switcher_unactivated_background: string;
   switcher_unactivated_text: string;
@@ -23,7 +20,6 @@ type Theme = {
 
 export const theme: Theme = {
   line_color: '#999',
-  // circle_background: 'white', // After change background on white
   circle_background: 'white',
   circle_background_input: '#802A6E',
   circle_background_output: 'black',
@@ -33,9 +29,6 @@ export const theme: Theme = {
   rect_border: 'black',
   rect_selection_border: 'blue',
   choose_group_color: 'yellow',
-  rect_switch_stroke: 'white',
-  rect_inject_stroke: '#4fd0d6',
-  rect_debug_stroke: '#1fce43',
   switcher_unactivated_background: 'white',
   switcher_unactivated_text: 'steelblue',
   switcher_debug_on_text: '#9e9e9e',
