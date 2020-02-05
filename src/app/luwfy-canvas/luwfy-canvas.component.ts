@@ -15,6 +15,7 @@ import { Layer } from 'konva/types/Layer';
 import { UndoRedoCanvasService } from '../services/undo-redo-canvas.service';
 import { ContainerKonvaSizes, GridSizes, KonvaStartSizes, MaxStageSize, ShapesSizes } from './sizes';
 import ShapeCreator from './ShapesCreator';
+import ShapesClipboard from './shapes-clipboard';
 import { FlowboardSizes } from './sizes';
 import { Stage } from 'konva/types/Stage';
 import { BlocksService } from '../services/blocks.service';
@@ -65,7 +66,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   private oldStageWidth: number;
   private oldStageHeight: number;
   private activeTab: dataInTabLayer;
-  private calledMenuButton = '';
+  private calledMenuButton: any;
   private selectedBlocks = [];
   private copiedBlocks = [];
 
@@ -199,7 +200,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       });
     });
 
-  // TODO: rectangle for selection blocks for copying
+  // rectangle for selection blocks for copying
   activeWrapperBlock: IActiveWrapperBlock = {
     initial_position: {
       x: 0,
@@ -303,26 +304,10 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         if (event.target.className && event.target.className === 'Path') {
           return 0;
         }
-        this.selectedBlock(event.target);
+        ShapesClipboard.selectedBlock(event.target, this.selectedBlocks);
       }
     });
   };
-
-  // TODO: function add selected block to array with other blocks
-  selectedBlock(event) {
-    if (this.selectedBlocks.length > 0) {
-      if (this.selectedBlocks[0].parent._id !== event.parent.parent._id) {
-        return 0;
-      }
-    }
-    this.selectedBlocks.push(event.parent);
-    event.parent.children.each(elem => {
-      if (elem.className === 'Rect' && elem.attrs.main_stroke) {
-        elem.setAttr('stroke', theme.choose_group_color);
-      }
-      elem.setAttr('draggable', false);
-    });
-  }
 
   handleClickEvent = event => {
     if (this.currentLineToDraw.isLineDrawable) {
@@ -363,10 +348,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   };
 
   checkIsGroupInFlow(flowboard, block, returnFlow?: boolean) {
-    console.log(flowboard);
-    console.log(block);
-
-
     if (flowboard && flowboard.attrs.x < block.attrs.x - ShapesSizes.circle_radius &&
       flowboard.attrs.x + flowboard.attrs.width > block.attrs.x + block.width() - ShapesSizes.circle_radius &&
       flowboard.attrs.y < block.attrs.y &&
@@ -426,13 +407,12 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       }
       return 0;
     }
-
-    // TODO: rectamgle selected blocks
+    //rectamgle look witch blocks in own borders
     if (this.activeWrapperBlock.isDraw) {
       let allBlocks = this.mainLayer.getStage().find('Group').filter(group => group.attrs.type === GroupTypes.Block);
       allBlocks.forEach(elem => {
         if (this.checkValueBetween(elem.getAbsolutePosition(), elem.attrs.width, elem.attrs.height)) {
-          this.selectedBlock((elem as any).findOne('Rect'));
+          ShapesClipboard.selectedBlock((elem as any).findOne('Rect'), this.selectedBlocks);
         }
       });
       this.activeWrapperBlock.isActive = true;
@@ -465,16 +445,13 @@ export class CanvasComponent implements OnInit, AfterViewInit {
           this.activeWrapperBlock.now_position.y <= obj.y + height));
 
     let condition_down_and_right =
-      (obj.x >= this.activeWrapperBlock.initial_position.x &&
-        obj.x <= this.activeWrapperBlock.now_position.x) ||
-      (width &&
-        obj.x >= this.activeWrapperBlock.initial_position.x + width &&
-        obj.x <= this.activeWrapperBlock.now_position.x + width &&
+      (obj.x >= this.activeWrapperBlock.initial_position.x && obj.x <= this.activeWrapperBlock.now_position.x) ||
+      (obj.x >= this.activeWrapperBlock.initial_position.x + width && obj.x <= this.activeWrapperBlock.now_position.x + width &&
         ((this.activeWrapperBlock.initial_position.y >= obj.y &&
           this.activeWrapperBlock.now_position.y <= obj.y) ||
           (this.activeWrapperBlock.initial_position.y >= obj.y &&
             this.activeWrapperBlock.now_position.y <= obj.y) ||
-          (height &&
+          (
             this.activeWrapperBlock.initial_position.y >= obj.y + height &&
             this.activeWrapperBlock.now_position.y <= obj.y + height)));
 
@@ -551,7 +528,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     }
   }
 
-  // TODO: Ctrl + C
+  // Ctrl + C
   @HostListener('document:keydown.control.c') undoCtrlC(event: KeyboardEvent) {
     if (this.selectedBlocks.length > 0) {
       this.copiedBlocks = this.selectedBlocks;
@@ -560,88 +537,35 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     }
   }
 
-  // TODO: Ctrl + V
+  // Ctrl + V
   @HostListener('document:keydown.control.v') undoCtrlV(event: KeyboardEvent) {
     if (this.copiedBlocks.length > 0) {
-      this.currentCopiedGroup.removeChildren();
-      let allElemPaths = [];
-      let allClonedPaths = [];
-      let allElemOutputs = [];
-      let allClonedOutputs = [];
-      let allElemInputs = [];
-      let allClonedInputs = [];
-      let clonedBlocks = [];
-
-      this.copiedBlocks.forEach(elem => {
-        elem.find('Path').forEach(path => allElemPaths.push(path));
-        elem.find('Circle').filter(circle => circle.attrs.type === CircleTypes.Output).forEach(output => allElemOutputs.push(output));
-        elem.find('Circle').filter(circle => circle.attrs.type === CircleTypes.Input).forEach(input => allElemInputs.push(input));
-        let clone = elem.clone();
-        clone.attrs.flowId = elem.parent._id;
-        clonedBlocks.push(clone);
-        this.returnColorAfterSelect(elem);
-      });
-
-      clonedBlocks.forEach(elem => {
-        elem.find('Path').forEach(path => allClonedPaths.push(path));
-        elem.find('Circle').filter(circle => circle.attrs.type === CircleTypes.Output).forEach(output => allClonedOutputs.push(output));
-        elem.find('Circle').filter(circle => circle.attrs.type === CircleTypes.Input).forEach(input => allClonedInputs.push(input));
-      })
-      allElemPaths.forEach((path, indexPath) => {
-        if (path) {
-          allElemOutputs.forEach((output, indexOutput) => {
-            if (output) {
-              if (path.attrs.start_info.start_circle_id === output._id) {
-                allClonedPaths[indexPath].attrs.start_info.start_circle_id = allClonedOutputs[indexOutput]._id;
-                allClonedPaths[indexPath].attrs.start_info.start_group_id = allClonedOutputs[indexOutput].parent._id;
-              }
-            }
-          })
-          allElemInputs.forEach((input, indexInput) => {
-            if (input) {
-              if (path.attrs.end_info.end_circle_id === input._id) {
-                allClonedPaths[indexPath].attrs.end_info.end_circle_id = allClonedInputs[indexInput]._id;
-                allClonedPaths[indexPath].attrs.end_info.end_group_id = allClonedInputs[indexInput].parent._id;
-              }
-            }
-          })
-        }
-        // if id input cicle original path equal id input cicle clone path
-        // it's mean we don't copy block on end of this path
-        // and don't need copy this path
-        if (path.attrs.end_info.end_circle_id === allClonedPaths[indexPath].attrs.end_info.end_circle_id) {
-          allClonedPaths[indexPath].destroy();
-        }
-      })
-      if (clonedBlocks.length > 0) {
-        clonedBlocks.forEach(block => this.currentCopiedGroup.add(block))
-      }
+      ShapesClipboard.copySelectedBlocks(this.currentCopiedGroup, this.copiedBlocks);
+      ShapesClipboard.setSizeForCopiedGroup(this.currentCopiedGroup);
+      this.setPositionForGroup(this.currentCopiedGroup);
+      this.currentCopiedGroup.setAttr('visible', true);
+    } else {
+      this.localNotificationService.sendLocalNotification(`Clipboard is empty`, NotificationTypes.ERROR);
     }
-
-    this.currentCopiedGroup.setAttr('visible', true);
-    this.currentCopiedGroup.setAbsolutePosition({
-      x: this.stage.getStage().getPointerPosition().x - this.currentCopiedGroup.children[0].attrs.x,
-      y: this.stage.getStage().getPointerPosition().y - this.currentCopiedGroup.children[0].attrs.y
-    });
-
-    let biggestX = 0;
-    let biggestY = 0;
-
-    this.currentCopiedGroup.children.each(block => {
-      if (biggestX < block.attrs.x) {
-        biggestX = block.attrs.x;
-      }
-      if (biggestY < block.attrs.y) {
-        biggestY = block.attrs.y;
-      }
-    })
-
-    this.currentCopiedGroup.setAttrs({
-      width: biggestX - this.currentCopiedGroup.children[0].attrs.x + 80,
-      height: biggestY - this.currentCopiedGroup.children[0].attrs.y + 80
-    })
     this.mainLayer.getStage().draw();
   }
+
+  setPositionForGroup(group, isPointerXY?) {
+    if (group.hasChildren()) {
+      if (!isPointerXY) {
+        group.setAttrs({
+          x: this.stage.getStage().getPointerPosition().x - group.children[0].attrs.x,
+          y: this.stage.getStage().getPointerPosition().y - group.children[0].attrs.y
+        });
+      } else {
+        group.setAttrs({
+          x: this.stage.getStage().getPointerPosition().x,
+          y: this.stage.getStage().getPointerPosition().y
+        });
+      }
+    }
+  }
+
 
   handleMouseMove = e => {
     if (!e) {
@@ -710,20 +634,12 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     if (this.canvasService.activePathsArr.length > 0) {
       return 0;
     }
-
-    // TODO: chnge position of pasted group
-    if (this.currentCopiedGroup.hasChildren()) {
-      this.currentCopiedGroup.setAbsolutePosition({
-        x: this.stage.getStage().getPointerPosition().x - this.currentCopiedGroup.children[0].attrs.x,
-        y: this.stage.getStage().getPointerPosition().y - this.currentCopiedGroup.children[0].attrs.y
-      });
-    }
-
+    // change position of pasted group
+    this.setPositionForGroup(this.currentCopiedGroup);
     if (this.activeWrapperBlock.isDraw) {
       this.updateDragWrapper({ x: e.layerX, y: e.layerY });
       this.mainLayer.getStage().draw();
     }
-
   };
 
   handleMouseDown = e => {
@@ -737,37 +653,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     this.activeWrapperBlock.now_position.y = e.layerY;
     this.activeWrapperBlock.isDraw = true;
   };
-
-  // TODO: function call when we click on place where paste objects
-  // at first we take position of first shape for calculation 
-  // positions for another objects, after we transer all object
-  // from copy group in flowboard 
-  pasteOperation(flow) {
-    let pasteFlowId = this.currentCopiedGroup.children[0].attrs.flowId;
-    if (flow._id === pasteFlowId) {
-      let firstShapeX = this.currentCopiedGroup.children[0].attrs.x;
-      let firstShapeY = this.currentCopiedGroup.children[0].attrs.y;
-      let pasteObj;
-      while (this.currentCopiedGroup.getChildren().length > 0) {
-        pasteObj = this.currentCopiedGroup.children[0];
-        this.canvasService.setListenerOnBlock(this.mainLayer, pasteObj);
-        this.canvasService.setListenerOnIcons(pasteObj);
-        let flow = this.blocksService.getFlowboards().find(flow => flow._id === pasteObj.attrs.flowId);
-        pasteObj.setAttrs({
-          x: this.stage.getStage().getPointerPosition().x - flow.attrs.x + 5 + pasteObj.attrs.x - firstShapeX,
-          y: this.stage.getStage().getPointerPosition().y - flow.attrs.y + 5 + pasteObj.attrs.y - firstShapeY,
-        })
-        pasteObj.children[0].setAttr('text', 'copy ' + pasteObj.children[0].attrs.text);
-        this.returnColorAfterSelect(pasteObj);
-        flow.add(pasteObj);
-        this.currentCopiedGroup.setAttr('visible', false);
-      }
-      this.blocksService.pushFlowboardsChanges();
-      this.localNotificationService.sendLocalNotification(`Pasted`, NotificationTypes.INFO);
-    } else {
-      this.localNotificationService.sendLocalNotification(`Choose place inside ${this.blocksService.getFlowboardName(pasteFlowId)}`, NotificationTypes.ERROR);
-    }
-  }
 
   createGrid = flow => {
     let distBetweenLines = 20;
@@ -784,9 +669,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         );
       }
     }
-
     let menuButton = ShapeCreator.createMenuButton();
-
     menuButton.on('click', event => {
       let menu = document.getElementById('menuTrigger');
       menu.style.display = '';
@@ -925,12 +808,12 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     this.currentActiveGroup.zIndex(1);
     this.mainLayer.getStage().add(this.currentLineToDraw.line);
     this.mainLayer.getStage().add(this.currentCopiedGroup);
-    // TODO: if we have few selected blocks and click on free space 
+    // if we have few selected blocks and click on free space 
     // all blocks became unselected
     this.stage.getStage().on('click', event => {
       if (this.selectedBlocks.length > 0) {
         this.selectedBlocks.forEach(elem => {
-          this.returnColorAfterSelect(elem);
+          ShapesClipboard.returnColorAfterSelect(elem);
         });
       }
       this.selectedBlocks = [];
@@ -944,14 +827,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     this.activeTab.startStageSize.oldHeight = this.stage.getStage().height();
     this.zoomInPercent = this.stage.getStage().scaleX() * 100;
     this.canvasService.setCurrentZoom(this.zoomInPercent);
-  }
-
-  returnColorAfterSelect(shape) {
-    shape.children.each(elem => {
-      if (elem.className === 'Rect') {
-        elem.setAttr('stroke', shape.attrs.blockData.color);
-      }
-    })
   }
 
   addFlowToLayer() {
@@ -981,21 +856,15 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     });
     this.blocksService.addFlowboard(newFlow);
     newFlow.on('click', event => {
-      //TODO: if we paste copied block we chose place 
+      //if we paste copied block we chose place 
       if (this.currentCopiedGroup.getChildren().length > 0 && this.currentCopiedGroup.isVisible()) {
-        this.currentCopiedGroup.setAttrs({
-          x: this.stage.getStage().getPointerPosition().x,
-          y: this.stage.getStage().getPointerPosition().y
-        });
+        this.setPositionForGroup(this.currentCopiedGroup, true);
         if (this.checkIsGroupInFlow(newFlow, this.currentCopiedGroup)) {
-          this.pasteOperation(newFlow);
+          ShapesClipboard.pasteOperation(newFlow, this.stage, this.mainLayer, this.currentCopiedGroup, this.canvasService, this.blocksService, this.localNotificationService);
         } else {
           this.localNotificationService.sendLocalNotification(`Paste blocks outside`, NotificationTypes.ERROR);
         }
-        this.currentCopiedGroup.setAbsolutePosition({
-          x: this.stage.getStage().getPointerPosition().x - this.currentCopiedGroup.children[0].attrs.x,
-          y: this.stage.getStage().getPointerPosition().y - this.currentCopiedGroup.children[0].attrs.y
-        });
+        this.setPositionForGroup(this.currentCopiedGroup);
       }
     })
     this.createGrid(newFlow);
@@ -1100,9 +969,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     // @ts-ignore
     if (!tmp.layerData.find(elem => elem.id === this.calledMenuButton._id)) {
       tmp.layerData.push({
-        // @ts-ignore
         id: this.calledMenuButton._id,
-        // @ts-ignore
         name: this.calledMenuButton.attrs.name
       });
     }
@@ -1112,20 +979,8 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     this.zoomInPercent = event * 100;
     this.canvasService.setCurrentZoom(event * 100);
     this.stage.getStage().scale({ x: event, y: event });
-    this.stage
-      .getStage()
-      .width(
-        this.activeTab.startStageSize.oldWidth * event < MaxStageSize
-          ? this.activeTab.startStageSize.oldWidth * event
-          : MaxStageSize
-      );
-    this.stage
-      .getStage()
-      .height(
-        this.activeTab.startStageSize.oldHeight * event < MaxStageSize
-          ? this.activeTab.startStageSize.oldHeight * event
-          : MaxStageSize
-      );
+    this.stage.getStage().width(this.activeTab.startStageSize.oldWidth * event < MaxStageSize ? this.activeTab.startStageSize.oldWidth * event : MaxStageSize);
+    this.stage.getStage().height(this.activeTab.startStageSize.oldHeight * event < MaxStageSize ? this.activeTab.startStageSize.oldHeight * event : MaxStageSize);
   }
 
   repositionStage(event?) {
@@ -1135,10 +990,8 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       dx = event.target.scrollLeft - KonvaStartSizes.padding;
       dy = event.target.scrollTop - KonvaStartSizes.padding;
     } else {
-      dx =
-        this.scrollContainer.nativeElement.scrollLeft - KonvaStartSizes.padding;
-      dy =
-        this.scrollContainer.nativeElement.scrollTop - KonvaStartSizes.padding;
+      dx = this.scrollContainer.nativeElement.scrollLeft - KonvaStartSizes.padding;
+      dy = this.scrollContainer.nativeElement.scrollTop - KonvaStartSizes.padding;
     }
     this.stage.getStage().container().style.transform =
       'translate(' + dx + 'px, ' + dy + 'px)';

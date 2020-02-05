@@ -41,7 +41,7 @@ import { Path } from 'konva/types/shapes/Path';
 })
 export class CanvasService {
 
-  // TODO: variable for cheking mouse inside block
+  //variable for cheking mouse inside block
   private mouseInsideRectangle = null;
 
   constructor(
@@ -1015,7 +1015,7 @@ export class CanvasService {
     });
   }
 
-  // TODO: Function hide face image and show icons (edit, wizard, settings)
+  //Function hide face image and show icons (edit, wizard, settings)
   onHoverEffect = (group: Group) => {
     if (!this.currentLineToDraw.isLineDrawable) {
       let iconGroup = group.findOne(elem => elem.attrs.type === 'iconGroup');
