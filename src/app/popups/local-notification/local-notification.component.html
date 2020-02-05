@@ -1,4 +1,4 @@
-<div class="container_message" *ngIf="notification">
+<div class="container_message" *ngIf="notification" [ngStyle] ="{'border-color': color}">
 <div class="color_message" [ngStyle] ="{'background-color': color}"></div>
     <div class="text_message"><span>{{notification.text}}</span></div>
 </div>

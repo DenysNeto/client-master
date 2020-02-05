@@ -2,8 +2,8 @@
   position: fixed;
   left: 40%;
   top: 3%;
-  width: 200px;
-  height: 50px;
+  min-width: 200px;
+  height: 40px;
   background-color: white;
   border: 2px silver solid;
   border-radius: 5px;
@@ -13,7 +13,7 @@
 
   .color_message {
     height: 100%;
-    flex: 2;
+    flex: 1;
   }
 
   .text_message {

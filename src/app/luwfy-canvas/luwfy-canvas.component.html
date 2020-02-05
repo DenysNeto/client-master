@@ -11,13 +11,8 @@
   </mat-tab-group>
 
   <!--  Tabs bar where we can switch between our chosen flowboards -->
-  <mat-tab-group
-    id="flowTabs"
-    backgroundColor="primary"
-    color="warn"
-    *ngIf="activeTab === subTabs[1]"
-    (selectedIndexChange)="onFlowTabBarClick($event)"
-  >
+  <mat-tab-group id="flowTabs" backgroundColor="primary" color="warn" *ngIf="activeTab === subTabs[1]"
+    (selectedIndexChange)="onFlowTabBarClick($event)">
     <mat-tab *ngFor="let flow of subTabs[1].layerData" [label]="flow.name"></mat-tab>
   </mat-tab-group>
 
@@ -25,11 +20,8 @@
   <div id="scroll-container" #scroll_container>
     <div id="large-container">
       <ko-stage #stage [config]="KonvaUtil.createStage({width: konvaSize.width, height: konvaSize.height})"
-                (dragover)="handleDragOver($event)"
-                (click)="handleClickEvent($event)"
-                (mouseup)="handleMouseUp($event)"
-                (mousedown)="handleMouseDown($event)"
-                (mousemove)="handleMouseMove($event)">
+        (dragover)="handleDragOver($event)" (click)="handleClickEvent($event)" (mouseup)="handleMouseUp($event)"
+        (mousedown)="handleMouseDown($event)" (mousemove)="handleMouseMove($event)">
         <!--    Layer where created our block schemas-->
         <ko-layer #mainLayer>
         </ko-layer>
@@ -53,12 +45,7 @@
   </div>
 
   <!--  Button add new flowboard-->
-  <button
-    id="add_flow"
-    mat-fab
-    color="primary"
-    (click)="addFlowToLayer()"
-    *ngIf="activeTab === subTabs[0]"
-  ><span style="font-size:xx-large">+</span>
+  <button id="add_flow" mat-fab color="primary" (click)="addFlowToLayer()" *ngIf="activeTab === subTabs[0]"><span
+      style="font-size:xx-large">+</span>
   </button>
 </div>

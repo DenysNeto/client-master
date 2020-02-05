@@ -1,14 +1,7 @@
 import Konva from 'konva';
 import {theme} from './theme';
 import {FlowboardSizes, ShapesSizes, ShapesSizes as sizes} from './sizes';
-import {
-  BtnEventBlock, ButtonsTypes,
-  CircleTypes,
-  GroupTypes,
-  IRectCustom,
-  IStartPointPathInfo,
-  SettingIcons
-} from './shapes-interface';
+import {BtnEventBlock, ButtonsTypes, CircleTypes, GroupTypes, IRectCustom, IStartPointPathInfo, SettingIcons} from './shapes-interface';
 
 
 const ShapeCreator = {

@@ -67,6 +67,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   private activeTab: dataInTabLayer;
   private calledMenuButton = '';
   private selectedBlocks = [];
+  private copiedBlocks = [];
 
 
   currentCopiedGroup: IGroupCustom = new Konva.Group({
@@ -198,7 +199,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       });
     });
 
-  // TODO: mouse rectangle selection
+  // TODO: rectangle for selection blocks for copying
   activeWrapperBlock: IActiveWrapperBlock = {
     initial_position: {
       x: 0,
@@ -362,6 +363,10 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   };
 
   checkIsGroupInFlow(flowboard, block, returnFlow?: boolean) {
+    console.log(flowboard);
+    console.log(block);
+
+
     if (flowboard && flowboard.attrs.x < block.attrs.x - ShapesSizes.circle_radius &&
       flowboard.attrs.x + flowboard.attrs.width > block.attrs.x + block.width() - ShapesSizes.circle_radius &&
       flowboard.attrs.y < block.attrs.y &&
@@ -549,6 +554,15 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   // TODO: Ctrl + C
   @HostListener('document:keydown.control.c') undoCtrlC(event: KeyboardEvent) {
     if (this.selectedBlocks.length > 0) {
+      this.copiedBlocks = this.selectedBlocks;
+      this.localNotificationService.sendLocalNotification(`Copied ${this.selectedBlocks.length} blocks`, NotificationTypes.INFO);
+      this.selectedBlocks = [];
+    }
+  }
+
+  // TODO: Ctrl + V
+  @HostListener('document:keydown.control.v') undoCtrlV(event: KeyboardEvent) {
+    if (this.copiedBlocks.length > 0) {
       this.currentCopiedGroup.removeChildren();
       let allElemPaths = [];
       let allClonedPaths = [];
@@ -557,7 +571,8 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       let allElemInputs = [];
       let allClonedInputs = [];
       let clonedBlocks = [];
-      this.selectedBlocks.forEach(elem => {
+
+      this.copiedBlocks.forEach(elem => {
         elem.find('Path').forEach(path => allElemPaths.push(path));
         elem.find('Circle').filter(circle => circle.attrs.type === CircleTypes.Output).forEach(output => allElemOutputs.push(output));
         elem.find('Circle').filter(circle => circle.attrs.type === CircleTypes.Input).forEach(input => allElemInputs.push(input));
@@ -566,6 +581,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         clonedBlocks.push(clone);
         this.returnColorAfterSelect(elem);
       });
+
       clonedBlocks.forEach(elem => {
         elem.find('Path').forEach(path => allClonedPaths.push(path));
         elem.find('Circle').filter(circle => circle.attrs.type === CircleTypes.Output).forEach(output => allClonedOutputs.push(output));
@@ -600,14 +616,8 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       if (clonedBlocks.length > 0) {
         clonedBlocks.forEach(block => this.currentCopiedGroup.add(block))
       }
-      this.localNotificationService.sendLocalNotification(`Copied ${this.selectedBlocks.length} blocks`, NotificationTypes.INFO);
-      this.selectedBlocks = [];
     }
-    // responds to control+z
-  }
 
-  // TODO: Ctrl + V
-  @HostListener('document:keydown.control.v') undoCtrlV(event: KeyboardEvent) {
     this.currentCopiedGroup.setAttr('visible', true);
     this.currentCopiedGroup.setAbsolutePosition({
       x: this.stage.getStage().getPointerPosition().x - this.currentCopiedGroup.children[0].attrs.x,
@@ -616,7 +626,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
     let biggestX = 0;
     let biggestY = 0;
-    let biggestHeight = 0;
 
     this.currentCopiedGroup.children.each(block => {
       if (biggestX < block.attrs.x) {
@@ -624,17 +633,14 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       }
       if (biggestY < block.attrs.y) {
         biggestY = block.attrs.y;
-        biggestHeight = block.attrs.height;
       }
     })
 
     this.currentCopiedGroup.setAttrs({
-      width: biggestX + 120,
-      height: biggestY + biggestHeight + 20
+      width: biggestX - this.currentCopiedGroup.children[0].attrs.x + 80,
+      height: biggestY - this.currentCopiedGroup.children[0].attrs.y + 80
     })
-
     this.mainLayer.getStage().draw();
-    // responds to control+z
   }
 
   handleMouseMove = e => {
@@ -705,7 +711,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       return 0;
     }
 
-    // TODO: some logic for Ctrl+V
+    // TODO: chnge position of pasted group
     if (this.currentCopiedGroup.hasChildren()) {
       this.currentCopiedGroup.setAbsolutePosition({
         x: this.stage.getStage().getPointerPosition().x - this.currentCopiedGroup.children[0].attrs.x,
@@ -757,6 +763,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         this.currentCopiedGroup.setAttr('visible', false);
       }
       this.blocksService.pushFlowboardsChanges();
+      this.localNotificationService.sendLocalNotification(`Pasted`, NotificationTypes.INFO);
     } else {
       this.localNotificationService.sendLocalNotification(`Choose place inside ${this.blocksService.getFlowboardName(pasteFlowId)}`, NotificationTypes.ERROR);
     }
@@ -976,11 +983,19 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     newFlow.on('click', event => {
       //TODO: if we paste copied block we chose place 
       if (this.currentCopiedGroup.getChildren().length > 0 && this.currentCopiedGroup.isVisible()) {
+        this.currentCopiedGroup.setAttrs({
+          x: this.stage.getStage().getPointerPosition().x,
+          y: this.stage.getStage().getPointerPosition().y
+        });
         if (this.checkIsGroupInFlow(newFlow, this.currentCopiedGroup)) {
           this.pasteOperation(newFlow);
         } else {
           this.localNotificationService.sendLocalNotification(`Paste blocks outside`, NotificationTypes.ERROR);
         }
+        this.currentCopiedGroup.setAbsolutePosition({
+          x: this.stage.getStage().getPointerPosition().x - this.currentCopiedGroup.children[0].attrs.x,
+          y: this.stage.getStage().getPointerPosition().y - this.currentCopiedGroup.children[0].attrs.y
+        });
       }
     })
     this.createGrid(newFlow);

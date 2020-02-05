@@ -11,16 +11,25 @@ export class LocalNotificationComponent implements OnInit {
 
   notification: LocalNotification;
   color = '';
+  private showTime;
   constructor(private _localNotificationService: LocalNotificationService) { }
 
   ngOnInit() {
     this._localNotificationService.sendNotification.subscribe(data => {
-      this.notification = null;
+      this.stopNotification();
       this.notification = data;
       this.color = this.notification.type === NotificationTypes.INFO ? 'green' : 'red';
-      setTimeout(() => {
-        this.notification = null;
-      }, 2000);
+      this.startNotification();
     });
+  }
+
+  startNotification() {
+    this.showTime = setTimeout(() => {
+      this.notification = null;
+    }, 2000);
+  }
+
+  stopNotification() {
+    clearTimeout(this.showTime);
   }
 }
