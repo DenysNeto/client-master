@@ -19,7 +19,7 @@
 
     <!--    Menu with checkboxes where can we choose
         flowboards which we want see -->
-    <button [matMenuTriggerFor]="flowboardsMenu" (onMenuOpen)="getAllFlowBoards()">Flowboards</button>
+    <button [matMenuTriggerFor]="flowboardsMenu">Flowboards</button>
     <mat-menu #flowboardsMenu="matMenu">
       <mat-list (click)="$event.stopPropagation()">
         <mat-list-item *ngFor="let flowboard of flowboardsArr">

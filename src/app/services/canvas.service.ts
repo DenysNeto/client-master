@@ -2,26 +2,9 @@ import { Injectable } from '@angular/core';
 import { StageComponent } from 'ng2-konva';
 import { Group } from 'konva/types/Group';
 import Konva from 'konva';
-import {
-  ButtonsTypes,
-  CircleTypes,
-  GroupTypes,
-  IActiveWrapperBlock,
-  ICircleCustom,
-  ICurrentLineToDraw,
-  IGroupCustom,
-  InputBlocksInterface,
-  IPathCustom
-} from '../luwfy-canvas/shapes-interface';
+import {ButtonsTypes, CircleTypes, GroupTypes, IActiveWrapperBlock, ICircleCustom, ICurrentLineToDraw, IGroupCustom, InputBlocksInterface, IPathCustom} from '../luwfy-canvas/shapes-interface';
 import ShapeCreator from '../luwfy-canvas/ShapesCreator';
-import {
-  ButtonSizes,
-  FlowboardSizes,
-  GridSizes,
-  ShapesSizes,
-  ShapesSizes as sizes,
-  SwitcherSizes
-} from '../luwfy-canvas/sizes';
+import {ButtonSizes, FlowboardSizes, GridSizes, ShapesSizes, ShapesSizes as sizes, SwitcherSizes} from '../luwfy-canvas/sizes';
 import { theme } from '../luwfy-canvas/theme';
 import KonvaUtil from '../luwfy-canvas/konva-util';
 import { Layer } from 'konva/types/Layer';
@@ -114,6 +97,8 @@ export class CanvasService {
     isDraw: false,
     rectangle: new Konva.Rect({
       stroke: 'blue',
+      strokeWidth: 0.75,
+      fill: 'rgba(231,242,255,0.2)',
       draggable: false,
       isActive_block: true
     })
@@ -152,30 +137,21 @@ export class CanvasService {
     let group_children_temp = currentActiveGroup.children;
     if (group_children_temp.length > 0) {
       while (group_children_temp.length) {
-        group_children_temp[group_children_temp.length - 1].children.each(
-          elem => {
-            if (elem.className !== 'Path') {
-              elem.setAttr('stroke', theme.rect_border);
-            }
+        group_children_temp[group_children_temp.length - 1].children.each(elem => {
+          if (elem.className !== 'Path') {
+            elem.setAttr('stroke', theme.rect_border);
           }
-        );
-        group_children_temp[group_children_temp.length - 1].setAttr(
-          'draggable',
-          true
-        );
-        group_children_temp[group_children_temp.length - 1].setAttr(
-          'x',
+        });
+        group_children_temp[group_children_temp.length - 1].setAttr('draggable', true);
+        group_children_temp[group_children_temp.length - 1].setAttr('x',
           group_children_temp[group_children_temp.length - 1].position().x +
           currentActiveGroup.position().x
         );
-        group_children_temp[group_children_temp.length - 1].setAttr(
-          'y',
+        group_children_temp[group_children_temp.length - 1].setAttr('y',
           group_children_temp[group_children_temp.length - 1].position().y +
           currentActiveGroup.position().y
         );
-        mainLayer
-          .getStage()
-          .add(group_children_temp[group_children_temp.length - 1]);
+        mainLayer.getStage().add(group_children_temp[group_children_temp.length - 1]);
       }
       currentActiveGroup.removeChildren();
       mainLayer.getStage().draw();
@@ -194,40 +170,20 @@ export class CanvasService {
       activeWrapperBlock.rectangle.setAttr('visible', false);
     });
     group.on('mouseup', event => {
-      if (
-        this.currentLineToDraw.isLineDrawable &&
-        event.target._id !== this.currentLineToDraw.groupId &&
-        event.target.parent._id !== this.currentLineToDraw.groupId &&
-        this.currentLineToDraw.groupId !== 0
+      if (this.currentLineToDraw.isLineDrawable && event.target._id !== this.currentLineToDraw.groupId &&
+        event.target.parent._id !== this.currentLineToDraw.groupId && this.currentLineToDraw.groupId !== 0
       ) {
-        let input_circle = this.getInputCircleFromGroup(
-          event.target.parent as Group
-        );
-        let current_flowboard = this.getGroupById(
-          this.currentLineToDraw.flowboardId,
-          mainLayer.getStage()
-        );
-        let current_path_group = this.getGroupById(
-          this.currentLineToDraw.groupId,
-          current_flowboard as Group
-        );
+        let input_circle = this.getInputCircleFromGroup(event.target.parent as Group);
+        let current_flowboard = this.getGroupById(this.currentLineToDraw.flowboardId, mainLayer.getStage());
+        let current_path_group = this.getGroupById(this.currentLineToDraw.groupId, current_flowboard as Group);
         current_path_group.setAttr('draggable', 'true');
         let current_path = (current_path_group as Group).findOne(elem => {
-          if (
-            elem.className === 'Path' &&
-            elem.attrs.start_info.start_group_id ===
-            this.currentLineToDraw.groupId &&
-            elem._id === this.currentLineToDraw.lineId
-          ) {
+          if (elem.className === 'Path' && elem.attrs.start_info.start_group_id === this.currentLineToDraw.groupId && elem._id === this.currentLineToDraw.lineId) {
             return elem;
           }
         });
         let start_circle = (current_path_group as Group).findOne(elem => {
-          if (
-            current_path &&
-            current_path.attrs.start_info &&
-            elem._id === current_path.attrs.start_info.start_circle_id
-          ) {
+          if (current_path && current_path.attrs.start_info && elem._id === current_path.attrs.start_info.start_circle_id) {
             return elem;
           }
         });
@@ -265,29 +221,13 @@ export class CanvasService {
         });
         (current_path as any).strokeLinearGradientEndPoint({
           x: event.target.parent.attrs.x - current_path_group.attrs.x,
-          y:
-            event.target.parent.attrs.y -
-            current_path_group.attrs.y +
-            input_circle.attrs.y
+          y: event.target.parent.attrs.y - current_path_group.attrs.y + input_circle.attrs.y
         });
 
-        let startColor = current_path.parent.parent.findOne(
-          elem => elem._id === current_path.attrs.start_info.start_circle_id
-        ).attrs.stroke;
-        let endColor = current_path.parent.parent.findOne(
-          elem => elem._id === current_path.attrs.end_info.end_circle_id
-        ).attrs.fill;
-        (current_path as any).strokeLinearGradientColorStops([
-          0,
-          startColor,
-          1,
-          endColor
-        ]);
-        if (
-          !current_path.attrs.end_info ||
-          current_path.attrs.start_info.start_group_id ===
-          current_path.attrs.end_info.end_group_id
-        ) {
+        let startColor = current_path.parent.parent.findOne(elem => elem._id === current_path.attrs.start_info.start_circle_id).attrs.stroke;
+        let endColor = current_path.parent.parent.findOne(elem => elem._id === current_path.attrs.end_info.end_circle_id).attrs.fill;
+        (current_path as any).strokeLinearGradientColorStops([0, startColor, 1, endColor]);
+        if (!current_path.attrs.end_info || current_path.attrs.start_info.start_group_id === current_path.attrs.end_info.end_group_id) {
           current_path.remove();
         }
         this.currentLineToDraw.isLineDrawable = false;
@@ -301,23 +241,14 @@ export class CanvasService {
       }
     });
     group.on('mouseleave', event => {
-      if (
-        event.target.parent.attrs.type &&
-        event.target.parent.attrs.type.includes('output')
-      ) {
+      if (event.target.parent.attrs.type && event.target.parent.attrs.type.includes('output')) {
       }
     });
     if (group.attrs.type === GroupTypes.Block) {
       group.on('dragmove', event => {
         this.checkTheGroupNearBorder(event.target as IGroupCustom);
-        let temp_blocks = this.getAllBlocksFromFlowBoard(
-          event.target.parent as IGroupCustom,
-          event.target._id
-        );
-        if (
-          temp_blocks &&
-          this.checkIfCollision(temp_blocks, event.target as IGroupCustom)
-        ) {
+        let temp_blocks = this.getAllBlocksFromFlowBoard(event.target.parent as IGroupCustom, event.target._id);
+        if (temp_blocks && this.checkIfCollision(temp_blocks, event.target as IGroupCustom)) {
           event.target.setAttr('collision', true);
         } else {
           event.target.setAttr('collision', false);
@@ -355,13 +286,8 @@ export class CanvasService {
 
   checkTheGroupNearBorder(current_group: IGroupCustom) {
     let temp_changes: boolean = false;
-    if (
-      current_group.parent.attrs.width -
-      current_group.attrs.x -
-      current_group.attrs.width <
-      GridSizes.flowboard_cell &&
-      current_group.parent.attrs.width + GridSizes.flowboard_cell <
-      GridSizes.flowboard_max_width
+    if (current_group.parent.attrs.width - current_group.attrs.x - current_group.attrs.width < GridSizes.flowboard_cell &&
+      current_group.parent.attrs.width + GridSizes.flowboard_cell < GridSizes.flowboard_max_width
     ) {
       current_group.parent.children.each(elem => {
         if (elem.className === 'Rect') {
@@ -369,23 +295,14 @@ export class CanvasService {
           return 0;
         }
       });
-      current_group.parent.setAttr(
-        'width',
-        current_group.parent.attrs.width + GridSizes.flowboard_cell
-      );
+      current_group.parent.setAttr('width', current_group.parent.attrs.width + GridSizes.flowboard_cell);
       this.flowboardDimensionsChanged.next({
         dimension: 'width',
         id: current_group.parent._id
       });
       current_group.parent.findOne(elem => {
-        if (
-          elem.attrs.type === ButtonsTypes.DrugPoint ||
-          elem.attrs.type === ButtonsTypes.MenuButton
-        ) {
-          elem.setAttr(
-            'x',
-            current_group.parent.attrs.width + FlowboardSizes.buttonPadding
-          );
+        if (elem.attrs.type === ButtonsTypes.DrugPoint || elem.attrs.type === ButtonsTypes.MenuButton) {
+          elem.setAttr('x', current_group.parent.attrs.width + FlowboardSizes.buttonPadding);
           this.flowboardPositionChanged.next({
             dimension: 'width',
             id: elem._id
@@ -407,10 +324,7 @@ export class CanvasService {
           return 0;
         }
       });
-      current_group.parent.setAttr(
-        'height',
-        current_group.parent.attrs.height + GridSizes.flowboard_cell
-      );
+      current_group.parent.setAttr('height', current_group.parent.attrs.height + GridSizes.flowboard_cell);
       this.flowboardDimensionsChanged.next({
         dimension: 'height',
         id: current_group.parent._id
@@ -418,19 +332,13 @@ export class CanvasService {
       temp_changes = true;
     }
     if (temp_changes) {
-      current_group
-        .find(elem => {
-          if (elem.className === 'Line') {
-            return elem;
-          }
-        })
-        .each(elem => {
-          elem.remove();
-        });
-      let vertLines =
-        current_group.parent.attrs.height / GridSizes.flowboard_cell;
-      let horLines =
-        current_group.parent.attrs.width / GridSizes.flowboard_cell;
+      current_group.find(elem => {
+        if (elem.className === 'Line') {
+          return elem;
+        }
+      }).each(elem => elem.remove());
+      let vertLines = current_group.parent.attrs.height / GridSizes.flowboard_cell;
+      let horLines = current_group.parent.attrs.width / GridSizes.flowboard_cell;
       let maxLines = vertLines > horLines ? vertLines : horLines;
       for (let i = 1; i <= maxLines; i++) {
         if (horLines > i) {
@@ -458,21 +366,14 @@ export class CanvasService {
     }
   }
 
-  setMouseDownEventForSwitchCircle(
-    circle: ICircleCustom,
-    mainLayer: Layer,
-    currentActiveGroup: Group
-  ) {
+  setMouseDownEventForSwitchCircle(circle: ICircleCustom, mainLayer: Layer, currentActiveGroup: Group) {
     circle.on('mousedown', event => {
-      if (
-        event.target.attrs.type === CircleTypes.Output &&
-        !currentActiveGroup.hasChildren()
-      ) {
+      if (event.target.attrs.type === CircleTypes.Output && !currentActiveGroup.hasChildren()) {
         let line_temp: IPathCustom = ShapeCreator.createLine({
           start_circle_id: event.target._id,
           start_group_id: event.target.parent._id,
           start_flowboard_id: event.target.parent.parent._id
-        }) as IPathCustom;
+        }, event.target.attrs.stroke) as IPathCustom;
         this.setClickEventForPath(line_temp, mainLayer, currentActiveGroup);
         event.target.parent.add(line_temp);
         event.target.parent.setAttr('draggable', false);
@@ -480,31 +381,23 @@ export class CanvasService {
         this.currentLineToDraw.lineId = line_temp._id;
         this.currentLineToDraw.groupId = event.target.parent._id;
         this.currentLineToDraw.flowboardId = event.target.parent.parent._id;
-        this.currentLineToDraw.prevX =
-          event.target.parent.attrs.x + event.target.attrs.x;
-        this.currentLineToDraw.prevY =
-          event.target.parent.attrs.y + event.target.attrs.y;
+        this.currentLineToDraw.prevX = event.target.parent.attrs.x + event.target.attrs.x;
+        this.currentLineToDraw.prevY = event.target.parent.attrs.y + event.target.attrs.y;
         this.lineToDraw.next(this.currentLineToDraw);
       }
     });
   }
 
-  setClickEventForPath(
-    path: IPathCustom,
-    mainLayer: Layer,
-    currentActiveGroup: Group
-  ) {
+  setClickEventForPath(path: IPathCustom, mainLayer: Layer, currentActiveGroup: Group) {
     path.on('mousedown', event => {
-      if (event.evt.ctrlKey) {
-      }
+      if (event.evt.ctrlKey) {}
     });
     path.on('mouseup', event => {
       if (this.currentLineToDraw.isLineDrawable) {
         event.cancelBubble = true;
       }
     });
-    path.on('mouseenter', event => {
-    });
+    path.on('mouseenter', event => {});
     path.on('click', event => {
       if (event.evt.ctrlKey) {
         if (currentActiveGroup.hasChildren()) {

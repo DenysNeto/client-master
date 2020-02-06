@@ -52,7 +52,7 @@ const ShapeCreator = {
     });
   },
 
-  createLine: (start_info: IStartPointPathInfo, strokeLine?) => {
+  createLine: (start_info: IStartPointPathInfo, strokeColor?) => {
     return new Konva.Path({
       data: '',
       start_info,
@@ -61,7 +61,7 @@ const ShapeCreator = {
       strokeWidth: 3,
       lineJoin: 'round',
       opacity: 1,
-      stroke: strokeLine || theme.line_color,
+      stroke: strokeColor || theme.line_color,
       isLastPathInGroup: true
     });
   },
@@ -196,6 +196,18 @@ const ShapeCreator = {
       fontFamily: 'FontAwesome',
       text: '\uf047',
       fill: '#115770',
+      type: ButtonsTypes.DrugPoint
+    });
+  },
+
+  createDeleteButton: () => {
+    return new Konva.Text({
+      x: 502 + FlowboardSizes.buttonPadding,
+      y: 70,
+      fontSize: 20,
+      fontFamily: 'FontAwesome',
+      text: '\uf014',
+      fill: '#f54c4c',
       type: ButtonsTypes.DrugPoint
     });
   },

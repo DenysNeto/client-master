@@ -6,8 +6,11 @@ import {BehaviorSubject} from 'rxjs';
 @Injectable({
   providedIn: 'root'
 })
+
 export class BlocksService {
   subjectArray: BehaviorSubject<any>;
+  // variable will take JSON from server and build
+  // block whick we can see on left pannel
   private blocks = data;
   private flowboards: Group[] = [];
   dataInBlock: any;
@@ -35,6 +38,11 @@ export class BlocksService {
 
   addFlowboard(flowboard){
     this.flowboards.push(flowboard);
+    this.pushFlowboardsChanges();
+  }
+
+  removeFlowboard(id){
+    this.flowboards = this.flowboards.filter(flow => flow._id !== id);
     this.pushFlowboardsChanges();
   }
 

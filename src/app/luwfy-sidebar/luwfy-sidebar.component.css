@@ -2,6 +2,8 @@
   width: 280px;
   height: 100%;
   border-left: 2px solid silver;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
 }
 
 .sidebar_container .sidebar_title {
@@ -52,7 +54,7 @@
 }
 
 .sidebar_container .info_block {
-  width: 100%;
+  width: calc(100% - 5px);
   background-color: #c6dbe1;
   -webkit-box-sizing: border-box;
           box-sizing: border-box;
@@ -72,5 +74,10 @@
 
 .sidebar_container p {
   margin-bottom: 10px;
+}
+
+.sidebar_container .blocks_container {
+  height: 855px;
+  overflow: auto;
 }
 /*# sourceMappingURL=luwfy-sidebar.component.css.map */

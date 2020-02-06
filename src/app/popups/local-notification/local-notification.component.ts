@@ -18,7 +18,7 @@ export class LocalNotificationComponent implements OnInit {
     this._localNotificationService.sendNotification.subscribe(data => {
       this.stopNotification();
       this.notification = data;
-      this.color = this.notification.type === NotificationTypes.INFO ? 'green' : 'red';
+      this.color = this.notification.type === NotificationTypes.INFO ? '#5b64b9' : this.notification.type === NotificationTypes.OK ? 'green'  :'red';
       this.startNotification();
     });
   }
@@ -26,7 +26,7 @@ export class LocalNotificationComponent implements OnInit {
   startNotification() {
     this.showTime = setTimeout(() => {
       this.notification = null;
-    }, 2000);
+    }, 3000);
   }
 
   stopNotification() {

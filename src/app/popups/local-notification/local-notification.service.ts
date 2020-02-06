@@ -1,4 +1,5 @@
 export enum NotificationTypes{
+    OK,
     INFO,
     ERROR
 }

@@ -1,0 +1,32 @@
+.container_message {
+  position: fixed;
+  left: 40%;
+  top: 3%;
+  min-width: 200px;
+  height: 40px;
+  background-color: white;
+  border: 2px silver solid;
+  border-radius: 5px;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  z-index: 10;
+}
+
+.container_message .color_message {
+  height: 100%;
+  -webkit-box-flex: 1;
+      -ms-flex: 1;
+          flex: 1;
+}
+
+.container_message .text_message {
+  text-align: center;
+  -webkit-box-flex: 8;
+      -ms-flex: 8;
+          flex: 8;
+}
+/*# sourceMappingURL=local-notification.component.css.map */

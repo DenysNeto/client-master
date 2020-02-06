@@ -29,23 +29,29 @@
     </div>
   </div>
 
-  <!--  Zoom buttons with indicator-->
-  <div class="zoom-buttons-group">
-    <button mat-button [matMenuTriggerFor]="aboveMenu">{{zoomInPercent}}%</button>
-    <mat-menu #aboveMenu="matMenu" yPosition="above">
-      <button mat-menu-item (click)="zoomingEvent(0.25)">25%</button>
-      <button mat-menu-item (click)="zoomingEvent(0.5)">50%</button>
-      <button mat-menu-item (click)="zoomingEvent(0.75)">75%</button>
-      <button mat-menu-item (click)="zoomingEvent(1)">100%</button>
-      <!-- <button mat-menu-item (click)="zoomingEvent(1.25)">125%</button>
-      <button mat-menu-item (click)="zoomingEvent(1.5)">150%</button>
-      <button mat-menu-item (click)="zoomingEvent(1.75)">175%</button>
-      <button mat-menu-item (click)="zoomingEvent(2)">200%</button> -->
-    </mat-menu>
+  <div class="buttons-group">
+
+    <div class="zoom-buttons-group">
+      <button mat-button [matMenuTriggerFor]="aboveMenu">{{zoomInPercent}}%</button>
+      <mat-menu #aboveMenu="matMenu" yPosition="above">
+        <button mat-menu-item (click)="zoomingEvent(0.25)">25%</button>
+        <button mat-menu-item (click)="zoomingEvent(0.5)">50%</button>
+        <button mat-menu-item (click)="zoomingEvent(0.75)">75%</button>
+        <button mat-menu-item (click)="zoomingEvent(1)">100%</button>
+        <!-- <button mat-menu-item (click)="zoomingEvent(1.25)">125%</button>
+        <button mat-menu-item (click)="zoomingEvent(1.5)">150%</button>
+        <button mat-menu-item (click)="zoomingEvent(1.75)">175%</button>
+        <button mat-menu-item (click)="zoomingEvent(2)">200%</button> -->
+      </mat-menu>
+    </div>
+
+    <div class="function_buttons" *ngIf="activeTab === subTabs[0]">
+      <button class="chat-button" mat-mini-fab color="primary" title="Open chat"><mat-icon>chat</mat-icon></button>
+      <button mat-fab color="primary" (click)="addFlowToLayer()" title="Add flowboard"><span
+          style="font-size:xx-large">+</span></button>
+      <button class="save-button" mat-mini-fab color="primary" title="Save project" (click)="saveProject()"><mat-icon>save</mat-icon></button>
+    </div>
+
   </div>
 
-  <!--  Button add new flowboard-->
-  <button id="add_flow" mat-fab color="primary" (click)="addFlowToLayer()" *ngIf="activeTab === subTabs[0]"><span
-      style="font-size:xx-large">+</span>
-  </button>
 </div>

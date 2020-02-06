@@ -1,8 +1,8 @@
-import {Component, OnInit} from '@angular/core';
-import {BlocksService} from '../services/blocks.service';
-import {GroupTypes} from '../luwfy-canvas/shapes-interface';
-import {Group} from 'konva/types/Group';
-import {ContainerKonvaSizes} from '../luwfy-canvas/sizes';
+import { Component, OnInit } from '@angular/core';
+import { BlocksService } from '../services/blocks.service';
+import { GroupTypes } from '../luwfy-canvas/shapes-interface';
+import { Group } from 'konva/types/Group';
+import { ContainerKonvaSizes } from '../luwfy-canvas/sizes';
 
 @Component({
   selector: 'app-luwfy-sidebar',
@@ -11,24 +11,32 @@ import {ContainerKonvaSizes} from '../luwfy-canvas/sizes';
 })
 export class LuwfySidebarComponent implements OnInit {
 
-  flowboardsArr: Group[] = [];
-  blocksArr: Group[] = [];
-  debuggingBlock: Group[] = [];
+  flowboardsArr: Group[];
+  blocksArr: Group[];
+  debuggingBlock: Group[];
 
   constructor(private blocksService: BlocksService) {
   }
 
   ngOnInit() {
-    this.blocksService.subjectArray.subscribe(data => data.forEach(flow => {
-      flow.children.forEach(elem => {
-        if (elem.attrs.type === GroupTypes.Block && elem.attrs.name === 'debug') {
-          if (!this.getBlock(elem._id)) {
-            this.blocksArr.push(elem);
-            this.addBlockOnDebuggingPanel();
-          }
-        }
-      });
-    }));
+    this.blocksService.subjectArray.subscribe(data => {
+      this.flowboardsArr = [];
+      this.blocksArr = [];
+      this.debuggingBlock = [];
+      if (data) {
+        this.flowboardsArr = data;
+        this.flowboardsArr.forEach(flow => {
+          flow.children.toArray().forEach(elem => {
+            if (elem.attrs.type === GroupTypes.Block && elem.attrs.name === 'debug') {
+              if (!this.getBlock(elem._id)) {
+                this.blocksArr.push(elem as Group);
+                this.addBlockOnDebuggingPanel();
+              }
+            }
+          })
+        })
+      }
+    });
   }
 
   getBlock(id) {
@@ -74,9 +82,5 @@ export class LuwfySidebarComponent implements OnInit {
       shape.attrs.showOnPanel = flowboard.attrs.showOnPanel;
     });
     this.addBlockOnDebuggingPanel();
-  }
-
-  getAllFlowBoards() {
-    this.flowboardsArr = this.blocksService.getFlowboards();
   }
 }

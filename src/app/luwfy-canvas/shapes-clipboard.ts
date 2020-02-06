@@ -121,9 +121,9 @@ const ShapesClipboard = {
                 currentCopiedGroup.setAttr('visible', false);
             }
             blocksService.pushFlowboardsChanges();
-            localNotificationService.sendLocalNotification(`Pasted`, NotificationTypes.INFO);
+            localNotificationService.sendLocalNotification(`Inserted`, NotificationTypes.OK);
         } else {
-            localNotificationService.sendLocalNotification(`Choose place inside ${blocksService.getFlowboardName(pasteFlowId)}`, NotificationTypes.ERROR);
+            localNotificationService.sendLocalNotification(`Choose place inside "${blocksService.getFlowboardName(pasteFlowId)}"`, NotificationTypes.ERROR);
         }
     }
 }
