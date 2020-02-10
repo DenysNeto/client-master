@@ -21,7 +21,8 @@ export enum GroupTypes {
 
 export enum ButtonsTypes {
   DrugPoint = 'dragPoint',
-  MenuButton = 'menuButton'
+  MenuButton = 'menuButton',
+  DeleteButton = 'deleteButton'
 }
 
 

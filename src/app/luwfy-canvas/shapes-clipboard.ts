@@ -1,6 +1,7 @@
 import { theme } from "./theme";
 import { CircleTypes } from './shapes-interface';
 import { NotificationTypes } from '../popups/local-notification/local-notification.service';
+import { DataStorages } from '../services/indexed-db.service';
 
 
 const ShapesClipboard = {
@@ -19,6 +20,7 @@ const ShapesClipboard = {
             elem.setAttr('draggable', false);
         });
     },
+
     copySelectedBlocks(currentCopiedGroup, copiedBlocks) {
         currentCopiedGroup.removeChildren();
         let allElemPaths = [];
@@ -100,7 +102,7 @@ const ShapesClipboard = {
     // at first we take position of first shape for calculation 
     // positions for another objects, after we transer all object
     // from copy group in flowboard 
-    pasteOperation(flow, stage, mainLayer, currentCopiedGroup, canvasService, blocksService, localNotificationService) {
+    pasteOperation(flow, stage, mainLayer, currentCopiedGroup, canvasService, blocksService, localNotificationService, iDBService) {
         let pasteFlowId = currentCopiedGroup.children[0].attrs.flowId;
         if (flow._id === pasteFlowId) {
             let firstShapeX = currentCopiedGroup.children[0].attrs.x;
@@ -118,6 +120,7 @@ const ShapesClipboard = {
                 pasteObj.children[0].setAttr('text', 'copy ' + pasteObj.children[0].attrs.text);
                 ShapesClipboard.returnColorAfterSelect(pasteObj);
                 flow.add(pasteObj);
+                iDBService.updateData(DataStorages.FLOWS, { id: pasteObj._id, flow: pasteObj.toJSON() });
                 currentCopiedGroup.setAttr('visible', false);
             }
             blocksService.pushFlowboardsChanges();

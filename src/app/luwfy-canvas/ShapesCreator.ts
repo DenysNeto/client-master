@@ -208,7 +208,7 @@ const ShapeCreator = {
       fontFamily: 'FontAwesome',
       text: '\uf014',
       fill: '#f54c4c',
-      type: ButtonsTypes.DrugPoint
+      type: ButtonsTypes.DeleteButton
     });
   },
 

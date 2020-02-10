@@ -1,65 +1,75 @@
 import { Injectable } from "@angular/core";
 import { Subject, Observable } from 'rxjs';
-import { openDB } from 'idb';
+import * as idb from 'idb';
 import { Stage } from 'konva/types/Stage';
 
-const DB_NAME = 'stage_data';
+const DB_NAME = 'luwfy_IDB';
+
+export enum DataStorages {
+    BLOCKS = 'blocks',
+    FLOWS = 'flows',
+    BOARDS = 'boards',
+    EVENTS = 'events'
+}
 
 @Injectable({
     providedIn: "root"
 })
 
 export class IdbService {
-    private dataChange: Subject<Stage> = new Subject<Stage>();
-    private dbPromise;
+    private dataChange: Subject<Stage[]> = new Subject<Stage[]>();
+    private localIDB;
 
-    constructor(){
-    }
-
-
+    constructor() { }
 
     async connectionToIdb() {
-        this.dbPromise = await openDB(DB_NAME, 1, {
-            upgrade(db) {
-                db.createObjectStore('stages');
-                const stageStore = db.createObjectStore('stages', { keyPath: 'id' });
+        this.localIDB = await idb.openDB(DB_NAME, 1, {
+            upgrade(localIDB) {
+                if (!localIDB.objectStoreNames.contains(DataStorages.BLOCKS)) {
+                    localIDB.createObjectStore(DataStorages.BLOCKS, { keyPath: 'id' });
+                }
+                if (!localIDB.objectStoreNames.contains(DataStorages.FLOWS)) {
+                    localIDB.createObjectStore(DataStorages.FLOWS, { keyPath: 'id' });
+                }
+                if (!localIDB.objectStoreNames.contains(DataStorages.BOARDS)) {
+                    localIDB.createObjectStore(DataStorages.BOARDS, { keyPath: 'id' });
+                }
+                if (!localIDB.objectStoreNames.contains(DataStorages.EVENTS)) {
+                    localIDB.createObjectStore(DataStorages.EVENTS, { keyPath: 'dateCreation' });
+                }
             }
         })
     }
 
-    // deleteItems(target: string, value: Stage) {
-    //     this.dbPromise.then((db: any) => {
-    //         const tx = db.transaction(target, 'readwrite');
-    //         const store = tx.objectStore(target);
-    //         store.delete(value);
-    //         this.getAllData(target).then((items: Stage) => {
-    //             this.dataChange.next(items);
-    //         });
-    //         return tx.complete;
-    //     });
-    // }
+    async deleteData(target: string, value: number) {
+        await this.connectionToIdb();
+        const tx = await this.localIDB.transaction(target, 'readwrite');
+        const store = tx.objectStore(target);
+        await store.delete(value);
+    }
 
-    // addStage(storeName, stage) {
-    //     this.dbPromise.then((db: any) => {
-    //         const tx = db.transaction(storeName, 'readwrite');
-    //         tx.store.put(stage);
-    //         this.getAllData('stages').then((stage: Stage) => {
-    //             this.dataChange.next(stage);
-    //         });
-    //         return tx.complete();
-    //     })
-    // }
+    async addData(target: string, value: any) {
+        await this.connectionToIdb();
+        const tx = await this.localIDB.transaction(target, 'readwrite');
+        const store = tx.objectStore(target);
+        await store.add(value);
+    }
 
-    // getAllData(target: string) {
-    //     return this.dbPromise.then((db: any) => {
-    //         const tx = db.transaction(target, 'readonly');
-    //         const store = tx.objectStore(target);
-    //         return store.getAll();
-    //     });
-    // }
+    async getAllData(target: string) {
+        await this.connectionToIdb();
+        const tx = await this.localIDB.transaction(target, 'readonly');
+        const store = tx.objectStore(target);
+        return await store.getAll();
+    }
 
-    // dataChanged(): Observable<Stage> {
-    //     return this.dataChange;
-    // }
+    async updateData(target: string, value: any) {
+        await this.connectionToIdb();
+        const tx = await this.localIDB.transaction(target, 'readwrite');
+        const store = tx.objectStore(target);
+        await store.put(value);
+    }
 
+    dataChanged(): Observable<any> {
+        return this.dataChange;
+    }
 }
