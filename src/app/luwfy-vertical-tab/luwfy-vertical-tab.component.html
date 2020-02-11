@@ -1,8 +1,8 @@
 <div class="tab-wrapper">
   <ng-container *ngFor="let block of blocksArr; let  i = index">
     <div  class="block">
-      <span [ngStyle]="{color: block.color}">{{block.name}}</span>
-      <div id="{{block.name}}"
+      <span [ngStyle]="{color: block.color}">{{block.type}}</span>
+      <div id="{{block.type}}"
            [ngStyle]="{borderColor: block.color}"
            class="function"
            (dragend) = "dragFinish($event)"

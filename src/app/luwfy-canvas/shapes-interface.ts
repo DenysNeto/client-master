@@ -122,7 +122,7 @@ export interface BtnEventBlock {
 // checking data we must understand which
 // shape we took and create it.
 export interface InputBlocksInterface {
-  name: string,
+  type: string,
   label: string,
   inputs: number,
   outputs: number,

@@ -22,7 +22,7 @@ import { BlocksService } from '../services/blocks.service';
 import { TestStartStop } from '../services/testStartStop';
 import { StageComponent } from 'ng2-konva';
 import { LocalNotificationService, NotificationTypes } from '../popups/local-notification/local-notification.service';
-import { IdbService, DataStorages } from '../services/indexed-db.service';
+import { IdbService, DataStorages, Board, Flow } from '../services/indexed-db.service';
 
 @Component({
   selector: 'luwfy-canvas',
@@ -254,24 +254,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     });
   }
 
-  setClickEventForGroup = (group: Group) => {
-    group.on('click', event => {
-      event.cancelBubble = true;
-      if (event.evt.ctrlKey) {
-        if (event.target.className === 'Path') {
-          return 0;
-        }
-        if (this.canvasService.activePathsArr.length > 0) {
-          return 0;
-        }
-        if (event.target.className && event.target.className === 'Path') {
-          return 0;
-        }
-        ShapesClipboard.selectedBlock(event.target, this.selectedBlocks);
-      }
-    });
-  };
-
   handleClickEvent = event => {
     if (this.currentLineToDraw.isLineDrawable) {
       this.currentLineToDraw.isLineDrawable = false;
@@ -292,9 +274,8 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
   handleDragOver = e => {
     if (this.idChangedTrigger) {
-      this.currentDraggedGroup = this.canvasService.createDefaultGroup(this.mainLayer, this.activeWrapperBlock, this.currentActiveGroup, this.currentId);
+      this.currentDraggedGroup = this.canvasService.createDefaultGroup(this.mainLayer, this.activeWrapperBlock, this.currentActiveGroup, this.currentId, this.selectedBlocks);
       this.idChangedTrigger = false;
-      this.setClickEventForGroup(this.currentDraggedGroup);
       this.mainLayer.getStage().add(this.currentDraggedGroup);
       this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].setAttr('time', new Date().getTime());
       this.mainLayer.getStage().draw();
@@ -689,25 +670,32 @@ export class CanvasComponent implements OnInit, AfterViewInit {
               x: Math.abs(this.currentDraggedGroup.position().x - actualFlowboard.position().x),
               y: Math.abs(this.currentDraggedGroup.position().y - actualFlowboard.position().y)
             });
+            let actualFlowboardId = actualFlowboard._id;
             actualFlowboard.add(this.currentDraggedGroup);
+
             // TODO: save flow to DB
-            this.currentDraggedGroup.setAttr('parentId', actualFlowboard._id);
-            this.iDBService.addData(DataStorages.FLOWS, { id: this.currentDraggedGroup._id, flow: this.currentDraggedGroup.toJSON() });
+            this.iDBService.checkIsKeyExist(DataStorages.BOARDS, this.currentDraggedGroup._id)
+              .then(res => {
+                if (!res) {
+                  this.iDBService.addData(DataStorages.FLOWS,
+                    {
+                      id: this.currentDraggedGroup._id,
+                      block_type: this.currentDraggedGroup.attrs.name,
+                      x: this.currentDraggedGroup.attrs.x,
+                      y: this.currentDraggedGroup.attrs.y,
+                      width: this.currentDraggedGroup.attrs.width,
+                      height: this.currentDraggedGroup.attrs.height,
+                      board_id: actualFlowboardId,
+                      payload: {}
+                    } as Flow);
+                } else {
+                  console.log(`ID: ${this.currentDraggedGroup._id} is allready exist.`);
+                }
+              });
 
             let temp_custom = actualFlowboard.findOne(elem => elem._id === this.currentDraggedGroup._id);
+            temp_custom.dragBoundFunc(pos => this.setDragBoundFunc(temp_custom, pos));
             this.blocksService.pushFlowboardsChanges();
-
-            // function restrict block in border of flowboard 
-            this.currentDraggedGroup.dragBoundFunc(pos => {
-              return {
-                x: pos.x <= (temp_custom.parent.position().x + GridSizes.flowboard_cell) * (this.zoomInPercent / 100) ? (temp_custom.parent.position().x + GridSizes.flowboard_cell) * (this.zoomInPercent / 100)
-                  : pos.x <= (temp_custom.parent.position().x + temp_custom.parent.attrs.width - temp_custom.attrs.width) * (this.zoomInPercent / 100)
-                    ? pos.x : (temp_custom.parent.position().x + temp_custom.parent.attrs.width - temp_custom.attrs.width) * (this.zoomInPercent / 100),
-                y: pos.y <= (temp_custom.parent.position().y + GridSizes.flowboard_cell * 2) * (this.zoomInPercent / 100) ? (temp_custom.parent.position().y + GridSizes.flowboard_cell) * (this.zoomInPercent / 100)
-                  : pos.y <= (temp_custom.parent.position().y + temp_custom.parent.attrs.height - temp_custom.attrs.height) * (this.zoomInPercent / 100)
-                    ? pos.y : (temp_custom.parent.position().y + temp_custom.parent.attrs.height - temp_custom.attrs.height - GridSizes.flowboard_cell) * (this.zoomInPercent / 100)
-              };
-            });
             flowGroup.children.each(elem => {
               if (elem.className === 'Rect') {
                 elem.setAttr('stroke', theme.line_color);
@@ -771,67 +759,42 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   }
 
   loadingDataFromIDB() {
-    // TODO: loading from indexedDB
+    // TODO: loading boards from indexedDB
     this.iDBService.getAllData(DataStorages.BOARDS).then(data => {
-      if (data) {
-        data.forEach(value => {
-          let board = Konva.Node.create(value.board);
-          board._id = value.id;
-          board.children.toArray().forEach(child => {
-            if (child.attrs.type === GroupTypes.Block) {
-              child.destroy();
-            }
-          })
-          // Add all listener in downloaded flowboard from DB
-          this.setClickEventForFlowboard(board);
-          this.setClickEventForFlowboardButtons(board);
-          this.mainLayer.getStage().add(board);
-          this.blocksService.addFlowboard(board);
-        })
-      }
-      this.stage.getStage().draw();
+      data.forEach((boardData: Board) => {
+        this.addBoardToLayer(boardData);
+      })
     })
-
+    // TODO: loading flows from indexedDB
     this.iDBService.getAllData(DataStorages.FLOWS).then(data => {
-      let allFlows = [];
-      if (data) {
-        data.forEach(value => {
-          let flow = Konva.Node.create(value.flow);
-          flow._id = value.id;
-          flow.children.each(child => {
-            if (child.className === "Circle") {
-              child._id = child.attrs.ownId;
-            }
-          })
-
-          // Add all listener in downloaded block from DB
-          this.setClickEventForGroup(flow);
-          this.canvasService.setRegularGroupHandlers(flow, this.mainLayer, this.activeWrapperBlock, this.currentActiveGroup);
-
-          let circles_collection = this.canvasService.getAllCirclesFromGroup(flow);
-          circles_collection && circles_collection.each((elem: ICircleCustom) => {
-            // elem.setAttr('zIndex', 1000);
-            this.canvasService.setMouseDownEventForSwitchCircle(elem, this.mainLayer, this.currentActiveGroup);
-          });
-
-          allFlows.push(flow);
-        })
+      data.forEach((flowData: Flow) => {
+        let flow = this.canvasService.createDefaultGroup(this.mainLayer, this.activeWrapperBlock, this.currentActiveGroup, flowData.block_type, this.selectedBlocks);
+        flow._id = flowData.id;
+        flow.setAttrs({ x: flowData.x, y: flowData.y });
+        flow.dragBoundFunc(pos => this.setDragBoundFunc(flow, pos));
         this.blocksService.getFlowboards().forEach(board => {
-          allFlows.forEach(flow => {
-            // console.log('board', board);
-            // console.log('flow', flow);
-            if (board._id === flow.attrs.parentId) {
-              board.add(flow);
-            }
-          })
+          if (board._id === flowData.board_id) {
+            board.add(flow);
+          }
         })
-      }
+      })
       this.blocksService.pushFlowboardsChanges();
-      this.stage.getStage().draw();
     })
   }
 
-  addFlowToLayer() {
+  // function restrict block in border of flowboard 
+  setDragBoundFunc(flow, pos) {
+    return {
+      x: pos.x <= (flow.parent.position().x + GridSizes.flowboard_cell) * (this.zoomInPercent / 100) ? (flow.parent.position().x + GridSizes.flowboard_cell) * (this.zoomInPercent / 100)
+        : pos.x <= (flow.parent.position().x + flow.parent.attrs.width - flow.attrs.width) * (this.zoomInPercent / 100)
+          ? pos.x : (flow.parent.position().x + flow.parent.attrs.width - flow.attrs.width) * (this.zoomInPercent / 100),
+      y: pos.y <= (flow.parent.position().y + GridSizes.flowboard_cell * 2) * (this.zoomInPercent / 100) ? (flow.parent.position().y + GridSizes.flowboard_cell) * (this.zoomInPercent / 100)
+        : pos.y <= (flow.parent.position().y + flow.parent.attrs.height - flow.attrs.height) * (this.zoomInPercent / 100)
+          ? pos.y : (flow.parent.position().y + flow.parent.attrs.height - flow.attrs.height - GridSizes.flowboard_cell) * (this.zoomInPercent / 100)
+    };
+  }
+
+  addBoardToLayer(boardData?: Board) {
     let newX, newY;
     if (this.blocksService.getFlowboards().length === 0) {
       newX = newY = FlowboardSizes.sizeBetweenFlowblock;
@@ -848,21 +811,36 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       }
     }
     let newFlow = new Konva.Group({
-      x: newX,
-      y: newY,
-      width: FlowboardSizes.newFlowWidth,
-      height: FlowboardSizes.newFlowHeight,
+      x: boardData ? boardData.x : newX,
+      y: boardData ? boardData.y : newY,
+      width: boardData ? boardData.width : FlowboardSizes.newFlowWidth,
+      height: boardData ? boardData.height : FlowboardSizes.newFlowHeight,
       //draggable: true,
       type: GroupTypes.Flowboard,
       showOnPanel: true
     });
-    this.blocksService.addFlowboard(newFlow);
     this.setClickEventForFlowboard(newFlow);
     this.createGrid(newFlow);
+    newFlow._id = boardData ? boardData.id : newFlow._id;
     this.mainLayer.getStage().add(newFlow);
+    this.blocksService.addFlowboard(newFlow);
 
     // TODO: save board to DB
-    this.iDBService.addData(DataStorages.BOARDS, { id: newFlow._id, board: newFlow.toJSON() });
+    this.iDBService.checkIsKeyExist(DataStorages.BOARDS, newFlow._id)
+      .then(res => {
+        if (!res) {
+          this.iDBService.addData(DataStorages.BOARDS,
+            {
+              id: newFlow._id,
+              x: newFlow.attrs.x,
+              y: newFlow.attrs.y,
+              width: newFlow.attrs.width,
+              height: newFlow.attrs.height,
+              payload: {}
+            } as Board);
+        }
+      });
+
     this.subTabs[0].layerData = [];
     this.subTabs[0].layerData = this.mainLayer.getStage().children.toArray();
     setTimeout(() => {

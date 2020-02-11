@@ -2,7 +2,6 @@ import {Injectable} from '@angular/core';
 import data from '../../assets/document.json';
 import {Group} from 'konva/types/Group';
 import {BehaviorSubject} from 'rxjs';
-import { IdbService, DataStorages } from './indexed-db.service.js';
 
 @Injectable({
   providedIn: 'root'

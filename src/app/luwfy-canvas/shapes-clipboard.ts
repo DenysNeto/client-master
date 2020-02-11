@@ -1,7 +1,7 @@
 import { theme } from "./theme";
 import { CircleTypes } from './shapes-interface';
 import { NotificationTypes } from '../popups/local-notification/local-notification.service';
-import { DataStorages } from '../services/indexed-db.service';
+import { DataStorages, Flow } from '../services/indexed-db.service';
 
 
 const ShapesClipboard = {
@@ -120,7 +120,26 @@ const ShapesClipboard = {
                 pasteObj.children[0].setAttr('text', 'copy ' + pasteObj.children[0].attrs.text);
                 ShapesClipboard.returnColorAfterSelect(pasteObj);
                 flow.add(pasteObj);
-                iDBService.updateData(DataStorages.FLOWS, { id: pasteObj._id, flow: pasteObj.toJSON() });
+                // TODO: save copied flow to DB
+                iDBService.checkIsKeyExist(DataStorages.BOARDS, pasteObj._id)
+                    .then(res => {
+                        if (!res) {
+                            iDBService.addData(DataStorages.FLOWS,
+                                {
+                                    id: pasteObj._id,
+                                    block_type: pasteObj.attrs.name,
+                                    x: pasteObj.attrs.x,
+                                    y: pasteObj.attrs.y,
+                                    width: pasteObj.attrs.width,
+                                    height: pasteObj.attrs.height,
+                                    board_id: flow._id,
+                                    payload: {}
+                                } as Flow);
+                        } else {
+                            console.log(`ID: ${this.currentDraggedGroup._id} is allready exist.`);
+                        }
+                    });
+                // iDBService.updateData(DataStorages.FLOWS, { id: pasteObj._id, flow: pasteObj.toJSON() });
                 currentCopiedGroup.setAttr('visible', false);
             }
             blocksService.pushFlowboardsChanges();

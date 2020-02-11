@@ -1,6 +1,6 @@
 [
   {
-    "name": "switch",
+    "type": "switch",
     "label": "new switch",
     "inputs": 1,
     "outputs": 1,
@@ -15,7 +15,7 @@
     "btn_event_block": "null"
   },
   {
-    "name": "connect",
+    "type": "connect",
     "label": "new connect",
     "inputs": 1,
     "outputs": 1,
@@ -30,7 +30,7 @@
     "btn_event_block": "null"
   },
   {
-    "name": "inject",
+    "type": "inject",
     "label": "new inject",
     "inputs": 1,
     "outputs": 1,
@@ -51,7 +51,7 @@
     }
   },
   {
-    "name": "debug",
+    "type": "debug",
     "label": "new debug",
     "inputs": 1,
     "outputs": 1,

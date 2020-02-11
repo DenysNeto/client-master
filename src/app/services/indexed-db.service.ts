@@ -5,6 +5,28 @@ import { Stage } from 'konva/types/Stage';
 
 const DB_NAME = 'luwfy_IDB';
 
+export interface Board {
+    id: number,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    payload: {}
+}
+
+export interface Flow {
+    id: number,
+    block_type: string,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    board_id: number,
+    payload: {}
+    out_block_id?: any,
+    in_block_id?: any
+}
+
 export enum DataStorages {
     BLOCKS = 'blocks',
     FLOWS = 'flows',
@@ -37,8 +59,11 @@ export class IdbService {
                 if (!localIDB.objectStoreNames.contains(DataStorages.EVENTS)) {
                     localIDB.createObjectStore(DataStorages.EVENTS, { keyPath: 'dateCreation' });
                 }
+            },
+            blocked() {
+                console.log('Was closed');
             }
-        })
+        });
     }
 
     async deleteData(target: string, value: number) {
@@ -49,10 +74,28 @@ export class IdbService {
     }
 
     async addData(target: string, value: any) {
+        try {
+            await this.connectionToIdb();
+            const tx = await this.localIDB.transaction(target, 'readwrite');
+            const store = tx.objectStore(target);
+            let addreq = await store.add(value);
+        } catch (error) {
+            console.log(error.message);
+        }
+    }
+
+    async getDataByKey(target: string, key: any) {
         await this.connectionToIdb();
-        const tx = await this.localIDB.transaction(target, 'readwrite');
+        const tx = await this.localIDB.transaction(target, 'readonly');
         const store = tx.objectStore(target);
-        await store.add(value);
+        return await store.get(key);
+    }
+
+    async checkIsKeyExist(target: string, key: any) {
+        await this.connectionToIdb();
+        const tx = await this.localIDB.transaction(target, 'readonly');
+        const store = tx.objectStore(target);
+        return await store.count(key);
     }
 
     async getAllData(target: string) {
