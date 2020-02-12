@@ -1,8 +1,8 @@
 import { theme } from "./theme";
 import { CircleTypes } from './shapes-interface';
 import { NotificationTypes } from '../popups/local-notification/local-notification.service';
-import { DataStorages, FlowBlock, FlowPort } from '../services/indexed-db.service';
 import ShapeCreator from './ShapesCreator';
+import { DataStorages, FlowBlock, FlowPort, DataState } from '../services/indexed-db.interface';
 
 
 const ShapesClipboard = {
@@ -142,12 +142,19 @@ const ShapesClipboard = {
                             await iDBService.addData(DataStorages.FLOW_BLOCKS,
                                 {
                                     id: pasteObj._id,
-                                    pallete_elem_id: pasteObj.attrs.name,
-                                    board_id: flow._id,
-                                    x: pasteObj.attrs.x,
-                                    y: pasteObj.attrs.y,
-                                    width: pasteObj.attrs.width,
-                                    height: pasteObj.attrs.height
+                                    boardId: flow._id,
+                                    paletteElementId: pasteObj.attrs.name,
+                                    location: {
+                                        x: pasteObj.attrs.x,
+                                        y: pasteObj.attrs.y,
+                                    },
+                                    formId: 1,
+                                    name: pasteObj.attrs.label,
+                                    state: DataState.ACTIVE,
+                                    sizes: {
+                                        width: pasteObj.attrs.width,
+                                        height: pasteObj.attrs.height
+                                    }
                                 } as FlowBlock);
 
                             pasteObj.children.toArray().forEach(async elem => {
@@ -156,9 +163,13 @@ const ShapesClipboard = {
                                         {
                                             id: elem._id,
                                             type: elem.attrs.type,
-                                            block_id: elem.parent._id,
-                                            x: elem.attrs.x,
-                                            y: elem.attrs.y
+                                            location: {
+                                                x: elem.attrs.x,
+                                                y: elem.attrs.y
+                                            },
+                                            flowBlockId: elem.parent._id,
+                                            state: DataState.ACTIVE,
+                                            colorId: 1
                                         } as FlowPort)
                                 }
                             })

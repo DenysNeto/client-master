@@ -1,48 +1,8 @@
 import { Injectable } from "@angular/core";
 import { openDB, deleteDB } from 'idb';
+import { DataStorages } from './indexed-db.interface';
 
 const DB_NAME = 'luwfy_IDB';
-
-export interface FlowBlock {
-    id: number,
-    pallete_elem_id: string,
-    board_id: number,
-    x: number,
-    y: number,
-    width: number,
-    height: number
-}
-
-export interface FlowPort {
-    id: number,
-    type: string,
-    block_id: number,
-    x: number,
-    y: number
-}
-
-export interface FlowRelation {
-    start_port_id: number,
-    end_port_id: number
-}
-
-export interface Board {
-    id: number,
-    name: string,
-    x: number,
-    y: number,
-    width: number,
-    height: number
-}
-
-export enum DataStorages {
-    PALLETE_ELEMENTS = 'pallete_elements',
-    FLOW_BLOCKS = 'flow_blocks',
-    FLOW_PORTS = 'flow_ports',
-    FLOW_RELATIONS = 'flow_relations',
-    BOARDS = 'boards',
-    EVENTS = 'events'
-}
 
 @Injectable({
     providedIn: "root"
@@ -73,6 +33,15 @@ export class IdbService {
                 }
                 if (!localIDB.objectStoreNames.contains(DataStorages.EVENTS)) {
                     localIDB.createObjectStore(DataStorages.EVENTS, { keyPath: 'id' });
+                }
+                if (!localIDB.objectStoreNames.contains(DataStorages.EVENTS)) {
+                    localIDB.createObjectStore(DataStorages.CATEGORIES, { keyPath: 'id' });
+                }
+                if (!localIDB.objectStoreNames.contains(DataStorages.EVENTS)) {
+                    localIDB.createObjectStore(DataStorages.IMAGES, { keyPath: 'id' });
+                }
+                if (!localIDB.objectStoreNames.contains(DataStorages.EVENTS)) {
+                    localIDB.createObjectStore(DataStorages.COLORS, { keyPath: 'id' });
                 }
             },
             blocked() {
