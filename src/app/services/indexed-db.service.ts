@@ -1,35 +1,45 @@
 import { Injectable } from "@angular/core";
-import { Subject, Observable } from 'rxjs';
-import * as idb from 'idb';
-import { Stage } from 'konva/types/Stage';
+import { openDB, deleteDB } from 'idb';
 
 const DB_NAME = 'luwfy_IDB';
 
-export interface Board {
+export interface FlowBlock {
     id: number,
+    pallete_elem_id: string,
+    board_id: number,
     x: number,
     y: number,
     width: number,
-    height: number,
-    payload: {}
+    height: number
 }
 
-export interface Flow {
+export interface FlowPort {
     id: number,
-    block_type: string,
+    type: string,
+    block_id: number,
+    x: number,
+    y: number
+}
+
+export interface FlowRelation {
+    start_port_id: number,
+    end_port_id: number
+}
+
+export interface Board {
+    id: number,
+    name: string,
     x: number,
     y: number,
     width: number,
-    height: number,
-    board_id: number,
-    payload: {}
-    out_block_id?: any,
-    in_block_id?: any
+    height: number
 }
 
 export enum DataStorages {
-    BLOCKS = 'blocks',
-    FLOWS = 'flows',
+    PALLETE_ELEMENTS = 'pallete_elements',
+    FLOW_BLOCKS = 'flow_blocks',
+    FLOW_PORTS = 'flow_ports',
+    FLOW_RELATIONS = 'flow_relations',
     BOARDS = 'boards',
     EVENTS = 'events'
 }
@@ -39,25 +49,30 @@ export enum DataStorages {
 })
 
 export class IdbService {
-    private dataChange: Subject<Stage[]> = new Subject<Stage[]>();
     private localIDB;
 
     constructor() { }
 
     async connectionToIdb() {
-        this.localIDB = await idb.openDB(DB_NAME, 1, {
+        this.localIDB = await openDB(DB_NAME, 1, {
             upgrade(localIDB) {
-                if (!localIDB.objectStoreNames.contains(DataStorages.BLOCKS)) {
-                    localIDB.createObjectStore(DataStorages.BLOCKS, { keyPath: 'id' });
+                if (!localIDB.objectStoreNames.contains(DataStorages.PALLETE_ELEMENTS)) {
+                    localIDB.createObjectStore(DataStorages.PALLETE_ELEMENTS, { keyPath: 'id' });
                 }
-                if (!localIDB.objectStoreNames.contains(DataStorages.FLOWS)) {
-                    localIDB.createObjectStore(DataStorages.FLOWS, { keyPath: 'id' });
+                if (!localIDB.objectStoreNames.contains(DataStorages.FLOW_BLOCKS)) {
+                    localIDB.createObjectStore(DataStorages.FLOW_BLOCKS, { keyPath: 'id' });
+                }
+                if (!localIDB.objectStoreNames.contains(DataStorages.FLOW_PORTS)) {
+                    localIDB.createObjectStore(DataStorages.FLOW_PORTS, { keyPath: 'id' });
+                }
+                if (!localIDB.objectStoreNames.contains(DataStorages.FLOW_RELATIONS)) {
+                    localIDB.createObjectStore(DataStorages.FLOW_RELATIONS, { keyPath: 'id' });
                 }
                 if (!localIDB.objectStoreNames.contains(DataStorages.BOARDS)) {
                     localIDB.createObjectStore(DataStorages.BOARDS, { keyPath: 'id' });
                 }
                 if (!localIDB.objectStoreNames.contains(DataStorages.EVENTS)) {
-                    localIDB.createObjectStore(DataStorages.EVENTS, { keyPath: 'dateCreation' });
+                    localIDB.createObjectStore(DataStorages.EVENTS, { keyPath: 'id' });
                 }
             },
             blocked() {
@@ -78,9 +93,9 @@ export class IdbService {
             await this.connectionToIdb();
             const tx = await this.localIDB.transaction(target, 'readwrite');
             const store = tx.objectStore(target);
-            let addreq = await store.add(value);
+            await store.add(value);
         } catch (error) {
-            console.log(error.message);
+            console.log(error.message + ' / ID: ' + value.id + ' / Store: ' + target);
         }
     }
 
@@ -95,14 +110,14 @@ export class IdbService {
         await this.connectionToIdb();
         const tx = await this.localIDB.transaction(target, 'readonly');
         const store = tx.objectStore(target);
-        return await store.count(key);
+        return store.count(key);
     }
 
     async getAllData(target: string) {
         await this.connectionToIdb();
         const tx = await this.localIDB.transaction(target, 'readonly');
         const store = tx.objectStore(target);
-        return await store.getAll();
+        return store.getAll();
     }
 
     async updateData(target: string, value: any) {
@@ -112,7 +127,7 @@ export class IdbService {
         await store.put(value);
     }
 
-    dataChanged(): Observable<any> {
-        return this.dataChange;
+    async deleteDB() {
+        await deleteDB(DB_NAME, {});
     }
 }

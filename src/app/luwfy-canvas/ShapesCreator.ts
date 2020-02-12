@@ -1,7 +1,7 @@
 import Konva from 'konva';
-import {theme} from './theme';
-import {FlowboardSizes, ShapesSizes, ShapesSizes as sizes} from './sizes';
-import {BtnEventBlock, ButtonsTypes, CircleTypes, GroupTypes, IRectCustom, IStartPointPathInfo, SettingIcons} from './shapes-interface';
+import { theme } from './theme';
+import { FlowboardSizes, ShapesSizes, ShapesSizes as sizes } from './sizes';
+import { BtnEventBlock, ButtonsTypes, CircleTypes, GroupTypes, IRectCustom, IStartPointPathInfo, SettingIcons } from './shapes-interface';
 
 
 const ShapeCreator = {
@@ -19,7 +19,7 @@ const ShapeCreator = {
   },
 
   createPortCircle: (x, y, color, inputPort: boolean) => {
-    return new Konva.Circle({
+    let port = new Konva.Circle({
       x,
       y: y ? y : sizes.block_height / 2,
       radius: sizes.circle_radius,
@@ -27,18 +27,22 @@ const ShapeCreator = {
       stroke: color,
       type: inputPort ? CircleTypes.Input : CircleTypes.Output
     });
+    port._id = ShapeCreator.randomIdNumber();
+    return port;
   },
 
 
-  createErrorOutput: (y) => {
-    return new Konva.Text({
-      x: sizes.block_width - (sizes.error_icon_size / 2.5),
+  createErrorOutput: (y, x?) => {
+    let errorPort = new Konva.Text({
+      x: x ? x : sizes.block_width - (sizes.error_icon_size / 2.5),
       y,
       text: '\uf05c',
       fontFamily: 'FontAwesome',
       fontSize: sizes.error_icon_size,
       fill: 'red'
     });
+    errorPort._id = ShapeCreator.randomIdNumber();
+    return errorPort;
   },
 
   createRect: (strokeColor: string, height?: number, payload?: any): IRectCustom => {
@@ -73,13 +77,13 @@ const ShapeCreator = {
       type: 'iconGroup',
       hovered: true
     }).add(new Konva.Text({
-        x: 0,
-        padding: 2,
-        fontFamily: 'FontAwesome',
-        fontSize: 19,
-        text: iconsGroup.edit_icon,
-        fill: 'orange'
-      }),
+      x: 0,
+      padding: 2,
+      fontFamily: 'FontAwesome',
+      fontSize: 19,
+      text: iconsGroup.edit_icon,
+      fill: 'orange'
+    }),
       new Konva.Text({
         x: 20,
         padding: 2,
@@ -131,7 +135,7 @@ const ShapeCreator = {
         stroke: 'gray',
         strokeWidth: 1,
         fill: 'red',
-        switcher_circle:true
+        switcher_circle: true
         //type: CircleTypes.Output
       }));
   },
@@ -188,9 +192,9 @@ const ShapeCreator = {
     });
   },
 
-  createDrugPoint: () => {
+  createDrugPoint: (width) => {
     return new Konva.Text({
-      x: 500 + FlowboardSizes.buttonPadding,
+      x: width + FlowboardSizes.buttonPadding,
       y: 10,
       fontSize: 20,
       fontFamily: 'FontAwesome',
@@ -200,9 +204,9 @@ const ShapeCreator = {
     });
   },
 
-  createDeleteButton: () => {
+  createDeleteButton: (width) => {
     return new Konva.Text({
-      x: 502 + FlowboardSizes.buttonPadding,
+      x: width + FlowboardSizes.buttonPadding + 2.5,
       y: 70,
       fontSize: 20,
       fontFamily: 'FontAwesome',
@@ -212,9 +216,9 @@ const ShapeCreator = {
     });
   },
 
-  createMenuButton: () => {
+  createMenuButton: (width) => {
     return new Konva.Text({
-      x: 500 + FlowboardSizes.buttonPadding,
+      x: width + FlowboardSizes.buttonPadding,
       y: 40,
       fontSize: 25,
       fontFamily: 'FontAwesome',
@@ -224,6 +228,12 @@ const ShapeCreator = {
     })
       .on('mousedown', event => event.target.attrs.fill = 'silver')
       .on('mouseup', event => event.target.attrs.fill = '#115770');
+  },
+
+  randomIdNumber: () => {
+    let min = 111111111;
+    let max = 999999999;
+    return (Math.floor(Math.random() * max + 1) + min);
   }
 };
 

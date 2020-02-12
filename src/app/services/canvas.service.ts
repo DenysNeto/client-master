@@ -18,7 +18,7 @@ import { BlocksRedactorService } from '../popups/blocks-redactor.service';
 import { BlocksService } from './blocks.service';
 import { TestStartStop } from './testStartStop';
 import { Path } from 'konva/types/shapes/Path';
-import { IdbService, DataStorages, Board } from './indexed-db.service';
+import { IdbService, DataStorages, Board, FlowBlock, FlowPort } from './indexed-db.service';
 import ShapesClipboard from '../luwfy-canvas/shapes-clipboard';
 
 @Injectable({
@@ -179,8 +179,7 @@ export class CanvasService {
         let input_circle = this.getInputCircleFromGroup(event.target.parent as Group);
         let current_flowboard = this.getGroupById(this.currentLineToDraw.flowboardId, mainLayer.getStage());
         let current_path_group = this.getGroupById(this.currentLineToDraw.groupId, current_flowboard as Group);
-        current_path_group.setAttr('draggable', 'true');
-
+        current_path_group.setAttr('draggable', true);
         // take path witch we draw
         let current_path = (current_path_group as Group).findOne(elem => {
           if (elem.className === 'Path' && elem.attrs.start_info.start_group_id === this.currentLineToDraw.groupId && elem._id === this.currentLineToDraw.lineId) {
@@ -239,7 +238,6 @@ export class CanvasService {
         }
         this.currentLineToDraw.isLineDrawable = false;
         this.lineToDraw.next(this.currentLineToDraw);
-        console.log('Here1');
 
         // TODO: update DB flows after line beetwen flows was drew
         // this.iDBService.updateData(DataStorages.FLOWS, { id: current_path_group._id, flow: current_path_group.toJSON() });
@@ -291,23 +289,21 @@ export class CanvasService {
             });
           }
         }
-        // this.iDBService.updateData(DataStorages.FLOWS, { id: event.currentTarget._id, flow: event.currentTarget.toJSON() });
-        // this.saveUpdateInputPaths(event.currentTarget);
+
+        // save block after change position
+        this.iDBService.updateData(DataStorages.FLOW_BLOCKS,
+          {
+            id: event.currentTarget._id,
+            pallete_elem_id: event.currentTarget.attrs.name,
+            board_id: event.currentTarget.parent._id,
+            x: event.currentTarget.attrs.x,
+            y: event.currentTarget.attrs.y,
+            width: event.currentTarget.attrs.width,
+            height: event.currentTarget.attrs.height,
+          } as FlowBlock);
+
       });
     }
-  }
-
-  // function check all inputs paths and update their parents
-  saveUpdateInputPaths(block) {
-    block.parent.children.each(item => {
-      if (item.getType() === 'Group') {
-        item.children.each(child => {
-          if (child.attrs.end_info && child.attrs.end_info.end_group_id === block._id) {
-            // this.iDBService.updateData(DataStorages.FLOWS, { id: item._id, flow: item.toJSON() });
-          }
-        })
-      }
-    })
   }
 
   checkTheGroupNearBorder(current_group: IGroupCustom) {
@@ -390,11 +386,11 @@ export class CanvasService {
     this.iDBService.updateData(DataStorages.BOARDS,
       {
         id: board._id,
+        name: board.attrs.name,
         x: board.attrs.x,
         y: board.attrs.y,
         width: board.attrs.width,
-        height: board.attrs.height,
-        payload: {}
+        height: board.attrs.height
       } as Board);
   }
 
@@ -637,30 +633,50 @@ export class CanvasService {
   }
 
   // function add all ports (input, output, error)
-  createPorts(blockVariables: InputBlocksInterface, temp_group: Group, height: number) {
-    let inputPorts = blockVariables.inputs;
-    let outputPorts = blockVariables.outputs;
-    let errorPorts = blockVariables.output_errors;
-    let max_ports = errorPorts + outputPorts > inputPorts ? errorPorts + outputPorts : inputPorts;
-    let delayInput = height / (inputPorts + 1);
-    let delayOutput = height / (outputPorts + errorPorts + 1);
-    for (let i = 1; i <= max_ports; i++) {
-      if (inputPorts > 0) {
-        let input = ShapeCreator.createPortCircle(0, delayInput * i, blockVariables.color, true);
-        input.setAttr('ownId', input._id);
-        temp_group.add(input); // add input
-        inputPorts--;
-      }
-      if (outputPorts > 0) {
-        let output = ShapeCreator.createPortCircle(sizes.block_width, delayOutput * i, blockVariables.color, false);
-        output.setAttr('ownId', output._id);
-        temp_group.add(output); // add output
-        outputPorts--;
-      } else if (errorPorts > 0) {
-        temp_group.add(ShapeCreator.createErrorOutput(delayOutput * i)); // add error
-        errorPorts--;
+  createPorts(blockVariables: InputBlocksInterface, temp_group: Group, height: number, blockDataID?, portsData?) {
+    if (blockDataID) {
+      portsData.forEach((port: FlowPort) => {
+        if (port.block_id === blockDataID) {
+          if (port.type === CircleTypes.Input) {
+            let input = ShapeCreator.createPortCircle(port.x, port.y, blockVariables.color, true);
+            input._id = port.id;
+            temp_group.add(input); // add input
+          } else if (port.type === CircleTypes.Output) {
+            let output = ShapeCreator.createPortCircle(port.x, port.y, blockVariables.color, false);
+            output._id = port.id;
+            temp_group.add(output); // add output
+          } else {
+            let errorPort = ShapeCreator.createErrorOutput(port.y, port.x);
+            errorPort._id = port.id;
+            temp_group.add(errorPort); // add error
+          }
+        }
+      })
+    } else {
+      let inputPorts = blockVariables.inputs;
+      let outputPorts = blockVariables.outputs;
+      let errorPorts = blockVariables.output_errors;
+      let max_ports = errorPorts + outputPorts > inputPorts ? errorPorts + outputPorts : inputPorts;
+      let delayInput = height / (inputPorts + 1);
+      let delayOutput = height / (outputPorts + errorPorts + 1);
+      for (let i = 1; i <= max_ports; i++) {
+        if (inputPorts > 0) {
+          let input = ShapeCreator.createPortCircle(0, delayInput * i, blockVariables.color, true);
+          temp_group.add(input); // add input
+          inputPorts--;
+        }
+        if (outputPorts > 0) {
+          let output = ShapeCreator.createPortCircle(sizes.block_width, delayOutput * i, blockVariables.color, false);
+          temp_group.add(output); // add output
+          outputPorts--;
+        } else if (errorPorts > 0) {
+          let errorPort = ShapeCreator.createErrorOutput(delayOutput * i);
+          temp_group.add(errorPort); // add error
+          errorPorts--;
+        }
       }
     }
+
   }
 
   switcherAnimation(event, colorActive, colorDisabled, blockColor) {
@@ -773,7 +789,7 @@ export class CanvasService {
     return isCollisionDetected;
   }
 
-  createDefaultGroup(mainLayer: Layer, activeWrapperBlock, currentActiveGroup: Group, blockName, selectedBlocks) {
+  createDefaultGroup(mainLayer: Layer, activeWrapperBlock, currentActiveGroup: Group, blockName, selectedBlocks, blockData?: FlowBlock, portsData?) {
     let newBlockVariables = this.blocksArr.find(block => block.type === blockName);
     let height;
     let temp_group = new Konva.Group({
@@ -785,7 +801,7 @@ export class CanvasService {
       blockData: newBlockVariables,
       showOnPanel: true
     }) as IGroupCustom;
-
+    temp_group._id = blockData ? blockData.id : ShapeCreator.randomIdNumber();
     if (newBlockVariables.outputs + newBlockVariables.output_errors > 2 || newBlockVariables.inputs > 2) {
       let max_ports = newBlockVariables.outputs + newBlockVariables.output_errors > newBlockVariables.inputs ?
         newBlockVariables.outputs + newBlockVariables.output_errors : newBlockVariables.inputs;
@@ -794,22 +810,16 @@ export class CanvasService {
       height = sizes.block_height;
     }
     temp_group.add(ShapeCreator.createShapeName(newBlockVariables.label, newBlockVariables.color));
-
     temp_group.add(ShapeCreator.createRect(newBlockVariables.color, height));
-
-    this.createPorts(newBlockVariables, temp_group, height);
+    blockData ? this.createPorts(newBlockVariables, temp_group, height, blockData.id, portsData) : this.createPorts(newBlockVariables, temp_group, height);
     temp_group.add(ShapeCreator.iconGroupCreator(SwitcherSizes.margin_left, (height - SwitcherSizes.iconsFontSize) / 2, newBlockVariables.setting_icons).hide());
-
     temp_group.add(ShapeCreator.createFaceImage(ShapesSizes.block_width - ShapesSizes.face_img_font_size - 10,
       (height - ShapesSizes.face_img_font_size) / 2, newBlockVariables.color, newBlockVariables.setting_icons.face_image)
     );
-
     if (newBlockVariables.btn_event_block.switch > -1) {
       temp_group.add(ShapeCreator.switcherGroupCreator((ShapesSizes.block_width - 45) / 2, height - 9, 45, newBlockVariables.color, newBlockVariables.btn_event_block)
       );
-
       let blockSwitcher = temp_group.findOne(elem => !!elem.attrs.switched);
-
       if (newBlockVariables.btn_event_block.switch === 1) {
         blockSwitcher.on('click', event => {
           this.switcherAnimation(event, newBlockVariables.btn_event_block.color_active, newBlockVariables.btn_event_block.color_disabled, newBlockVariables.color)
@@ -824,18 +834,14 @@ export class CanvasService {
       width: sizes.block_width + sizes.circle_radius * 2,
       height: height
     });
-
     this.setClickEventForGroup(temp_group, selectedBlocks);
     this.setListenerOnBlock(mainLayer, temp_group);
     this.setListenerOnIcons(temp_group);
-
     let circles_collection = this.getAllCirclesFromGroup(temp_group);
-
     circles_collection && circles_collection.each((elem: ICircleCustom) => {
       elem.setAttr('zIndex', 1000);
       this.setMouseDownEventForSwitchCircle(elem, mainLayer, currentActiveGroup);
     });
-
     this.setRegularGroupHandlers(temp_group, mainLayer, activeWrapperBlock, currentActiveGroup);
     return temp_group;
   }
@@ -946,7 +952,7 @@ export class CanvasService {
   getGroupById(id: number, component: Group) {
     if (component) {
       return component.getStage().findOne(elem => {
-        if (elem._id === id) {
+        if (elem._id === id && !elem.className) {
           return elem;
         }
       });

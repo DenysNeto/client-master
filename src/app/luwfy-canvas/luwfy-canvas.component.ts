@@ -22,7 +22,7 @@ import { BlocksService } from '../services/blocks.service';
 import { TestStartStop } from '../services/testStartStop';
 import { StageComponent } from 'ng2-konva';
 import { LocalNotificationService, NotificationTypes } from '../popups/local-notification/local-notification.service';
-import { IdbService, DataStorages, Board, Flow } from '../services/indexed-db.service';
+import { IdbService, DataStorages, Board, FlowBlock, FlowPort } from '../services/indexed-db.service';
 
 @Component({
   selector: 'luwfy-canvas',
@@ -262,11 +262,11 @@ export class CanvasComponent implements OnInit, AfterViewInit {
           return elem;
         }
       });
-      let current_path = current_group.findOne(elem => {
-        if (elem.attrs.custom_id && elem.attrs.custom_id.includes('line')) {
-          return elem;
-        }
-      });
+      // let current_path = current_group.findOne(elem => {
+      //   if (elem.attrs.custom_id && elem.attrs.custom_id.includes('line')) {
+      //     return elem;
+      //   }
+      // });
       this.canvasService.resetActivePathArr();
       return 0;
     }
@@ -346,6 +346,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         return 0;
       }
       if (!temp_path.start_info || !temp_path.end_info) {
+        current_group.setAttr('draggable', true);
         temp_path.remove();
       }
       return 0;
@@ -521,7 +522,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
           }
         });
         let current_group = current_flowboard.findOne(elem => {
-          if (elem._id === this.currentLineToDraw.groupId) {
+          if (elem._id === this.currentLineToDraw.groupId && elem.attrs.type === GroupTypes.Block) {
             return elem;
           }
         });
@@ -567,8 +568,8 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
   createGrid = flow => {
     let distBetweenLines = 20;
-    let vertLines = flow.attrs.height / distBetweenLines;
-    let horLines = flow.attrs.width / distBetweenLines;
+    let horLines = flow.attrs.height / distBetweenLines;
+    let vertLines = flow.attrs.width / distBetweenLines;
     let maxLines = vertLines > horLines ? vertLines : horLines;
     for (let i = 1; i <= maxLines; i++) {
       if (vertLines > i) {
@@ -580,12 +581,11 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         );
       }
     }
-    let menuButton = ShapeCreator.createMenuButton();
-    let deleteButton = ShapeCreator.createDeleteButton();
-    flow.setAttr('name', `new flow${this.blocksService.getFlowboards().length}`);
+    let menuButton = ShapeCreator.createMenuButton(flow.attrs.width);
+    let deleteButton = ShapeCreator.createDeleteButton(flow.attrs.width);
     flow.add(
       ShapeCreator.createShadowForGrid(flow.attrs.width, flow.attrs.height),
-      ShapeCreator.createDrugPoint(),
+      ShapeCreator.createDrugPoint(flow.attrs.width),
       ShapeCreator.createNameOfFlowboard(flow.attrs.name),
       deleteButton,
       menuButton
@@ -673,25 +673,37 @@ export class CanvasComponent implements OnInit, AfterViewInit {
             let actualFlowboardId = actualFlowboard._id;
             actualFlowboard.add(this.currentDraggedGroup);
 
-            // TODO: save flow to DB
-            this.iDBService.checkIsKeyExist(DataStorages.BOARDS, this.currentDraggedGroup._id)
+            // TODO: save new block to DB
+            this.iDBService.checkIsKeyExist(DataStorages.FLOW_BLOCKS, this.currentDraggedGroup._id)
               .then(res => {
                 if (!res) {
-                  this.iDBService.addData(DataStorages.FLOWS,
+                  this.iDBService.addData(DataStorages.FLOW_BLOCKS,
                     {
                       id: this.currentDraggedGroup._id,
-                      block_type: this.currentDraggedGroup.attrs.name,
+                      pallete_elem_id: this.currentDraggedGroup.attrs.name,
+                      board_id: actualFlowboardId,
                       x: this.currentDraggedGroup.attrs.x,
                       y: this.currentDraggedGroup.attrs.y,
                       width: this.currentDraggedGroup.attrs.width,
-                      height: this.currentDraggedGroup.attrs.height,
-                      board_id: actualFlowboardId,
-                      payload: {}
-                    } as Flow);
-                } else {
-                  console.log(`ID: ${this.currentDraggedGroup._id} is allready exist.`);
+                      height: this.currentDraggedGroup.attrs.height
+                    } as FlowBlock);
+
+                  this.currentDraggedGroup.children.toArray().forEach(elem => {
+                    if (elem.attrs.type === CircleTypes.Input || elem.attrs.type === CircleTypes.Output || elem.attrs.type === CircleTypes.Error) {
+                      this.iDBService.addData(DataStorages.FLOW_PORTS,
+                        {
+                          id: elem._id,
+                          type: elem.attrs.type,
+                          block_id: elem.parent._id,
+                          x: elem.attrs.x,
+                          y: elem.attrs.y
+                        } as FlowPort)
+                    }
+                  })
                 }
               });
+
+
 
             let temp_custom = actualFlowboard.findOne(elem => elem._id === this.currentDraggedGroup._id);
             temp_custom.dragBoundFunc(pos => this.setDragBoundFunc(temp_custom, pos));
@@ -749,7 +761,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       }
       this.selectedBlocks = [];
     })
-
     this.scrollContainer.nativeElement.addEventListener('scroll', this.repositionStage());
     this.repositionStage();
     this.activeTab.startStageSize.oldWidth = this.stage.getStage().width();
@@ -765,20 +776,23 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         this.addBoardToLayer(boardData);
       })
     })
-    // TODO: loading flows from indexedDB
-    this.iDBService.getAllData(DataStorages.FLOWS).then(data => {
-      data.forEach((flowData: Flow) => {
-        let flow = this.canvasService.createDefaultGroup(this.mainLayer, this.activeWrapperBlock, this.currentActiveGroup, flowData.block_type, this.selectedBlocks);
-        flow._id = flowData.id;
-        flow.setAttrs({ x: flowData.x, y: flowData.y });
-        flow.dragBoundFunc(pos => this.setDragBoundFunc(flow, pos));
-        this.blocksService.getFlowboards().forEach(board => {
-          if (board._id === flowData.board_id) {
-            board.add(flow);
-          }
+    // TODO: loading ports from indexedDB
+    this.iDBService.getAllData(DataStorages.FLOW_PORTS).then(portsData => {
+      // TODO: loading blocks from indexedDB
+      this.iDBService.getAllData(DataStorages.FLOW_BLOCKS).then(data => {
+        data.forEach((blockData: FlowBlock) => {
+          let block = this.canvasService.createDefaultGroup(this.mainLayer, this.activeWrapperBlock, this.currentActiveGroup,
+            blockData.pallete_elem_id, this.selectedBlocks, blockData, portsData);
+          block.setAttrs({ x: blockData.x, y: blockData.y });
+          block.dragBoundFunc(pos => this.setDragBoundFunc(block, pos));
+          this.blocksService.getFlowboards().forEach(board => {
+            if (board._id === blockData.board_id) {
+              board.add(block);
+            }
+          })
         })
+        this.blocksService.pushFlowboardsChanges();
       })
-      this.blocksService.pushFlowboardsChanges();
     })
   }
 
@@ -817,11 +831,12 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       height: boardData ? boardData.height : FlowboardSizes.newFlowHeight,
       //draggable: true,
       type: GroupTypes.Flowboard,
+      name: boardData ? boardData.name : `new flowboard`,
       showOnPanel: true
     });
     this.setClickEventForFlowboard(newFlow);
     this.createGrid(newFlow);
-    newFlow._id = boardData ? boardData.id : newFlow._id;
+    newFlow._id = boardData ? boardData.id : ShapeCreator.randomIdNumber();
     this.mainLayer.getStage().add(newFlow);
     this.blocksService.addFlowboard(newFlow);
 
@@ -832,11 +847,11 @@ export class CanvasComponent implements OnInit, AfterViewInit {
           this.iDBService.addData(DataStorages.BOARDS,
             {
               id: newFlow._id,
+              name: newFlow.attrs.name,
               x: newFlow.attrs.x,
               y: newFlow.attrs.y,
               width: newFlow.attrs.width,
-              height: newFlow.attrs.height,
-              payload: {}
+              height: newFlow.attrs.height
             } as Board);
         }
       });
@@ -966,5 +981,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
   saveProject() {
     // TODO: deploy project on server
+    // NOW IS DELETE DB
+    this.iDBService.deleteDB();
   }
 }

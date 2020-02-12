@@ -1,7 +1,8 @@
 import { theme } from "./theme";
 import { CircleTypes } from './shapes-interface';
 import { NotificationTypes } from '../popups/local-notification/local-notification.service';
-import { DataStorages, Flow } from '../services/indexed-db.service';
+import { DataStorages, FlowBlock, FlowPort } from '../services/indexed-db.service';
+import ShapeCreator from './ShapesCreator';
 
 
 const ShapesClipboard = {
@@ -30,20 +31,30 @@ const ShapesClipboard = {
         let allElemInputs = [];
         let allClonedInputs = [];
         let clonedBlocks = [];
+
         copiedBlocks.forEach(elem => {
             elem.find('Path').forEach(path => allElemPaths.push(path));
             elem.find('Circle').filter(circle => circle.attrs.type === CircleTypes.Output).forEach(output => allElemOutputs.push(output));
             elem.find('Circle').filter(circle => circle.attrs.type === CircleTypes.Input).forEach(input => allElemInputs.push(input));
             let clone = elem.clone();
+            clone._id = ShapeCreator.randomIdNumber();
             clone.attrs.flowId = elem.parent._id;
             clonedBlocks.push(clone);
             this.returnColorAfterSelect(elem);
         });
+
         clonedBlocks.forEach(elem => {
             elem.find('Path').forEach(path => allClonedPaths.push(path));
-            elem.find('Circle').filter(circle => circle.attrs.type === CircleTypes.Output).forEach(output => allClonedOutputs.push(output));
-            elem.find('Circle').filter(circle => circle.attrs.type === CircleTypes.Input).forEach(input => allClonedInputs.push(input));
+            elem.find('Circle').filter(circle => circle.attrs.type === CircleTypes.Output).forEach(output => {
+                output._id = ShapeCreator.randomIdNumber();
+                allClonedOutputs.push(output);
+            });
+            elem.find('Circle').filter(circle => circle.attrs.type === CircleTypes.Input).forEach(input => {
+                input._id = ShapeCreator.randomIdNumber();
+                allClonedInputs.push(input);
+            });
         })
+
         allElemPaths.forEach((path, indexPath) => {
             if (path) {
                 allElemOutputs.forEach((output, indexOutput) => {
@@ -74,6 +85,7 @@ const ShapesClipboard = {
             clonedBlocks.forEach(block => currentCopiedGroup.add(block))
         }
     },
+
     returnColorAfterSelect(shape) {
         shape.children.each(elem => {
             if (elem.className === 'Rect') {
@@ -81,6 +93,7 @@ const ShapesClipboard = {
             }
         })
     },
+
     setSizeForCopiedGroup(currentCopiedGroup) {
         let biggestX = 0;
         let biggestY = 0;
@@ -102,7 +115,7 @@ const ShapesClipboard = {
     // at first we take position of first shape for calculation 
     // positions for another objects, after we transer all object
     // from copy group in flowboard 
-    pasteOperation(flow, stage, mainLayer, currentCopiedGroup, canvasService, blocksService, localNotificationService, iDBService) {
+    async pasteOperation(flow, stage, mainLayer, currentCopiedGroup, canvasService, blocksService, localNotificationService, iDBService) {
         let pasteFlowId = currentCopiedGroup.children[0].attrs.flowId;
         if (flow._id === pasteFlowId) {
             let firstShapeX = currentCopiedGroup.children[0].attrs.x;
@@ -120,26 +133,40 @@ const ShapesClipboard = {
                 pasteObj.children[0].setAttr('text', 'copy ' + pasteObj.children[0].attrs.text);
                 ShapesClipboard.returnColorAfterSelect(pasteObj);
                 flow.add(pasteObj);
+                mainLayer.getStage().draw();
+
                 // TODO: save copied flow to DB
-                iDBService.checkIsKeyExist(DataStorages.BOARDS, pasteObj._id)
-                    .then(res => {
+                await iDBService.checkIsKeyExist(DataStorages.FLOW_BLOCKS, pasteObj._id)
+                    .then(async res => {
                         if (!res) {
-                            iDBService.addData(DataStorages.FLOWS,
+                            await iDBService.addData(DataStorages.FLOW_BLOCKS,
                                 {
                                     id: pasteObj._id,
-                                    block_type: pasteObj.attrs.name,
+                                    pallete_elem_id: pasteObj.attrs.name,
+                                    board_id: flow._id,
                                     x: pasteObj.attrs.x,
                                     y: pasteObj.attrs.y,
                                     width: pasteObj.attrs.width,
-                                    height: pasteObj.attrs.height,
-                                    board_id: flow._id,
-                                    payload: {}
-                                } as Flow);
+                                    height: pasteObj.attrs.height
+                                } as FlowBlock);
+
+                            pasteObj.children.toArray().forEach(async elem => {
+                                if (elem.attrs.type === CircleTypes.Input || elem.attrs.type === CircleTypes.Output || elem.attrs.type === CircleTypes.Error) {
+                                    await iDBService.addData(DataStorages.FLOW_PORTS,
+                                        {
+                                            id: elem._id,
+                                            type: elem.attrs.type,
+                                            block_id: elem.parent._id,
+                                            x: elem.attrs.x,
+                                            y: elem.attrs.y
+                                        } as FlowPort)
+                                }
+                            })
                         } else {
-                            console.log(`ID: ${this.currentDraggedGroup._id} is allready exist.`);
+                            console.log(`ID: ${pasteObj._id} is allready exist.`);
                         }
+
                     });
-                // iDBService.updateData(DataStorages.FLOWS, { id: pasteObj._id, flow: pasteObj.toJSON() });
                 currentCopiedGroup.setAttr('visible', false);
             }
             blocksService.pushFlowboardsChanges();
