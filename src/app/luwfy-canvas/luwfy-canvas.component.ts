@@ -24,6 +24,7 @@ import { StageComponent } from 'ng2-konva';
 import { LocalNotificationService, NotificationTypes } from '../popups/local-notification/local-notification.service';
 import { IdbService } from '../services/indexed-db.service';
 import { DataStorages, FlowBlock, FlowPort, Board, DataState } from '../services/indexed-db.interface';
+import { HttpClientService } from '../services/http-client.service';
 
 @Component({
   selector: 'luwfy-canvas',
@@ -43,7 +44,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     private testStartStop: TestStartStop,
     private localNotificationService: LocalNotificationService,
     private iDBService: IdbService,
-    private httpClientService : HttpClientService,
+    private httpClientService: HttpClientService,
   ) { }
 
   @ViewChild('stage', null) stage: Stage;
@@ -623,6 +624,27 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit() {
+    this.httpClientService.getInitialData();
+    //this.httpClientService.getFlowData();
+    this.httpClientService.getPaletteData();
+
+    console.log(' localIDB.objectStoreNames');
+    this.httpClientService.httpResponsePayload.subscribe(payloadData => {
+      if (payloadData.stores) {
+        for (let storeName in payloadData.stores) {
+          if (payloadData.stores[storeName].length > 0) {
+            //check if store created in database if no creates it 
+            this.iDBService.connectionToIdb();
+            this.iDBService.getStoreFromIDBByNameAndClear(storeName);
+            payloadData.stores[storeName].forEach(storeElement => {
+              this.iDBService.addData(storeName, storeElement);
+            })
+          }
+        }
+
+      }
+    })
+
     this.subTabs = [
       {
         label: 'Main Project',
@@ -661,6 +683,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   ngAfterViewInit() {
     this.stage.getStage().add(this.mainLayer.getStage());
     this.loadingDataFromIDB();
+
     this.mainLayer.getStage().add(this.activeWrapperBlock.rectangle);
     this.canvasService.dragFinished.subscribe(() => {
       let actualFlowboard;
@@ -785,13 +808,16 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     // TODO: loading boards from indexedDB
     this.iDBService.getAllData(DataStorages.BOARDS).then(data => {
       data.forEach((boardData: Board) => {
+        console.log('[c] boardData', boardData);
         this.addBoardToLayer(boardData);
       })
     })
     // TODO: loading ports from indexedDB
     this.iDBService.getAllData(DataStorages.FLOW_PORTS).then(portsData => {
+      console.log('[c] portsData', portsData);
       // TODO: loading blocks from indexedDB
       this.iDBService.getAllData(DataStorages.FLOW_BLOCKS).then(data => {
+        console.log('[c] flowBlocks', data);
         data.forEach((blockData: FlowBlock) => {
           let block = this.canvasService.createDefaultGroup(this.mainLayer, this.activeWrapperBlock, this.currentActiveGroup,
             blockData.paletteElementId, this.selectedBlocks, blockData, portsData);
