@@ -16,6 +16,7 @@ import {CodemirrorModule} from '@ctrl/ngx-codemirror';
 import {MaterialModule} from 'src/app/material.module';
 import {FormsModule} from '@angular/forms';
 import { LocalNotificationComponent } from './popups/local-notification/local-notification.component';
+import { HttpClientModule } from '@angular/common/http';
 
 @NgModule({
   declarations: [
@@ -30,6 +31,7 @@ import { LocalNotificationComponent } from './popups/local-notification/local-no
   ],
   imports: [
     BrowserModule,
+    HttpClientModule,
     AppRoutingModule,
     KonvaModule,
     BrowserAnimationsModule,

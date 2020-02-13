@@ -23,6 +23,7 @@ import { TestStartStop } from '../services/testStartStop';
 import { StageComponent } from 'ng2-konva';
 import { LocalNotificationService, NotificationTypes } from '../popups/local-notification/local-notification.service';
 import { IdbService, DataStorages, Board, FlowBlock, FlowPort } from '../services/indexed-db.service';
+import { HttpClientService } from '../services/http-client.service';
 
 @Component({
   selector: 'luwfy-canvas',
@@ -41,7 +42,8 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     private blocksService: BlocksService,
     private testStartStop: TestStartStop,
     private localNotificationService: LocalNotificationService,
-    private iDBService: IdbService
+    private iDBService: IdbService,
+    private httpClientService : HttpClientService,
   ) { }
 
   @ViewChild('stage', null) stage: Stage;
