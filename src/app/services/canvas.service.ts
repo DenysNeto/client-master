@@ -18,8 +18,9 @@ import { BlocksRedactorService } from '../popups/blocks-redactor.service';
 import { BlocksService } from './blocks.service';
 import { TestStartStop } from './testStartStop';
 import { Path } from 'konva/types/shapes/Path';
-import { IdbService, DataStorages, Board, FlowBlock, FlowPort } from './indexed-db.service';
+import { IdbService } from './indexed-db.service';
 import ShapesClipboard from '../luwfy-canvas/shapes-clipboard';
+import { DataStorages, FlowRelation, FlowBlock, Board, FlowPort, DataState } from './indexed-db.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -239,8 +240,17 @@ export class CanvasService {
         this.currentLineToDraw.isLineDrawable = false;
         this.lineToDraw.next(this.currentLineToDraw);
 
-        // TODO: update DB flows after line beetwen flows was drew
-        // this.iDBService.updateData(DataStorages.FLOWS, { id: current_path_group._id, flow: current_path_group.toJSON() });
+        // TODO: update DB flows after line beetwen blocks was drew
+        this.iDBService.addData(DataStorages.FLOW_RELATIONS, {
+          id: current_path._id,
+          startPortId: current_path.attrs.start_info.start_circle_id,
+          endPortId: current_path.attrs.end_info.end_circle_id,
+          colorId: 1,
+          state: DataState.ACTIVE,
+          name: 'relation',
+          description: 'description'
+        } as FlowRelation);
+
         mainLayer.getStage().draw();
         return 0;
       }
@@ -291,17 +301,24 @@ export class CanvasService {
         }
 
         // save block after change position
+        let targetBlock = event.currentTarget;
         this.iDBService.updateData(DataStorages.FLOW_BLOCKS,
           {
-            id: event.currentTarget._id,
-            pallete_elem_id: event.currentTarget.attrs.name,
-            board_id: event.currentTarget.parent._id,
-            x: event.currentTarget.attrs.x,
-            y: event.currentTarget.attrs.y,
-            width: event.currentTarget.attrs.width,
-            height: event.currentTarget.attrs.height,
+            id: targetBlock._id,
+            boardId: targetBlock.parent._id,
+            paletteElementId: targetBlock.attrs.name,
+            location: {
+              x: targetBlock.attrs.x,
+              y: targetBlock.attrs.y,
+            },
+            formId: 1,
+            name: targetBlock.attrs.label,
+            state: DataState.ACTIVE,
+            sizes: {
+              width: targetBlock.attrs.width,
+              height: targetBlock.attrs.height
+            }
           } as FlowBlock);
-
       });
     }
   }
@@ -387,10 +404,19 @@ export class CanvasService {
       {
         id: board._id,
         name: board.attrs.name,
-        x: board.attrs.x,
-        y: board.attrs.y,
-        width: board.attrs.width,
-        height: board.attrs.height
+        location: {
+          x: board.attrs.x,
+          y: board.attrs.y
+        },
+        state: DataState.ACTIVE,
+        description: 'description',
+        colorId: 1,
+        imageId: 1,
+        formId: 1,
+        sizes: {
+          width: board.attrs.width,
+          height: board.attrs.height
+        }
       } as Board);
   }
 
@@ -633,20 +659,20 @@ export class CanvasService {
   }
 
   // function add all ports (input, output, error)
-  createPorts(blockVariables: InputBlocksInterface, temp_group: Group, height: number, blockDataID?, portsData?) {
+  createPorts(blockVariables: InputBlocksInterface, temp_group: Group, height: number, blockDataID?: number, portsData?: FlowPort[]) {
     if (blockDataID) {
       portsData.forEach((port: FlowPort) => {
-        if (port.block_id === blockDataID) {
+        if (port.flowBlockId === blockDataID) {
           if (port.type === CircleTypes.Input) {
-            let input = ShapeCreator.createPortCircle(port.x, port.y, blockVariables.color, true);
+            let input = ShapeCreator.createPortCircle(port.location.x, port.location.y, blockVariables.color, true);
             input._id = port.id;
             temp_group.add(input); // add input
           } else if (port.type === CircleTypes.Output) {
-            let output = ShapeCreator.createPortCircle(port.x, port.y, blockVariables.color, false);
+            let output = ShapeCreator.createPortCircle(port.location.x, port.location.y, blockVariables.color, false);
             output._id = port.id;
             temp_group.add(output); // add output
           } else {
-            let errorPort = ShapeCreator.createErrorOutput(port.y, port.x);
+            let errorPort = ShapeCreator.createErrorOutput(port.location.y, port.location.x);
             errorPort._id = port.id;
             temp_group.add(errorPort); // add error
           }

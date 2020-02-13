@@ -22,8 +22,8 @@ import { BlocksService } from '../services/blocks.service';
 import { TestStartStop } from '../services/testStartStop';
 import { StageComponent } from 'ng2-konva';
 import { LocalNotificationService, NotificationTypes } from '../popups/local-notification/local-notification.service';
-import { IdbService, DataStorages, Board, FlowBlock, FlowPort } from '../services/indexed-db.service';
-import { HttpClientService } from '../services/http-client.service';
+import { IdbService } from '../services/indexed-db.service';
+import { DataStorages, FlowBlock, FlowPort, Board, DataState } from '../services/indexed-db.interface';
 
 @Component({
   selector: 'luwfy-canvas',
@@ -675,30 +675,40 @@ export class CanvasComponent implements OnInit, AfterViewInit {
             let actualFlowboardId = actualFlowboard._id;
             actualFlowboard.add(this.currentDraggedGroup);
 
-            // TODO: save new block to DB
+            // TODO: save new Flow block to DB
             this.iDBService.checkIsKeyExist(DataStorages.FLOW_BLOCKS, this.currentDraggedGroup._id)
               .then(res => {
                 if (!res) {
                   this.iDBService.addData(DataStorages.FLOW_BLOCKS,
                     {
                       id: this.currentDraggedGroup._id,
-                      pallete_elem_id: this.currentDraggedGroup.attrs.name,
-                      board_id: actualFlowboardId,
-                      x: this.currentDraggedGroup.attrs.x,
-                      y: this.currentDraggedGroup.attrs.y,
-                      width: this.currentDraggedGroup.attrs.width,
-                      height: this.currentDraggedGroup.attrs.height
+                      boardId: actualFlowboardId,
+                      paletteElementId: this.currentDraggedGroup.attrs.name,
+                      location: {
+                        x: this.currentDraggedGroup.attrs.x,
+                        y: this.currentDraggedGroup.attrs.y,
+                      },
+                      formId: 1,
+                      name: this.currentDraggedGroup.attrs.label,
+                      state: DataState.ACTIVE,
+                      sizes: {
+                        width: this.currentDraggedGroup.attrs.width,
+                        height: this.currentDraggedGroup.attrs.height
+                      }
                     } as FlowBlock);
-
                   this.currentDraggedGroup.children.toArray().forEach(elem => {
                     if (elem.attrs.type === CircleTypes.Input || elem.attrs.type === CircleTypes.Output || elem.attrs.type === CircleTypes.Error) {
                       this.iDBService.addData(DataStorages.FLOW_PORTS,
                         {
                           id: elem._id,
                           type: elem.attrs.type,
-                          block_id: elem.parent._id,
-                          x: elem.attrs.x,
-                          y: elem.attrs.y
+                          location: {
+                            x: elem.attrs.x,
+                            y: elem.attrs.y
+                          },
+                          flowBlockId: elem.parent._id,
+                          state: DataState.ACTIVE,
+                          colorId: 1
                         } as FlowPort)
                     }
                   })
@@ -753,7 +763,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     this.currentActiveGroup.zIndex(1);
     this.mainLayer.getStage().add(this.currentLineToDraw.line);
     this.mainLayer.getStage().add(this.currentCopiedGroup);
-    // if we have few selected blocks and click on free space 
+    // if we have few selected blocks and click on free space
     // all blocks became unselected
     this.stage.getStage().on('click', event => {
       if (this.selectedBlocks.length > 0) {
@@ -784,11 +794,11 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       this.iDBService.getAllData(DataStorages.FLOW_BLOCKS).then(data => {
         data.forEach((blockData: FlowBlock) => {
           let block = this.canvasService.createDefaultGroup(this.mainLayer, this.activeWrapperBlock, this.currentActiveGroup,
-            blockData.pallete_elem_id, this.selectedBlocks, blockData, portsData);
-          block.setAttrs({ x: blockData.x, y: blockData.y });
+            blockData.paletteElementId, this.selectedBlocks, blockData, portsData);
+          block.setAttrs({ x: blockData.location.x, y: blockData.location.y });
           block.dragBoundFunc(pos => this.setDragBoundFunc(block, pos));
           this.blocksService.getFlowboards().forEach(board => {
-            if (board._id === blockData.board_id) {
+            if (board._id === blockData.boardId) {
               board.add(block);
             }
           })
@@ -798,7 +808,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     })
   }
 
-  // function restrict block in border of flowboard 
+  // function restrict block in border of flowboard
   setDragBoundFunc(flow, pos) {
     return {
       x: pos.x <= (flow.parent.position().x + GridSizes.flowboard_cell) * (this.zoomInPercent / 100) ? (flow.parent.position().x + GridSizes.flowboard_cell) * (this.zoomInPercent / 100)
@@ -827,10 +837,10 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       }
     }
     let newFlow = new Konva.Group({
-      x: boardData ? boardData.x : newX,
-      y: boardData ? boardData.y : newY,
-      width: boardData ? boardData.width : FlowboardSizes.newFlowWidth,
-      height: boardData ? boardData.height : FlowboardSizes.newFlowHeight,
+      x: boardData ? boardData.location.x : newX,
+      y: boardData ? boardData.location.y : newY,
+      width: boardData ? boardData.sizes.width : FlowboardSizes.newFlowWidth,
+      height: boardData ? boardData.sizes.height : FlowboardSizes.newFlowHeight,
       //draggable: true,
       type: GroupTypes.Flowboard,
       name: boardData ? boardData.name : `new flowboard`,
@@ -850,10 +860,19 @@ export class CanvasComponent implements OnInit, AfterViewInit {
             {
               id: newFlow._id,
               name: newFlow.attrs.name,
-              x: newFlow.attrs.x,
-              y: newFlow.attrs.y,
-              width: newFlow.attrs.width,
-              height: newFlow.attrs.height
+              location: {
+                x: newFlow.attrs.x,
+                y: newFlow.attrs.y
+              },
+              state: DataState.ACTIVE,
+              description: 'description',
+              colorId: 1,
+              imageId: 1,
+              formId: 1,
+              sizes: {
+                width: newFlow.attrs.width,
+                height: newFlow.attrs.height
+              }
             } as Board);
         }
       });
@@ -870,7 +889,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   }
 
   placeForPasteInsideFlowboard = (flowboard: Group) => {
-    //if we paste copied block we chose place 
+    //if we paste copied block we chose place
     if (this.currentCopiedGroup.getChildren().length > 0 && this.currentCopiedGroup.isVisible()) {
       this.setPositionForGroup(this.currentCopiedGroup, true);
       if (this.checkIsGroupInFlow(flowboard, this.currentCopiedGroup)) {
