@@ -3,36 +3,24 @@ import { HttpClient } from '@angular/common/http';
 import { Subject, BehaviorSubject } from 'rxjs';
 import { ICurrentLineToDraw } from '../luwfy-canvas/shapes-interface';
 
-
 const apiUrl = "https://sandboxcrm.openax.com/fake-api";
 // init
 @Injectable({
   providedIn: 'root'
 })
 
-
-
 export class HttpClientService {
-
   //TODO  change interfaces
   httpResponsePayload: Subject<any> = new Subject<any>();
 
-
-
-
-  constructor(private http: HttpClient) {
-
-  }
+  constructor(private http: HttpClient) { }
 
   getInitialData() {
     //TODO  change interfaces
-    this.http.get(`${apiUrl}/initStores`)
     this.http.get(`${apiUrl}/initStores`).subscribe((dataPayload: any) => {
-      console.log('dataPayload INIT', dataPayload);
       this.httpResponsePayload.next(dataPayload);
     }, error => {
       console.log('dataPayload INIT ERROR', error);
-
     });
   }
 
@@ -42,22 +30,13 @@ export class HttpClientService {
       this.httpResponsePayload.next(dataPayload);
     }, error => {
       console.log('dataPayload INIT ERROR', error);
-
     });
   }
   getPaletteData() {
     this.http.get(`${apiUrl}/palette`).subscribe((dataPayload: any) => {
-
-      console.log('dataPayload PALETTE', dataPayload);
       this.httpResponsePayload.next(dataPayload);
     }, error => {
       console.log('dataPayload INIT ERROR', error);
-
     });
   }
-
-
-
-
-
 }

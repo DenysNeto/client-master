@@ -2,11 +2,10 @@ import { Injectable } from '@angular/core';
 import { StageComponent } from 'ng2-konva';
 import { Group } from 'konva/types/Group';
 import Konva from 'konva';
-import { ButtonsTypes, CircleTypes, GroupTypes, IActiveWrapperBlock, ICircleCustom, ICurrentLineToDraw, IGroupCustom, InputBlocksInterface, IPathCustom } from '../luwfy-canvas/shapes-interface';
+import { ButtonsTypes, CircleTypes, GroupTypes, IActiveWrapperBlock, ICircleCustom, ICurrentLineToDraw, IGroupCustom, IPathCustom } from '../luwfy-canvas/shapes-interface';
 import ShapeCreator from '../luwfy-canvas/ShapesCreator';
 import { ButtonSizes, FlowboardSizes, GridSizes, ShapesSizes, ShapesSizes as sizes, SwitcherSizes } from '../luwfy-canvas/sizes';
 import { theme } from '../luwfy-canvas/theme';
-import KonvaUtil from '../luwfy-canvas/konva-util';
 import { Layer } from 'konva/types/Layer';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { Collection } from 'konva/types/Util';
@@ -38,7 +37,7 @@ export class CanvasService {
     private testStartStop: TestStartStop,
     private iDBService: IdbService
   ) {
-    this.blocksArr = this.blocksService.getBlocks() as InputBlocksInterface[];
+    // this.blocksArr = this.blocksService.getBlocks() as InputBlocksInterface[];
   }
 
   currentLineToDraw: ICurrentLineToDraw = {
@@ -131,7 +130,7 @@ export class CanvasService {
 
   fileNameDialogRef: MatDialogRef<ModalPropComponent>;
 
-  blocksArr: InputBlocksInterface[];
+  blocksArr: any;
 
   isElem() {
     return this.activePathsArr.length > 0;
@@ -198,7 +197,7 @@ export class CanvasService {
         let deltaY = event.target.parent.attrs.y - current_path_group.attrs.y;
         current_path.setAttr(
           'data',
-          KonvaUtil.generateLinkPath(
+          ShapeCreator.generateLinkPath(
             start_circle.attrs.x,
             start_circle.attrs.y,
             event.target.parent.attrs.x - current_path_group.attrs.x,
@@ -528,7 +527,7 @@ export class CanvasService {
             let deltaY = temp_start_point_group.getAbsolutePosition().y - event.target.attrs.y + temp_start_circle.attrs.y - temp_end_point_circle.attrs.y;
             elem.setAttr(
               'data',
-              KonvaUtil.generateLinkPath(
+              ShapeCreator.generateLinkPath(
                 temp_start_point_group.getAbsolutePosition().x / (this._currentZoom / 100) - event.target.attrs.x + temp_start_circle.attrs.x - event.target.parent.attrs.x,
                 temp_start_point_group.getAbsolutePosition().y / (this._currentZoom / 100) - event.target.attrs.y + temp_start_circle.attrs.y - event.target.parent.attrs.y,
                 temp_end_point_circle.attrs.x,
@@ -554,7 +553,7 @@ export class CanvasService {
             let deltaY = temp_start_point_group.getAbsolutePosition().y - temp_start_point_group.attrs.y + temp_start_circle.attrs.y;
             elem.setAttr(
               'data',
-              KonvaUtil.generateLinkPath(
+              ShapeCreator.generateLinkPath(
                 temp_start_point_group.getAbsolutePosition().x / (this._currentZoom / 100) - temp_start_point_group.attrs.x + temp_start_circle.attrs.x - event.target.parent.attrs.x,
                 temp_start_point_group.getAbsolutePosition().y / (this._currentZoom / 100) - temp_start_point_group.attrs.y + temp_start_circle.attrs.y - event.target.parent.attrs.y,
                 event.target.attrs.x - temp_start_point_group.attrs.x,
@@ -608,7 +607,7 @@ export class CanvasService {
   }
 
   // function add all ports (input, output, error)
-  createPorts(blockVariables: InputBlocksInterface, temp_group: Group, height: number, blockDataID?: number, portsData?: FlowPort[]) {
+  createPorts(blockVariables, temp_group: Group, height: number, blockDataID?: number, portsData?: FlowPort[]) {
     if (blockDataID) {
       portsData.forEach((port: FlowPort) => {
         if (port.flowBlockId === blockDataID) {

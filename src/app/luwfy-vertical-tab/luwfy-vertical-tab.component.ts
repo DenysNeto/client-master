@@ -1,9 +1,9 @@
-import {Component, OnInit} from '@angular/core';
-import {RegistryService} from '../services/registry.service';
-import {BlocksService} from '../services/blocks.service';
-import {ICurrentLineToDraw, InputBlocksInterface} from '../luwfy-canvas/shapes-interface';
-import {BehaviorSubject, Subject} from 'rxjs';
-import {CanvasService} from '../services/canvas.service';
+import { Component, OnInit } from '@angular/core';
+import { RegistryService } from '../services/registry.service';
+import { BlocksService } from '../services/blocks.service';
+import { CanvasService } from '../services/canvas.service';
+import { PaletteElement, Color, Image, Category, DataStorages } from '../services/indexed-db.interface';
+import { IdbService } from '../services/indexed-db.service';
 
 @Component({
   selector: 'luwfy-vertical-tab',
@@ -12,13 +12,36 @@ import {CanvasService} from '../services/canvas.service';
 })
 export class LuwfyVerticalTabComponent implements OnInit {
 
-  blocksArr: InputBlocksInterface[];
+  categories: Category[];
+  palettes: PaletteElement[];
+  colors: Color[];
+  images: Image[];
 
-  constructor(private registryService: RegistryService, private blocksService: BlocksService, private canvasService: CanvasService) {
+  constructor(private registryService: RegistryService, private canvasService: CanvasService, private iDBService: IdbService) {
+
   }
 
   ngOnInit() {
-    this.blocksArr = this.blocksService.getBlocks() as InputBlocksInterface[];
+    this.iDBService.getAllData(DataStorages.PALLETE_ELEMENTS).then(data => {
+      if (data) {
+        this.palettes = data;
+      }
+    });
+    this.iDBService.getAllData(DataStorages.CATEGORIES).then(data => {
+      if (data) {
+        this.categories = data;
+      }
+    });
+    this.iDBService.getAllData(DataStorages.COLORS).then(data => {
+      if (data) {
+        this.colors = data;
+      }
+    });
+    this.iDBService.getAllData(DataStorages.IMAGES).then(data => {
+      if (data) {
+        this.images = data;
+      }
+    });
   }
 
   dragEvent(event: any) {
@@ -30,4 +53,14 @@ export class LuwfyVerticalTabComponent implements OnInit {
   dragFinish(event: any) {
     this.canvasService.dragFinished.next(true);
   }
+
+  getColor(colorId) {
+    return this.colors.forEach((color: Color) => {
+      if (colorId === color.id) {
+        return color.value;
+      }
+    })
+  }
+
+
 }

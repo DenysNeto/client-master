@@ -19,9 +19,8 @@
   <!--  Konva window-->
   <div id="scroll-container" #scroll_container>
     <div id="large-container">
-      <ko-stage #stage [config]="KonvaUtil.createStage({width: konvaSize.width, height: konvaSize.height})"
-        (dragover)="handleDragOver($event)" (mouseup)="handleMouseUp($event)" (mousedown)="handleMouseDown($event)"
-        (mousemove)="handleMouseMove($event)">
+      <ko-stage #stage [config]="configStage" (dragover)="handleDragOver($event)" (mouseup)="handleMouseUp($event)"
+        (mousedown)="handleMouseDown($event)" (mousemove)="handleMouseMove($event)">
         <!--    Layer where created our block schemas-->
         <ko-layer #mainLayer>
         </ko-layer>

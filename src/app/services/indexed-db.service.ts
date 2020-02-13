@@ -77,7 +77,7 @@ export class IdbService {
     }
 
     async getStoreFromIDBByNameAndClear(storeName: string) {
-
+        await this.connectionToIdb();
         const tx = await this.localIDB.transaction(storeName, 'readwrite');
         return tx ? await tx.objectStore(storeName).clear() : -1;
     }

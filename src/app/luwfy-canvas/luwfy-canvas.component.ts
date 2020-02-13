@@ -1,10 +1,9 @@
 import { AfterViewInit, Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
 import { RegistryService } from '../services/registry.service';
-import KonvaUtil from './konva-util';
 import { theme } from './theme';
 import Konva from 'konva';
 import { CanvasService } from '../services/canvas.service';
-import { CircleTypes, dataInTabLayer, GroupTypes, ButtonsTypes, IActiveWrapperBlock, ICurrentLineToDraw, IGroupCustom, IPathCustom, ICircleCustom } from './shapes-interface';
+import { CircleTypes, dataInTabLayer, GroupTypes, ButtonsTypes, IActiveWrapperBlock, ICurrentLineToDraw, IGroupCustom, IPathCustom } from './shapes-interface';
 import { Collection } from 'konva/types/Util';
 import { MatDialog, MatMenuTrigger } from '@angular/material';
 import { BlocksRedactorService } from '../popups/blocks-redactor.service';
@@ -24,8 +23,8 @@ import { StageComponent } from 'ng2-konva';
 import { LocalNotificationService, NotificationTypes } from '../popups/local-notification/local-notification.service';
 import { IdbService } from '../services/indexed-db.service';
 import { DataStorages, FlowBlock, FlowPort, Board, DataState, FlowRelation } from '../services/indexed-db.interface';
-import { Path } from 'konva/types/shapes/Path';
 import { HttpClientService } from '../services/http-client.service';
+import { Observable, of } from 'rxjs';
 
 @Component({
   selector: 'luwfy-canvas',
@@ -57,15 +56,10 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   lines = [];
   currentId: string;
   idChangedTrigger: boolean = false;
-  KonvaUtil = KonvaUtil;
   subTabs: dataInTabLayer[] = [];
   menuOfViews: string[] = [];
   zoomInPercent: number = 100;
   activeTab: dataInTabLayer;
-  konvaSize = {
-    width: window.innerWidth + KonvaStartSizes.padding * 2,
-    height: window.innerHeight + KonvaStartSizes.padding * 2
-  };
 
   private interval: any;
   private isMouseDown: boolean;
@@ -74,7 +68,10 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   private calledMenuButton: any;
   private selectedBlocks = [];
   private copiedBlocks = [];
-
+  public configStage: Observable<any> = of({
+    width: window.innerWidth + KonvaStartSizes.padding * 2,
+    height: window.innerHeight + KonvaStartSizes.padding * 2
+  });
 
   currentCopiedGroup: IGroupCustom = new Konva.Group({
     x: 0,
@@ -161,7 +158,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
               });
               elem.setAttr(
                 'data',
-                KonvaUtil.generateLinkPath(
+                ShapeCreator.generateLinkPath(
                   temp_end_point_circle.attrs.x,
                   temp_end_point_circle.attrs.y,
                   temp_start_point_group.getAbsolutePosition().x -
@@ -188,7 +185,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
                 }
               });
               elem.setAttr('data',
-                KonvaUtil.generateLinkPath(
+                ShapeCreator.generateLinkPath(
                   temp_start_point_circle.attrs.x,
                   temp_start_point_circle.attrs.y,
                   event.target.getAbsolutePosition().x -
@@ -518,7 +515,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         });
         if (current_path) {
           current_path.setAttr('data',
-            KonvaUtil.generateLinkPath(
+            ShapeCreator.generateLinkPath(
               this.currentLineToDraw.prevX - current_group.getPosition().x - 20,
               this.currentLineToDraw.prevY - current_group.getPosition().y,
               Math.ceil((pos.x / (this.zoomInPercent / 100) - current_group.parent.getPosition().x - current_group.getPosition().x) / 5) * 5,
@@ -824,7 +821,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
                 endCircle = circle;
               }
             });
-            let lineData = KonvaUtil.generateLinkPath(
+            let lineData = ShapeCreator.generateLinkPath(
               startCircle.attrs.x,
               startCircle.attrs.y,
               endCircle.parent.attrs.x - startCircle.parent.attrs.x,

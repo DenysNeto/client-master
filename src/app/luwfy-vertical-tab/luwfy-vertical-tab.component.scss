@@ -44,7 +44,6 @@ $test_color: #8e05ff;
   overflow: auto;
 }
 
-
 // Styles for Switch blocks
 
 .block {
@@ -66,6 +65,8 @@ $test_color: #8e05ff;
   margin: 0 auto 10px;
   cursor: pointer;
 
+ 
+
   .input-port {
     position: relative;
     left: -12px;
@@ -75,13 +76,6 @@ $test_color: #8e05ff;
     border: 2px solid;
     border-radius: 10px;
     float: left;
-  }
-
-  svg {
-    position: relative;
-    float: right;
-    top: 13px;
-    right: 15px;
   }
 
   .output-port {

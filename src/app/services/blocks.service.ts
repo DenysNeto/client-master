@@ -1,18 +1,18 @@
 import { Injectable } from '@angular/core';
-import data from '../../assets/document.json';
 import { Group } from 'konva/types/Group';
 import { BehaviorSubject } from 'rxjs';
+import { PaletteElement, Category, Image, Color, DataStorages } from './indexed-db.interface';
+import { IdbService } from './indexed-db.service';
 
 @Injectable({
   providedIn: 'root'
 })
 
 export class BlocksService {
-  subjectArray: BehaviorSubject<any>;
   // variable will take JSON from server and build
   // block whick we can see on left pannel
-  private blocks = data;
   private flowboards: Group[] = [];
+  subjectArray: BehaviorSubject<any>;
   dataInBlock: any;
 
   private codData = {
@@ -20,12 +20,40 @@ export class BlocksService {
     codText: 'some code'
   };
 
-  constructor() {
+  constructor(private iDBService: IdbService) {
     this.subjectArray = new BehaviorSubject<Group[]>(this.flowboards);
   }
 
-  getBlocks() {
-    return this.blocks;
+  getPallets() {
+    this.iDBService.getAllData(DataStorages.PALLETE_ELEMENTS).then(data => {
+      if (data) {
+        return data;
+      }
+    });
+  }
+
+  getCategories() {
+    return this.iDBService.getAllData(DataStorages.CATEGORIES).then(data => {
+      if (data) {
+        return data;
+      }
+    });
+  }
+
+  getImages() {
+    return this.iDBService.getAllData(DataStorages.IMAGES).then(data => {
+      if (data) {
+        return data;
+      }
+    });
+  }
+
+  getColors() {
+    return this.iDBService.getAllData(DataStorages.COLORS).then(data => {
+      if (data) {
+        return data;
+      }
+    });
   }
 
   getCodData() {

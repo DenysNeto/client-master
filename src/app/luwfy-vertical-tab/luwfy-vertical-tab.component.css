@@ -40,13 +40,6 @@
   float: left;
 }
 
-.function svg {
-  position: relative;
-  float: right;
-  top: 13px;
-  right: 15px;
-}
-
 .function .output-port {
   position: relative;
   left: 70px;

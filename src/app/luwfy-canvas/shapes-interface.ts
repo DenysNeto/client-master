@@ -115,20 +115,6 @@ export interface BtnEventBlock {
   color_disabled: string
 }
 
-// Interfaces for creating group from JSON
-// checking data we must understand which
-// shape we took and create it.
-export interface InputBlocksInterface {
-  type: string,
-  label: string,
-  inputs: number,
-  outputs: number,
-  output_errors: number,
-  color: string,
-  setting_icons: SettingIcons,
-  btn_event_block: BtnEventBlock,
-  blockData: any
-}
 
 export interface dataInTabLayer {
   label: string,

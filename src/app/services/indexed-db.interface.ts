@@ -114,7 +114,7 @@ export interface Image {
     formId: number
 }
 
-export interface Colors {
+export interface Color {
     id: number,
     name: string,
     value: any,
