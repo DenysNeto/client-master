@@ -2,7 +2,7 @@ import { theme } from "./theme";
 import { CircleTypes } from './shapes-interface';
 import { NotificationTypes } from '../popups/local-notification/local-notification.service';
 import ShapeCreator from './ShapesCreator';
-import { DataStorages, FlowBlock, FlowPort, DataState } from '../services/indexed-db.interface';
+import { DataStorages, FlowBlock, FlowPort, DataState, FlowRelation } from '../services/indexed-db.interface';
 
 
 const ShapesClipboard = {
@@ -156,7 +156,6 @@ const ShapesClipboard = {
                                         height: pasteObj.attrs.height
                                     }
                                 } as FlowBlock);
-
                             pasteObj.children.toArray().forEach(async elem => {
                                 if (elem.attrs.type === CircleTypes.Input || elem.attrs.type === CircleTypes.Output || elem.attrs.type === CircleTypes.Error) {
                                     await iDBService.addData(DataStorages.FLOW_PORTS,
@@ -171,6 +170,17 @@ const ShapesClipboard = {
                                             state: DataState.ACTIVE,
                                             colorId: 1
                                         } as FlowPort)
+                                } else if (elem.className === 'Path') {
+                                    await iDBService.addData(DataStorages.FLOW_RELATIONS, {
+                                        id: elem._id,
+                                        startPortId: elem.attrs.start_info.start_circle_id,
+                                        endPortId: elem.attrs.end_info.end_circle_id,
+                                        colorId: 1,
+                                        state: DataState.ACTIVE,
+                                        name: 'relation',
+                                        description: 'description'
+                                    } as FlowRelation);
+
                                 }
                             })
                         } else {

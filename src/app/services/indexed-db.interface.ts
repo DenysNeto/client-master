@@ -1,16 +1,16 @@
 import { CircleTypes } from '../luwfy-canvas/shapes-interface';
 
 export enum DataStorages {
-    PALLETE_ELEMENTS = 'pallete_elements',
-    FLOW_BLOCKS = 'flow_blocks',
-    FLOW_PORTS = 'flow_ports',
-    FLOW_RELATIONS = 'flow_relations',
-    BOARDS = 'boards',
-    EVENTS = 'events',
-    FORMS = 'forms',
-    CATEGORIES = 'categories',
-    IMAGES = 'images',
-    COLORS = 'colors'
+    PALLETE_ELEMENTS = 'PaletteElements',
+    FLOW_BLOCKS = 'FlowBlocks',
+    FLOW_PORTS = 'FlowPorts',
+    FLOW_RELATIONS = 'FlowRelations',
+    BOARDS = 'Boards',
+    EVENTS = 'Events',
+    FORMS = 'Forms',
+    CATEGORIES = 'Categories',
+    IMAGES = 'Images',
+    COLORS = 'Colors'
 }
 
 export enum DataState {
@@ -80,6 +80,7 @@ export interface Board {
 
 export interface PaletteElement {
     id: number,
+    categoryId: number,
     name: string,
     imageId: number,
     colorId: number,
@@ -107,6 +108,7 @@ export interface Category {
 export interface Image {
     id: number,
     name: string,
+    value: string,
     description: string,
     state: DataState,
     formId: number

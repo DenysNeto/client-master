@@ -1,7 +1,7 @@
 import Konva from 'konva';
 import { theme } from './theme';
 import { FlowboardSizes, ShapesSizes, ShapesSizes as sizes } from './sizes';
-import { BtnEventBlock, ButtonsTypes, CircleTypes, GroupTypes, IRectCustom, IStartPointPathInfo, SettingIcons } from './shapes-interface';
+import { BtnEventBlock, ButtonsTypes, CircleTypes, GroupTypes, IStartPointPathInfo, SettingIcons, IRectCustom } from './shapes-interface';
 
 
 const ShapeCreator = {
@@ -56,12 +56,11 @@ const ShapeCreator = {
     });
   },
 
-  createLine: (start_info: IStartPointPathInfo, strokeColor?) => {
+  createLine: (start_info?: IStartPointPathInfo, strokeColor?) => {
     return new Konva.Path({
       data: '',
       start_info,
       attached: true,
-      custom_id_output: 0,
       strokeWidth: 3,
       lineJoin: 'round',
       opacity: 1,

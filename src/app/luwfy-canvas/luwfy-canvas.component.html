@@ -20,8 +20,8 @@
   <div id="scroll-container" #scroll_container>
     <div id="large-container">
       <ko-stage #stage [config]="KonvaUtil.createStage({width: konvaSize.width, height: konvaSize.height})"
-        (dragover)="handleDragOver($event)" (click)="handleClickEvent($event)" (mouseup)="handleMouseUp($event)"
-        (mousedown)="handleMouseDown($event)" (mousemove)="handleMouseMove($event)">
+        (dragover)="handleDragOver($event)" (mouseup)="handleMouseUp($event)" (mousedown)="handleMouseDown($event)"
+        (mousemove)="handleMouseMove($event)">
         <!--    Layer where created our block schemas-->
         <ko-layer #mainLayer>
         </ko-layer>
@@ -46,10 +46,14 @@
     </div>
 
     <div class="function_buttons" *ngIf="activeTab === subTabs[0]">
-      <button class="chat-button" mat-mini-fab color="primary" title="Open chat"><mat-icon>chat</mat-icon></button>
+      <button class="chat-button" mat-mini-fab color="primary" title="Open chat">
+        <mat-icon>chat</mat-icon>
+      </button>
       <button mat-fab color="primary" (click)="addBoardToLayer()" title="Add flowboard"><span
           style="font-size:xx-large">+</span></button>
-      <button class="save-button" mat-mini-fab color="primary" title="Save project" (click)="saveProject()"><mat-icon>save</mat-icon></button>
+      <button class="save-button" mat-mini-fab color="primary" title="Save project" (click)="saveProject()">
+        <mat-icon>save</mat-icon>
+      </button>
     </div>
 
   </div>

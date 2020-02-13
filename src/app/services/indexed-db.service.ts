@@ -34,13 +34,13 @@ export class IdbService {
                 if (!localIDB.objectStoreNames.contains(DataStorages.EVENTS)) {
                     localIDB.createObjectStore(DataStorages.EVENTS, { keyPath: 'id' });
                 }
-                if (!localIDB.objectStoreNames.contains(DataStorages.EVENTS)) {
+                if (!localIDB.objectStoreNames.contains(DataStorages.CATEGORIES)) {
                     localIDB.createObjectStore(DataStorages.CATEGORIES, { keyPath: 'id' });
                 }
-                if (!localIDB.objectStoreNames.contains(DataStorages.EVENTS)) {
+                if (!localIDB.objectStoreNames.contains(DataStorages.IMAGES)) {
                     localIDB.createObjectStore(DataStorages.IMAGES, { keyPath: 'id' });
                 }
-                if (!localIDB.objectStoreNames.contains(DataStorages.EVENTS)) {
+                if (!localIDB.objectStoreNames.contains(DataStorages.COLORS)) {
                     localIDB.createObjectStore(DataStorages.COLORS, { keyPath: 'id' });
                 }
             },

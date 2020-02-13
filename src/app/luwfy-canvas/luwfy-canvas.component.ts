@@ -23,7 +23,8 @@ import { TestStartStop } from '../services/testStartStop';
 import { StageComponent } from 'ng2-konva';
 import { LocalNotificationService, NotificationTypes } from '../popups/local-notification/local-notification.service';
 import { IdbService } from '../services/indexed-db.service';
-import { DataStorages, FlowBlock, FlowPort, Board, DataState } from '../services/indexed-db.interface';
+import { DataStorages, FlowBlock, FlowPort, Board, DataState, FlowRelation } from '../services/indexed-db.interface';
+import { Path } from 'konva/types/shapes/Path';
 
 @Component({
   selector: 'luwfy-canvas',
@@ -58,6 +59,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   subTabs: dataInTabLayer[] = [];
   menuOfViews: string[] = [];
   zoomInPercent: number = 100;
+  activeTab: dataInTabLayer;
   konvaSize = {
     width: window.innerWidth + KonvaStartSizes.padding * 2,
     height: window.innerHeight + KonvaStartSizes.padding * 2
@@ -67,11 +69,9 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   private isMouseDown: boolean;
   private oldStageWidth: number;
   private oldStageHeight: number;
-  private activeTab: dataInTabLayer;
   private calledMenuButton: any;
   private selectedBlocks = [];
   private copiedBlocks = [];
-  private lastSavedStage: Stage;
 
 
   currentCopiedGroup: IGroupCustom = new Konva.Group({
@@ -254,24 +254,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       y: posRect.y1
     });
   }
-
-  handleClickEvent = event => {
-    if (this.currentLineToDraw.isLineDrawable) {
-      this.currentLineToDraw.isLineDrawable = false;
-      let current_group = this.mainLayer.getStage().findOne(elem => {
-        if (elem._id === this.currentLineToDraw.groupId) {
-          return elem;
-        }
-      });
-      // let current_path = current_group.findOne(elem => {
-      //   if (elem.attrs.custom_id && elem.attrs.custom_id.includes('line')) {
-      //     return elem;
-      //   }
-      // });
-      this.canvasService.resetActivePathArr();
-      return 0;
-    }
-  };
 
   handleDragOver = e => {
     if (this.idChangedTrigger) {
@@ -764,14 +746,19 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     this.mainLayer.getStage().add(this.currentCopiedGroup);
     // if we have few selected blocks and click on free space 
     // all blocks became unselected
-    this.stage.getStage().on('click', event => {
+    this.stage.getStage().on('mouseup', event => {
       if (this.selectedBlocks.length > 0) {
         this.selectedBlocks.forEach(elem => {
           ShapesClipboard.returnColorAfterSelect(elem);
         });
+        this.selectedBlocks = [];
+      } else if (this.copiedBlocks.length > 0) {
+        this.copiedBlocks.forEach(elem => {
+          ShapesClipboard.returnColorAfterSelect(elem);
+        });
       }
-      this.selectedBlocks = [];
     })
+
     this.scrollContainer.nativeElement.addEventListener('scroll', this.repositionStage());
     this.repositionStage();
     this.activeTab.startStageSize.oldWidth = this.stage.getStage().width();
@@ -803,6 +790,48 @@ export class CanvasComponent implements OnInit, AfterViewInit {
           })
         })
         this.blocksService.pushFlowboardsChanges();
+      }).then(() => {
+        this.iDBService.getAllData(DataStorages.FLOW_RELATIONS).then(relationsData => {
+          relationsData.forEach((path: FlowRelation) => {
+            let startCircle;
+            let endCircle;
+            this.mainLayer.getStage().find('Circle').forEach(circle => {
+              if (path.startPortId === circle._id) {
+                startCircle = circle;
+              } else if (path.endPortId === circle._id) {
+                endCircle = circle;
+              }
+            });
+            let lineData = KonvaUtil.generateLinkPath(
+              startCircle.attrs.x,
+              startCircle.attrs.y,
+              endCircle.parent.attrs.x - startCircle.parent.attrs.x,
+              endCircle.parent.attrs.y - startCircle.parent.attrs.y + endCircle.attrs.y,
+              1);
+            let line = ShapeCreator.createLine();
+            startCircle.parent.add(line);
+            line.setAttrs({
+              'zIndex': 1,
+              'data': lineData,
+              start_info: {
+                start_circle_id: startCircle._id,
+                start_group_id: startCircle.parent._id,
+                start_flowboard_id: startCircle.parent.parent._id
+              },
+              end_info: {
+                end_circle_id: endCircle._id,
+                end_group_id: endCircle.parent._id,
+                end_flowboard_id: endCircle.parent.parent._id
+              }
+            })
+            line._id = path.id;
+            this.canvasService.setClickEventForPath(line as IPathCustom);
+            this.canvasService.setGradientForPath(line, startCircle.position(), startCircle.attrs.stroke,
+              { x: endCircle.parent.attrs.x - startCircle.parent.attrs.x, y: endCircle.parent.attrs.y - startCircle.parent.attrs.y + endCircle.attrs.y },
+              endCircle.attrs.stroke);
+            this.mainLayer.getStage().draw();
+          })
+        })
       })
     })
   }
@@ -850,7 +879,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     newFlow._id = boardData ? boardData.id : ShapeCreator.randomIdNumber();
     this.mainLayer.getStage().add(newFlow);
     this.blocksService.addFlowboard(newFlow);
-
     // TODO: save board to DB
     this.iDBService.checkIsKeyExist(DataStorages.BOARDS, newFlow._id)
       .then(res => {
@@ -875,7 +903,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
             } as Board);
         }
       });
-
     this.subTabs[0].layerData = [];
     this.subTabs[0].layerData = this.mainLayer.getStage().children.toArray();
     setTimeout(() => {

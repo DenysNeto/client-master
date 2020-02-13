@@ -196,19 +196,18 @@ export class CanvasService {
         });
         let deltaX = event.target.parent.attrs.x - current_path_group.attrs.x;
         let deltaY = event.target.parent.attrs.y - current_path_group.attrs.y;
+        console.log(input_circle);
+
         current_path.setAttr(
           'data',
           KonvaUtil.generateLinkPath(
             start_circle.attrs.x,
             start_circle.attrs.y,
             event.target.parent.attrs.x - current_path_group.attrs.x,
-            event.target.parent.attrs.y -
-            current_path_group.attrs.y +
-            input_circle.attrs.y,
+            event.target.parent.attrs.y - current_path_group.attrs.y + input_circle.attrs.y,
             this.setParamForLine(deltaX, deltaY)
           )
         );
-        current_path.setAttr('custom_id_output', event.target._id);
         current_path.setAttr('end_info', {
           end_group_id: event.target.parent._id,
           end_circle_id: input_circle._id,
@@ -221,19 +220,13 @@ export class CanvasService {
           parent: event.target.parent as Group
         });
 
-        // add start and end points for gradient for path
-        (current_path as any).strokeLinearGradientStartPoint({
-          x: start_circle.attrs.x,
-          y: start_circle.attrs.y
-        });
-        (current_path as any).strokeLinearGradientEndPoint({
-          x: event.target.parent.attrs.x - current_path_group.attrs.x,
-          y: event.target.parent.attrs.y - current_path_group.attrs.y + input_circle.attrs.y
-        });
+        this.setGradientForPath(current_path as Path,
+          { x: start_circle.attrs.x, y: start_circle.attrs.y },
+          current_path.parent.parent.findOne(elem => elem._id === current_path.attrs.start_info.start_circle_id).attrs.stroke,
+          { x: event.target.parent.attrs.x - current_path_group.attrs.x, y: event.target.parent.attrs.y - current_path_group.attrs.y + input_circle.attrs.y },
+          current_path.parent.parent.findOne(elem => elem._id === current_path.attrs.end_info.end_circle_id).attrs.fill
+        );
 
-        let startColor = current_path.parent.parent.findOne(elem => elem._id === current_path.attrs.start_info.start_circle_id).attrs.stroke;
-        let endColor = current_path.parent.parent.findOne(elem => elem._id === current_path.attrs.end_info.end_circle_id).attrs.fill;
-        (current_path as any).strokeLinearGradientColorStops([0, startColor, 1, endColor]);
         if (!current_path.attrs.end_info || current_path.attrs.start_info.start_group_id === current_path.attrs.end_info.end_group_id) {
           current_path.remove();
         }
@@ -255,14 +248,7 @@ export class CanvasService {
         return 0;
       }
     });
-    group.on('mouseenter', event => {
-      if (this.currentLineToDraw.isLineDrawable) {
-      }
-    });
-    group.on('mouseleave', event => {
-      if (event.target.parent.attrs.type && event.target.parent.attrs.type.includes('output')) {
-      }
-    });
+
     if (group.attrs.type === GroupTypes.Block) {
       group.on('dragmove', event => {
         this.checkTheGroupNearBorder(event.target as IGroupCustom);
@@ -273,6 +259,7 @@ export class CanvasService {
           event.target.setAttr('collision', false);
         }
       });
+
       group.on('dragend', event => {
         if (event.target.attrs.collision) {
           event.target.attrs.copyPaths.forEach(cp => {
@@ -321,6 +308,19 @@ export class CanvasService {
           } as FlowBlock);
       });
     }
+  }
+
+  setGradientForPath(path: Path, startCircleLocation, startCircleColor, endCircleLocation, endCircleColor) {
+    // add start and end points for gradient for path
+    (path as any).strokeLinearGradientStartPoint({
+      x: startCircleLocation.x,
+      y: startCircleLocation.y
+    });
+    (path as any).strokeLinearGradientEndPoint({
+      x: endCircleLocation.x,
+      y: endCircleLocation.y
+    });
+    (path as any).strokeLinearGradientColorStops([0, startCircleColor, 1, endCircleColor]);
   }
 
   checkTheGroupNearBorder(current_group: IGroupCustom) {
@@ -421,33 +421,21 @@ export class CanvasService {
   }
 
 
-  setClickEventForPath(path: IPathCustom, mainLayer: Layer, currentActiveGroup: Group) {
+  setClickEventForPath(path: IPathCustom) {
     path.on('mousedown', event => {
-      if (event.evt.ctrlKey) { }
-    });
-    path.on('mouseup', event => {
-      if (this.currentLineToDraw.isLineDrawable) {
-        event.cancelBubble = true;
-      }
-    });
-    path.on('mouseenter', event => { });
-    path.on('click', event => {
       if (event.evt.ctrlKey) {
-        if (currentActiveGroup.hasChildren()) {
-          event.cancelBubble = true;
-          return 0;
-        }
-        this.activePathsArr.push(event.target as IPathCustom);
-        event.cancelBubble = true;
-        this.activeWrapperBlock.isDraw = false;
-        this.undoRedoService.addAction({
-          action: ActionType.Select,
-          object: event.target as IPathCustom,
-          parent: event.target.parent as IGroupCustom
-        });
-        event.target.setAttr('stroke', theme.choose_group_color);
+
       }
-    });
+    })
+      .on('mouseenter', event => event.cancelBubble = true)
+      .on('click', event => {
+        if (event.evt.ctrlKey) {
+          this.activePathsArr.push(event.target as IPathCustom);
+          event.cancelBubble = true;
+          this.activeWrapperBlock.isDraw = false;
+          event.target.setAttr('stroke', theme.choose_group_color);
+        }
+      });
   }
 
   resetActivePathArr() {
@@ -477,22 +465,6 @@ export class CanvasService {
       return null;
     }
   }
-
-  // setClickEvent(group: IGroupCustom, mainLayer: Layer, currentActiveGroup: Group) {
-  //   group.on('click', event => {
-  //     event.cancelBubble = true;
-  //     if (event.evt.ctrlKey) {
-  //       event.target.parent.setAttr('x', event.target.parent.position().x - currentActiveGroup.position().x);
-  //       event.target.parent.setAttr('y', event.target.parent.position().y - currentActiveGroup.position().y);
-  //       currentActiveGroup.add(event.target.parent as Group);
-  //       event.target.parent.children.each(elem => {
-  //         elem.setAttr('stroke', 'yellow');
-  //         elem.setAttr('draggable', false);
-  //       });
-  //       event.target.parent.setAttr('draggable', false);
-  //     }
-  //   });
-  // }
 
   setParamForLine(deltaX: number, deltaY: number) {
     if (deltaX < 0) {
@@ -541,10 +513,7 @@ export class CanvasService {
       event.target.attrs.x = event.target.attrs.x % 20 > 10 ? event.target.attrs.x - (event.target.attrs.x % 20) + 20 : event.target.attrs.x - (event.target.attrs.x % 20);
       event.target.attrs.y = event.target.attrs.y % 20 > 10 ? event.target.attrs.y - (event.target.attrs.y % 20) + 20 : event.target.attrs.y - (event.target.attrs.y % 20);
       let isPathInGroup = this.isPathInGroup(event.target as Group);
-      let input_paths: Array<IPathCustom> = this.getAllInputLinesFromGroup(
-        mainLayer.getStage(),
-        event.target as Group | IGroupCustom
-      );
+      let input_paths: Array<IPathCustom> = this.getAllInputLinesFromGroup(mainLayer.getStage(), event.target as Group | IGroupCustom);
       if (isPathInGroup || input_paths) {
         let output_paths: Collection<IPathCustom> = this.getAllOutputLinesFromGroup(
           event.target as Group | IGroupCustom
@@ -562,16 +531,8 @@ export class CanvasService {
             elem.setAttr(
               'data',
               KonvaUtil.generateLinkPath(
-                temp_start_point_group.getAbsolutePosition().x /
-                (this._currentZoom / 100) -
-                event.target.attrs.x +
-                temp_start_circle.attrs.x -
-                event.target.parent.attrs.x,
-                temp_start_point_group.getAbsolutePosition().y /
-                (this._currentZoom / 100) -
-                event.target.attrs.y +
-                temp_start_circle.attrs.y -
-                event.target.parent.attrs.y,
+                temp_start_point_group.getAbsolutePosition().x / (this._currentZoom / 100) - event.target.attrs.x + temp_start_circle.attrs.x - event.target.parent.attrs.x,
+                temp_start_point_group.getAbsolutePosition().y / (this._currentZoom / 100) - event.target.attrs.y + temp_start_circle.attrs.y - event.target.parent.attrs.y,
                 temp_end_point_circle.attrs.x,
                 temp_end_point_circle.attrs.y,
                 -1 * this.setParamForLine(deltaX, deltaY)
@@ -596,20 +557,10 @@ export class CanvasService {
             elem.setAttr(
               'data',
               KonvaUtil.generateLinkPath(
-                temp_start_point_group.getAbsolutePosition().x /
-                (this._currentZoom / 100) -
-                temp_start_point_group.attrs.x +
-                temp_start_circle.attrs.x -
-                event.target.parent.attrs.x,
-                temp_start_point_group.getAbsolutePosition().y /
-                (this._currentZoom / 100) -
-                temp_start_point_group.attrs.y +
-                temp_start_circle.attrs.y -
-                event.target.parent.attrs.y,
+                temp_start_point_group.getAbsolutePosition().x / (this._currentZoom / 100) - temp_start_point_group.attrs.x + temp_start_circle.attrs.x - event.target.parent.attrs.x,
+                temp_start_point_group.getAbsolutePosition().y / (this._currentZoom / 100) - temp_start_point_group.attrs.y + temp_start_circle.attrs.y - event.target.parent.attrs.y,
                 event.target.attrs.x - temp_start_point_group.attrs.x,
-                event.target.attrs.y -
-                temp_start_point_group.attrs.y +
-                temp_input_circle.attrs.y,
+                event.target.attrs.y - temp_start_point_group.attrs.y + temp_input_circle.attrs.y,
                 this.setParamForLine(deltaX, deltaY)
               )
             );
@@ -665,14 +616,17 @@ export class CanvasService {
         if (port.flowBlockId === blockDataID) {
           if (port.type === CircleTypes.Input) {
             let input = ShapeCreator.createPortCircle(port.location.x, port.location.y, blockVariables.color, true);
+            input.setAttr('zIndex', 1000);
             input._id = port.id;
             temp_group.add(input); // add input
           } else if (port.type === CircleTypes.Output) {
             let output = ShapeCreator.createPortCircle(port.location.x, port.location.y, blockVariables.color, false);
+            output.setAttr('zIndex', 1000);
             output._id = port.id;
             temp_group.add(output); // add output
           } else {
             let errorPort = ShapeCreator.createErrorOutput(port.location.y, port.location.x);
+            errorPort.setAttr('zIndex', 1000);
             errorPort._id = port.id;
             temp_group.add(errorPort); // add error
           }
@@ -880,7 +834,7 @@ export class CanvasService {
           start_group_id: event.target.parent._id,
           start_flowboard_id: event.target.parent.parent._id
         }, event.target.attrs.stroke) as IPathCustom;
-        this.setClickEventForPath(line_temp, mainLayer, currentActiveGroup);
+        this.setClickEventForPath(line_temp);
         event.target.parent.add(line_temp);
         event.target.parent.setAttr('draggable', false);
         this.currentLineToDraw.isLineDrawable = true;
