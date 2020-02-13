@@ -3,6 +3,7 @@ import { openDB, deleteDB } from 'idb';
 import { DataStorages } from './indexed-db.interface';
 
 const DB_NAME = 'luwfy_IDB';
+const VERSION = 1;
 
 @Injectable({
     providedIn: "root"
@@ -14,7 +15,7 @@ export class IdbService {
     constructor() { }
 
     async connectionToIdb() {
-        this.localIDB = await openDB(DB_NAME, 1, {
+        this.localIDB = await openDB(DB_NAME, VERSION, {
             upgrade(localIDB) {
                 if (!localIDB.objectStoreNames.contains(DataStorages.PALLETE_ELEMENTS)) {
                     localIDB.createObjectStore(DataStorages.PALLETE_ELEMENTS, { keyPath: 'id' });
@@ -73,6 +74,12 @@ export class IdbService {
         const tx = await this.localIDB.transaction(target, 'readonly');
         const store = tx.objectStore(target);
         return await store.get(key);
+    }
+
+    async getStoreFromIDBByNameAndClear(storeName: string) {
+
+        const tx = await this.localIDB.transaction(storeName, 'readwrite');
+        return tx ? await tx.objectStore(storeName).clear() : -1;
     }
 
     async checkIsKeyExist(target: string, key: any) {

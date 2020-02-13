@@ -25,6 +25,7 @@ import { LocalNotificationService, NotificationTypes } from '../popups/local-not
 import { IdbService } from '../services/indexed-db.service';
 import { DataStorages, FlowBlock, FlowPort, Board, DataState, FlowRelation } from '../services/indexed-db.interface';
 import { Path } from 'konva/types/shapes/Path';
+import { HttpClientService } from '../services/http-client.service';
 
 @Component({
   selector: 'luwfy-canvas',
@@ -43,7 +44,8 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     private blocksService: BlocksService,
     private testStartStop: TestStartStop,
     private localNotificationService: LocalNotificationService,
-    private iDBService: IdbService
+    private iDBService: IdbService,
+    private httpClientService: HttpClientService,
   ) { }
 
   @ViewChild('stage', null) stage: Stage;
@@ -604,6 +606,27 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit() {
+    this.httpClientService.getInitialData();
+    //this.httpClientService.getFlowData();
+    this.httpClientService.getPaletteData();
+
+    console.log(' localIDB.objectStoreNames');
+    this.httpClientService.httpResponsePayload.subscribe(payloadData => {
+      if (payloadData.stores) {
+        for (let storeName in payloadData.stores) {
+          if (payloadData.stores[storeName].length > 0) {
+            //check if store created in database if no creates it
+            this.iDBService.connectionToIdb();
+            this.iDBService.getStoreFromIDBByNameAndClear(storeName);
+            payloadData.stores[storeName].forEach(storeElement => {
+              this.iDBService.addData(storeName, storeElement);
+            })
+          }
+        }
+
+      }
+    })
+
     this.subTabs = [
       {
         label: 'Main Project',
@@ -744,7 +767,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     this.currentActiveGroup.zIndex(1);
     this.mainLayer.getStage().add(this.currentLineToDraw.line);
     this.mainLayer.getStage().add(this.currentCopiedGroup);
-    // if we have few selected blocks and click on free space 
+    // if we have few selected blocks and click on free space
     // all blocks became unselected
     this.stage.getStage().on('mouseup', event => {
       if (this.selectedBlocks.length > 0) {
@@ -758,7 +781,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         });
       }
     })
-
     this.scrollContainer.nativeElement.addEventListener('scroll', this.repositionStage());
     this.repositionStage();
     this.activeTab.startStageSize.oldWidth = this.stage.getStage().width();
@@ -836,7 +858,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     })
   }
 
-  // function restrict block in border of flowboard 
+  // function restrict block in border of flowboard
   setDragBoundFunc(flow, pos) {
     return {
       x: pos.x <= (flow.parent.position().x + GridSizes.flowboard_cell) * (this.zoomInPercent / 100) ? (flow.parent.position().x + GridSizes.flowboard_cell) * (this.zoomInPercent / 100)
@@ -915,7 +937,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   }
 
   placeForPasteInsideFlowboard = (flowboard: Group) => {
-    //if we paste copied block we chose place 
+    //if we paste copied block we chose place
     if (this.currentCopiedGroup.getChildren().length > 0 && this.currentCopiedGroup.isVisible()) {
       this.setPositionForGroup(this.currentCopiedGroup, true);
       if (this.checkIsGroupInFlow(flowboard, this.currentCopiedGroup)) {
