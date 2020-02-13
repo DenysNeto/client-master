@@ -135,7 +135,7 @@ const ShapesClipboard = {
                 flow.add(pasteObj);
                 mainLayer.getStage().draw();
 
-                // TODO: save copied flow to DB
+                // save copied flow to DB
                 await iDBService.checkIsKeyExist(DataStorages.FLOW_BLOCKS, pasteObj._id)
                     .then(async res => {
                         if (!res) {

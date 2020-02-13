@@ -196,8 +196,6 @@ export class CanvasService {
         });
         let deltaX = event.target.parent.attrs.x - current_path_group.attrs.x;
         let deltaY = event.target.parent.attrs.y - current_path_group.attrs.y;
-        console.log(input_circle);
-
         current_path.setAttr(
           'data',
           KonvaUtil.generateLinkPath(
@@ -233,7 +231,7 @@ export class CanvasService {
         this.currentLineToDraw.isLineDrawable = false;
         this.lineToDraw.next(this.currentLineToDraw);
 
-        // TODO: update DB flows after line beetwen blocks was drew
+        // update DB flows after line beetwen blocks was drew
         this.iDBService.addData(DataStorages.FLOW_RELATIONS, {
           id: current_path._id,
           startPortId: current_path.attrs.start_info.start_circle_id,

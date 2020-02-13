@@ -1,7 +1,7 @@
-import {Injectable} from '@angular/core';
+import { Injectable } from '@angular/core';
 import data from '../../assets/document.json';
-import {Group} from 'konva/types/Group';
-import {BehaviorSubject} from 'rxjs';
+import { Group } from 'konva/types/Group';
+import { BehaviorSubject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -28,32 +28,32 @@ export class BlocksService {
     return this.blocks;
   }
 
-  getCodData(){
+  getCodData() {
     return this.codData;
   }
 
-  getFlowboards(){
+  getFlowboards() {
     return this.flowboards;
   }
 
-  addFlowboard(flowboard){
+  addFlowboard(flowboard) {
     this.flowboards.push(flowboard);
     this.pushFlowboardsChanges();
   }
 
-  removeFlowboard(id){
+  removeFlowboard(id) {
     this.flowboards = this.flowboards.filter(flow => flow._id !== id);
     this.pushFlowboardsChanges();
   }
 
-  pushFlowboardsChanges(){
+  pushFlowboardsChanges() {
     this.subjectArray.next(this.flowboards);
   }
 
-  getFlowboardName(id){
+  getFlowboardName(id) {
     let name = '';
-    this.flowboards.forEach(flow =>{
-      if(flow._id === id){
+    this.flowboards.forEach(flow => {
+      if (flow._id === id) {
         name = flow.attrs.name;
       }
     });

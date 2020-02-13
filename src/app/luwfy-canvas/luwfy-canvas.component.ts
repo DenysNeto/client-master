@@ -656,7 +656,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
             let actualFlowboardId = actualFlowboard._id;
             actualFlowboard.add(this.currentDraggedGroup);
 
-            // TODO: save new Flow block to DB
+            // save new Flow block to DB
             this.iDBService.checkIsKeyExist(DataStorages.FLOW_BLOCKS, this.currentDraggedGroup._id)
               .then(res => {
                 if (!res) {
@@ -768,15 +768,15 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   }
 
   loadingDataFromIDB() {
-    // TODO: loading boards from indexedDB
+    // loading boards from indexedDB
     this.iDBService.getAllData(DataStorages.BOARDS).then(data => {
       data.forEach((boardData: Board) => {
         this.addBoardToLayer(boardData);
       })
     })
-    // TODO: loading ports from indexedDB
+    // loading ports from indexedDB
     this.iDBService.getAllData(DataStorages.FLOW_PORTS).then(portsData => {
-      // TODO: loading blocks from indexedDB
+      // loading blocks from indexedDB
       this.iDBService.getAllData(DataStorages.FLOW_BLOCKS).then(data => {
         data.forEach((blockData: FlowBlock) => {
           let block = this.canvasService.createDefaultGroup(this.mainLayer, this.activeWrapperBlock, this.currentActiveGroup,
@@ -879,7 +879,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     newFlow._id = boardData ? boardData.id : ShapeCreator.randomIdNumber();
     this.mainLayer.getStage().add(newFlow);
     this.blocksService.addFlowboard(newFlow);
-    // TODO: save board to DB
+    // save board to DB
     this.iDBService.checkIsKeyExist(DataStorages.BOARDS, newFlow._id)
       .then(res => {
         if (!res) {
