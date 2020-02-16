@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Subject, BehaviorSubject } from 'rxjs';
+import { Subject } from 'rxjs';
 import { ICurrentLineToDraw } from '../luwfy-canvas/shapes-interface';
 
 const apiUrl = "https://sandboxcrm.openax.com/fake-api";

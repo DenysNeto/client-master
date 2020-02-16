@@ -1,0 +1,24 @@
+::ng-deep .mat-dialog-container {
+    padding: 0;
+  }
+
+.export-container {
+    width: 935px;
+    height: 770px;
+  
+    .head_line {
+      background-color: #1b6580;
+      height: 50px;
+  
+      span {
+        color: white;
+      }
+    }
+
+    &>textarea{
+      margin: auto auto;
+      width: 80%;
+      height: 80%;
+      resize: none;
+    }
+  }

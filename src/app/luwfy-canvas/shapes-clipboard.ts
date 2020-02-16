@@ -4,7 +4,6 @@ import { NotificationTypes } from '../popups/local-notification/local-notificati
 import ShapeCreator from './ShapesCreator';
 import { DataStorages, FlowBlock, FlowPort, DataState, FlowRelation } from '../services/indexed-db.interface';
 
-
 const ShapesClipboard = {
     // function add selected block to array with other blocks
     selectedBlock(event, selectedBlocks) {
@@ -89,7 +88,8 @@ const ShapesClipboard = {
     returnColorAfterSelect(shape) {
         shape.children.each(elem => {
             if (elem.className === 'Rect') {
-                elem.setAttr('stroke', shape.attrs.blockData.color);
+                let color = shape.findOne('Circle').attrs.stroke;
+                elem.setAttr('stroke', color);
             }
         })
     },
@@ -143,7 +143,7 @@ const ShapesClipboard = {
                                 {
                                     id: pasteObj._id,
                                     boardId: flow._id,
-                                    paletteElementId: pasteObj.attrs.name,
+                                    paletteElementId: pasteObj.attrs.paletteElementId,
                                     location: {
                                         x: pasteObj.attrs.x,
                                         y: pasteObj.attrs.y,

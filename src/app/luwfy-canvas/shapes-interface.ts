@@ -125,9 +125,3 @@ export interface dataInTabLayer {
     oldHeight: any
   }
 }
-
-export interface allBlockVariables {
-  block: PaletteElement,
-  color: Color,
-  image: Image
-}

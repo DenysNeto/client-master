@@ -3,9 +3,9 @@ import { RegistryService } from '../services/registry.service';
 import { theme } from './theme';
 import Konva from 'konva';
 import { CanvasService } from '../services/canvas.service';
-import { CircleTypes, dataInTabLayer, GroupTypes, ButtonsTypes, IActiveWrapperBlock, ICurrentLineToDraw, IGroupCustom, IPathCustom, allBlockVariables } from './shapes-interface';
+import { CircleTypes, dataInTabLayer, GroupTypes, ButtonsTypes, IActiveWrapperBlock, ICurrentLineToDraw, IGroupCustom, IPathCustom } from './shapes-interface';
 import { Collection } from 'konva/types/Util';
-import { MatDialog, MatMenuTrigger } from '@angular/material';
+import { MatDialog, MatMenuTrigger, MatDialogRef } from '@angular/material';
 import { BlocksRedactorService } from '../popups/blocks-redactor.service';
 import { Group } from 'konva/types/Group';
 import { UndoRedoService } from '../services/undo-redo.service';
@@ -25,6 +25,8 @@ import { IdbService } from '../services/indexed-db.service';
 import { DataStorages, FlowBlock, FlowPort, Board, DataState, FlowRelation, PaletteElement, Color, Image } from '../services/indexed-db.interface';
 import { HttpClientService } from '../services/http-client.service';
 import { Observable, of } from 'rxjs';
+import { ExportWindowComponent } from '../popups/export-window/export-window.component';
+import { ImportWindowComponent } from '../popups/import-window/import-window.component';
 
 @Component({
   selector: 'luwfy-canvas',
@@ -66,11 +68,13 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   private oldStageWidth: number;
   private oldStageHeight: number;
   private calledMenuButton: any;
-  private selectedBlocks = [];
   private copiedBlocks = [];
   private palettes: PaletteElement[];
   private colors: Color[];
   private images: Image[];
+  private exportModalRef: MatDialogRef<ExportWindowComponent>;
+  private importModalRef: MatDialogRef<ImportWindowComponent>;
+
 
   public configStage: Observable<any> = of({
     width: window.innerWidth + KonvaStartSizes.padding * 2,
@@ -267,7 +271,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
   handleDragOver = e => {
     if (this.idChangedTrigger) {
-      this.currentDraggedGroup = this.canvasService.createDefaultGroup(this.mainLayer, this.activeWrapperBlock, this.currentActiveGroup, this.getAllBlockVariables(this.currentId), this.selectedBlocks);
+      this.currentDraggedGroup = this.canvasService.createDefaultGroup(this.mainLayer, this.activeWrapperBlock, this.currentActiveGroup, this.getAllBlockVariables(this.currentId));
       this.idChangedTrigger = false;
       this.mainLayer.getStage().add(this.currentDraggedGroup);
       this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].setAttr('time', new Date().getTime());
@@ -349,7 +353,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       let allBlocks = this.mainLayer.getStage().find('Group').filter(group => group.attrs.type === GroupTypes.Block);
       allBlocks.forEach(elem => {
         if (this.checkValueBetween(elem.getAbsolutePosition(), elem.attrs.width, elem.attrs.height)) {
-          ShapesClipboard.selectedBlock((elem as any).findOne('Rect'), this.selectedBlocks);
+          ShapesClipboard.selectedBlock((elem as any).findOne('Rect'), this.canvasService.selectedBlocks);
         }
       });
       this.activeWrapperBlock.isActive = true;
@@ -448,10 +452,10 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
   // Ctrl + C
   @HostListener('document:keydown.control.c') undoCtrlC(event: KeyboardEvent) {
-    if (this.selectedBlocks.length > 0) {
-      this.copiedBlocks = this.selectedBlocks;
-      this.localNotificationService.sendLocalNotification(`Copied (${this.selectedBlocks.length}) blocks`, NotificationTypes.OK);
-      this.selectedBlocks = [];
+    if (this.canvasService.selectedBlocks.length > 0) {
+      this.copiedBlocks = this.canvasService.selectedBlocks;
+      this.localNotificationService.sendLocalNotification(`Copied (${this.canvasService.selectedBlocks.length}) blocks`, NotificationTypes.OK);
+      this.canvasService.selectedBlocks = [];
     }
   }
 
@@ -777,12 +781,12 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     this.mainLayer.getStage().add(this.currentCopiedGroup);
     // if we have few selected blocks and click on free space
     // all blocks became unselected
-    this.stage.getStage().on('mouseup', event => {
-      if (this.selectedBlocks.length > 0) {
-        this.selectedBlocks.forEach(elem => {
+    this.stage.getStage().on('mousedown', () => {
+      if (this.canvasService.selectedBlocks.length > 0) {
+        this.canvasService.selectedBlocks.forEach(elem => {
           ShapesClipboard.returnColorAfterSelect(elem);
         });
-        this.selectedBlocks = [];
+        this.canvasService.selectedBlocks = [];
       } else if (this.copiedBlocks.length > 0) {
         this.copiedBlocks.forEach(elem => {
           ShapesClipboard.returnColorAfterSelect(elem);
@@ -810,7 +814,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       this.iDBService.getAllData(DataStorages.FLOW_BLOCKS).then(data => {
         data.forEach((blockData: FlowBlock) => {
           let block = this.canvasService.createDefaultGroup(this.mainLayer, this.activeWrapperBlock, this.currentActiveGroup,
-            this.getAllBlockVariables(blockData.paletteElementId), this.selectedBlocks, blockData, portsData);
+            this.getAllBlockVariables(blockData.paletteElementId), blockData, portsData);
           block.setAttrs({ x: blockData.location.x, y: blockData.location.y });
           block.dragBoundFunc(pos => this.setDragBoundFunc(block, pos));
           this.blocksService.getFlowboards().forEach(board => {
@@ -1061,4 +1065,18 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     // NOW IS DELETE DB
     this.iDBService.deleteDB();
   }
+
+  openExport() {
+    this.exportModalRef = this.dialog.open(ExportWindowComponent, {
+      data: this.canvasService.selectedBlocks
+    });
+  }
+
+  openImport() {
+    this.importModalRef = this.dialog.open(ImportWindowComponent, {
+      data: 'This is Import'
+    });
+  }
+
 }
+

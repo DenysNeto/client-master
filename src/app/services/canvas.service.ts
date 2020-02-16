@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { StageComponent } from 'ng2-konva';
 import { Group } from 'konva/types/Group';
 import Konva from 'konva';
-import { ButtonsTypes, CircleTypes, GroupTypes, IActiveWrapperBlock, ICircleCustom, ICurrentLineToDraw, IGroupCustom, IPathCustom, allBlockVariables } from '../luwfy-canvas/shapes-interface';
+import { ButtonsTypes, CircleTypes, GroupTypes, IActiveWrapperBlock, ICircleCustom, ICurrentLineToDraw, IGroupCustom, IPathCustom } from '../luwfy-canvas/shapes-interface';
 import ShapeCreator from '../luwfy-canvas/ShapesCreator';
 import { ButtonSizes, FlowboardSizes, GridSizes, ShapesSizes, ShapesSizes as sizes, SwitcherSizes } from '../luwfy-canvas/sizes';
 import { theme } from '../luwfy-canvas/theme';
@@ -19,7 +19,7 @@ import { TestStartStop } from './testStartStop';
 import { Path } from 'konva/types/shapes/Path';
 import { IdbService } from './indexed-db.service';
 import ShapesClipboard from '../luwfy-canvas/shapes-clipboard';
-import { DataStorages, FlowRelation, FlowBlock, Board, FlowPort, DataState, PaletteElement, Color, Image } from './indexed-db.interface';
+import { DataStorages, FlowRelation, FlowBlock, Board, FlowPort, DataState } from './indexed-db.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -28,6 +28,7 @@ export class CanvasService {
 
   //variable for cheking mouse inside block
   private mouseInsideRectangle = null;
+  selectedBlocks = [];
 
   constructor(
     private dialog: MatDialog,
@@ -126,7 +127,7 @@ export class CanvasService {
 
   activeBlock: Subject<IActiveWrapperBlock> = new BehaviorSubject<IActiveWrapperBlock>(this.activeWrapperBlock);
 
-  fileNameDialogRef: MatDialogRef<ModalPropComponent>;
+  blockSettingDialogRef: MatDialogRef<ModalPropComponent>;
 
   isElem() {
     return this.activePathsArr.length > 0;
@@ -767,7 +768,7 @@ export class CanvasService {
     return isCollisionDetected;
   }
 
-  createDefaultGroup(mainLayer: Layer, activeWrapperBlock, currentActiveGroup: Group, blockVariables, selectedBlocks, blockData?: FlowBlock, portsData?) {
+  createDefaultGroup(mainLayer: Layer, activeWrapperBlock, currentActiveGroup: Group, blockVariables, blockData?: FlowBlock, portsData?) {
     let temp_group;
     let height = sizes.block_height;
     temp_group = new Konva.Group({
@@ -823,7 +824,7 @@ export class CanvasService {
       height: height
     });
 
-    this.setClickEventForGroup(temp_group, selectedBlocks);
+    this.setClickEventForGroup(temp_group);
 
     this.setListenerOnBlock(mainLayer, temp_group);
 
@@ -865,8 +866,8 @@ export class CanvasService {
 
   // function set listeners on block for add to selected group 
   // using "Ctrl+Click"
-  setClickEventForGroup = (group: Group, selectedBlocks) => {
-    group.on('click', event => {
+  setClickEventForGroup = (group: Group) => {
+    group.on('mousedown', event => {
       event.cancelBubble = true;
       if (event.evt.ctrlKey) {
         if (event.target.className === 'Path') {
@@ -878,7 +879,13 @@ export class CanvasService {
         if (event.target.className && event.target.className === 'Path') {
           return 0;
         }
-        ShapesClipboard.selectedBlock(event.target, selectedBlocks);
+        ShapesClipboard.selectedBlock(event.target, this.selectedBlocks);
+      } else {
+        this.selectedBlocks.forEach(elem => {
+          ShapesClipboard.returnColorAfterSelect(elem);
+        });
+        this.selectedBlocks = [];
+        ShapesClipboard.selectedBlock(event.target, this.selectedBlocks);
       }
     });
   };
@@ -910,7 +917,7 @@ export class CanvasService {
         if (!this.blocksRedactorService.checkerOnExistBlock(elem)) {
           this.blocksRedactorService.addBlock(elem);
         }
-        this.fileNameDialogRef = this.dialog.open(ModalPropComponent, {
+        this.blockSettingDialogRef = this.dialog.open(ModalPropComponent, {
           data: elem._id
         });
       });

@@ -18,6 +18,7 @@ export class IdbService {
         this.localIDB = await openDB(DB_NAME, VERSION, {
             upgrade(localIDB) {
                 if (!localIDB.objectStoreNames.contains(DataStorages.PALLETE_ELEMENTS)) {
+                    console.log('Create store PALLETE_ELEMENTS');
                     localIDB.createObjectStore(DataStorages.PALLETE_ELEMENTS, { keyPath: 'id' });
                 }
                 if (!localIDB.objectStoreNames.contains(DataStorages.FLOW_BLOCKS)) {
@@ -63,7 +64,7 @@ export class IdbService {
             await this.connectionToIdb();
             const tx = await this.localIDB.transaction(target, 'readwrite');
             const store = tx.objectStore(target);
-            await store.add(value);
+            store.add(value);
         } catch (error) {
             console.log(error.message + ' / ID: ' + value.id + ' / Store: ' + target);
         }
