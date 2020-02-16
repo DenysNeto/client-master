@@ -18,18 +18,17 @@ export class LuwfyVerticalTabComponent implements OnInit {
   images: Image[];
 
   constructor(private registryService: RegistryService, private canvasService: CanvasService, private iDBService: IdbService) {
-
   }
 
   ngOnInit() {
-    this.iDBService.getAllData(DataStorages.PALLETE_ELEMENTS).then(data => {
-      if (data) {
-        this.palettes = data;
-      }
-    });
     this.iDBService.getAllData(DataStorages.CATEGORIES).then(data => {
       if (data) {
         this.categories = data;
+      }
+    });
+    this.iDBService.getAllData(DataStorages.IMAGES).then(data => {
+      if (data) {
+        this.images = data;
       }
     });
     this.iDBService.getAllData(DataStorages.COLORS).then(data => {
@@ -37,9 +36,9 @@ export class LuwfyVerticalTabComponent implements OnInit {
         this.colors = data;
       }
     });
-    this.iDBService.getAllData(DataStorages.IMAGES).then(data => {
+    this.iDBService.getAllData(DataStorages.PALLETE_ELEMENTS).then(data => {
       if (data) {
-        this.images = data;
+        this.palettes = data;
       }
     });
   }
@@ -55,12 +54,23 @@ export class LuwfyVerticalTabComponent implements OnInit {
   }
 
   getColor(colorId) {
-    return this.colors.forEach((color: Color) => {
+    let colorData = '';
+    this.colors.forEach((color: Color) => {
       if (colorId === color.id) {
-        return color.value;
+        colorData = color.value;
       }
     })
+    return colorData;
   }
 
+  getImage(imageId) {
+    let imageData = '';
+    this.images.forEach((image: Image) => {
+      if (imageId === image.id) {
+        imageData = image.value;
+      }
+    })
+    return imageData;
+  }
 
 }

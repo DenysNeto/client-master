@@ -2,6 +2,7 @@ import { Group } from 'konva/types/Group';
 import { Path } from 'konva/types/shapes/Path';
 import { Circle } from 'konva/types/shapes/Circle';
 import { Rect } from 'konva/types/shapes/Rect';
+import { PaletteElement, Color, Image } from '../services/indexed-db.interface';
 
 
 export enum CircleTypes {
@@ -123,4 +124,10 @@ export interface dataInTabLayer {
     oldWidth: any,
     oldHeight: any
   }
+}
+
+export interface allBlockVariables {
+  block: PaletteElement,
+  color: Color,
+  image: Image
 }

@@ -3,7 +3,7 @@ import { RegistryService } from '../services/registry.service';
 import { theme } from './theme';
 import Konva from 'konva';
 import { CanvasService } from '../services/canvas.service';
-import { CircleTypes, dataInTabLayer, GroupTypes, ButtonsTypes, IActiveWrapperBlock, ICurrentLineToDraw, IGroupCustom, IPathCustom } from './shapes-interface';
+import { CircleTypes, dataInTabLayer, GroupTypes, ButtonsTypes, IActiveWrapperBlock, ICurrentLineToDraw, IGroupCustom, IPathCustom, allBlockVariables } from './shapes-interface';
 import { Collection } from 'konva/types/Util';
 import { MatDialog, MatMenuTrigger } from '@angular/material';
 import { BlocksRedactorService } from '../popups/blocks-redactor.service';
@@ -22,7 +22,7 @@ import { TestStartStop } from '../services/testStartStop';
 import { StageComponent } from 'ng2-konva';
 import { LocalNotificationService, NotificationTypes } from '../popups/local-notification/local-notification.service';
 import { IdbService } from '../services/indexed-db.service';
-import { DataStorages, FlowBlock, FlowPort, Board, DataState, FlowRelation } from '../services/indexed-db.interface';
+import { DataStorages, FlowBlock, FlowPort, Board, DataState, FlowRelation, PaletteElement, Color, Image } from '../services/indexed-db.interface';
 import { HttpClientService } from '../services/http-client.service';
 import { Observable, of } from 'rxjs';
 
@@ -54,7 +54,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
   data = [];
   lines = [];
-  currentId: string;
+  currentId: number;
   idChangedTrigger: boolean = false;
   subTabs: dataInTabLayer[] = [];
   menuOfViews: string[] = [];
@@ -68,6 +68,10 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   private calledMenuButton: any;
   private selectedBlocks = [];
   private copiedBlocks = [];
+  private palettes: PaletteElement[];
+  private colors: Color[];
+  private images: Image[];
+
   public configStage: Observable<any> = of({
     width: window.innerWidth + KonvaStartSizes.padding * 2,
     height: window.innerHeight + KonvaStartSizes.padding * 2
@@ -138,7 +142,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       if (!event) {
         return 0;
       }
-
       event.target.children.each(elem => {
         let isPathInGroup = this.canvasService.isPathInGroup(elem);
         let input_paths: Array<IPathCustom> = this.canvasService.getAllInputLinesFromGroup(elem.parent, elem as Group | IGroupCustom);
@@ -254,9 +257,17 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     });
   }
 
+  // TODO: taking block data
+  getAllBlockVariables(id) {
+    let block = this.palettes.find(palette => palette.id === id);
+    let color = this.colors.find(color => color.id === block.colorId);
+    let image = this.images.find(image => image.id === block.imageId);
+    return { block, color, image };
+  }
+
   handleDragOver = e => {
     if (this.idChangedTrigger) {
-      this.currentDraggedGroup = this.canvasService.createDefaultGroup(this.mainLayer, this.activeWrapperBlock, this.currentActiveGroup, this.currentId, this.selectedBlocks);
+      this.currentDraggedGroup = this.canvasService.createDefaultGroup(this.mainLayer, this.activeWrapperBlock, this.currentActiveGroup, this.getAllBlockVariables(this.currentId), this.selectedBlocks);
       this.idChangedTrigger = false;
       this.mainLayer.getStage().add(this.currentDraggedGroup);
       this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].setAttr('time', new Date().getTime());
@@ -333,7 +344,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       }
       return 0;
     }
-
     //rectamgle look witch blocks in own borders
     if (this.activeWrapperBlock.isDraw) {
       let allBlocks = this.mainLayer.getStage().find('Group').filter(group => group.attrs.type === GroupTypes.Block);
@@ -606,8 +616,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     this.httpClientService.getInitialData();
     //this.httpClientService.getFlowData();
     this.httpClientService.getPaletteData();
-
-    console.log(' localIDB.objectStoreNames');
     this.httpClientService.httpResponsePayload.subscribe(payloadData => {
       if (payloadData.stores) {
         for (let storeName in payloadData.stores) {
@@ -620,9 +628,13 @@ export class CanvasComponent implements OnInit, AfterViewInit {
             })
           }
         }
-
       }
     })
+
+    // TODO: take data from iDB
+    this.iDBService.getAllData(DataStorages.IMAGES).then(images => this.images = images);
+    this.iDBService.getAllData(DataStorages.COLORS).then(colors => this.colors = colors);
+    this.iDBService.getAllData(DataStorages.PALLETE_ELEMENTS).then(paletts => this.palettes = paletts);
 
     this.subTabs = [
       {
@@ -645,7 +657,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       });
     }
     this.RegistryService.currentDraggableItem.subscribe(data => {
-      this.currentId = data;
+      this.currentId = parseInt(data);
       this.idChangedTrigger = true;
     });
     this.RegistryService.currentTabBlocks.subscribe(blocks => {
@@ -675,7 +687,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
             });
             let actualFlowboardId = actualFlowboard._id;
             actualFlowboard.add(this.currentDraggedGroup);
-
             // save new Flow block to DB
             this.iDBService.checkIsKeyExist(DataStorages.FLOW_BLOCKS, this.currentDraggedGroup._id)
               .then(res => {
@@ -684,7 +695,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
                     {
                       id: this.currentDraggedGroup._id,
                       boardId: actualFlowboardId,
-                      paletteElementId: this.currentDraggedGroup.attrs.name,
+                      paletteElementId: this.currentDraggedGroup.attrs.paletteElementId,
                       location: {
                         x: this.currentDraggedGroup.attrs.x,
                         y: this.currentDraggedGroup.attrs.y,
@@ -799,7 +810,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       this.iDBService.getAllData(DataStorages.FLOW_BLOCKS).then(data => {
         data.forEach((blockData: FlowBlock) => {
           let block = this.canvasService.createDefaultGroup(this.mainLayer, this.activeWrapperBlock, this.currentActiveGroup,
-            blockData.paletteElementId, this.selectedBlocks, blockData, portsData);
+            this.getAllBlockVariables(blockData.paletteElementId), this.selectedBlocks, blockData, portsData);
           block.setAttrs({ x: blockData.location.x, y: blockData.location.y });
           block.dragBoundFunc(pos => this.setDragBoundFunc(block, pos));
           this.blocksService.getFlowboards().forEach(board => {

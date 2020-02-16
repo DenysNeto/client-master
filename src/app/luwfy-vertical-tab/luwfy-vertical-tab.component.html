@@ -4,13 +4,12 @@
     <div class="block">
 
       <span [ngStyle]="{color: getColor(palette.colorId)}">{{palette.name}}</span>
-      <div [ngStyle]="{borderColor: getColor(palette.colorId)}" class="function" (dragend)="dragFinish($event)"
-        (dragstart)="dragEvent($event)" draggable="true">
-        <i class="fa fa-4x">&#xf015;</i>
+      <div id="{{palette.id}}" [ngStyle]="{borderColor: getColor(palette.colorId)}" class="function"
+        (dragend)="dragFinish($event)" (dragstart)="dragEvent($event)" draggable="true">
         <div class="input-port"
           [ngStyle]="{borderColor: getColor(palette.colorId), backgroundColor: getColor(palette.colorId)}"></div>
+        <i class="fa fa-3x" [ngStyle]="{color: getColor(palette.colorId)}">{{getImage(palette.imageId)}}</i>
         <div class="output-port" [ngStyle]="{borderColor: getColor(palette.colorId)}"></div>
-
       </div>
 
     </div>

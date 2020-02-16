@@ -69,7 +69,7 @@ const ShapeCreator = {
     });
   },
 
-  iconGroupCreator: (x, y, iconsGroup: SettingIcons) => {
+  iconGroupCreator: (x, y) => {
     return new Konva.Group({
       x,
       y,
@@ -80,7 +80,7 @@ const ShapeCreator = {
       padding: 2,
       fontFamily: 'FontAwesome',
       fontSize: 19,
-      text: iconsGroup.edit_icon,
+      text: "\uf040",
       fill: 'orange'
     }),
       new Konva.Text({
@@ -88,7 +88,7 @@ const ShapeCreator = {
         padding: 2,
         fontFamily: 'FontAwesome',
         fontSize: 19,
-        text: iconsGroup.wizard_icon,
+        text: "\uf013",
         fill: '#4fd0d6'
       }),
       new Konva.Text({
@@ -96,7 +96,7 @@ const ShapeCreator = {
         padding: 2,
         fontFamily: 'FontAwesome',
         fontSize: 19,
-        text: iconsGroup.settings_icon,
+        text: "\uf1de",
         fill: '#133f63'
       }));
   },
