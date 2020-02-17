@@ -29,9 +29,15 @@
   cursor: pointer;
 }
 
+.function > i {
+  position: relative;
+  top: 15px;
+  right: 10px;
+}
+
 .function .input-port {
   position: relative;
-  left: -12px;
+  right: 12px;
   top: 28px;
   width: 18px;
   height: 18px;
@@ -40,17 +46,10 @@
   float: left;
 }
 
-.function svg {
-  position: relative;
-  float: right;
-  top: 13px;
-  right: 15px;
-}
-
 .function .output-port {
   position: relative;
   left: 70px;
-  top: 28px;
+  bottom: 18px;
   width: 18px;
   height: 18px;
   background-color: #115770;

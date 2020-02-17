@@ -1,18 +1,18 @@
-import {Injectable} from '@angular/core';
-import data from '../../assets/document.json';
-import {Group} from 'konva/types/Group';
-import {BehaviorSubject} from 'rxjs';
+import { Injectable } from '@angular/core';
+import { Group } from 'konva/types/Group';
+import { BehaviorSubject } from 'rxjs';
+import { PaletteElement, Category, Image, Color, DataStorages } from './indexed-db.interface';
+import { IdbService } from './indexed-db.service';
 
 @Injectable({
   providedIn: 'root'
 })
 
 export class BlocksService {
-  subjectArray: BehaviorSubject<any>;
   // variable will take JSON from server and build
   // block whick we can see on left pannel
-  private blocks = data;
   private flowboards: Group[] = [];
+  subjectArray: BehaviorSubject<any>;
   dataInBlock: any;
 
   private codData = {
@@ -20,40 +20,68 @@ export class BlocksService {
     codText: 'some code'
   };
 
-  constructor() {
+  constructor(private iDBService: IdbService) {
     this.subjectArray = new BehaviorSubject<Group[]>(this.flowboards);
   }
 
-  getBlocks() {
-    return this.blocks;
+  getPallets() {
+    this.iDBService.getAllData(DataStorages.PALLETE_ELEMENTS).then(data => {
+      if (data) {
+        return data;
+      }
+    });
   }
 
-  getCodData(){
+  getCategories() {
+    return this.iDBService.getAllData(DataStorages.CATEGORIES).then(data => {
+      if (data) {
+        return data;
+      }
+    });
+  }
+
+  getImages() {
+    return this.iDBService.getAllData(DataStorages.IMAGES).then(data => {
+      if (data) {
+        return data;
+      }
+    });
+  }
+
+  getColors() {
+    return this.iDBService.getAllData(DataStorages.COLORS).then(data => {
+      if (data) {
+        return data;
+      }
+    });
+  }
+
+  getCodData() {
     return this.codData;
   }
 
-  getFlowboards(){
+  getFlowboards() {
     return this.flowboards;
   }
 
-  addFlowboard(flowboard){
+  addFlowboard(flowboard) {
     this.flowboards.push(flowboard);
     this.pushFlowboardsChanges();
   }
 
-  removeFlowboard(id){
+  removeFlowboard(id) {
     this.flowboards = this.flowboards.filter(flow => flow._id !== id);
     this.pushFlowboardsChanges();
   }
 
-  pushFlowboardsChanges(){
+  pushFlowboardsChanges() {
     this.subjectArray.next(this.flowboards);
   }
 
-  getFlowboardName(id){
+  getFlowboardName(id) {
     let name = '';
-    this.flowboards.forEach(flow =>{
-      if(flow._id === id){
+    this.flowboards.forEach(flow => {
+      if (flow._id === id) {
         name = flow.attrs.name;
       }
     });

@@ -1,0 +1,19 @@
+::ng-deep .mat-dialog-container {
+  padding: 0;
+}
+
+.import-container {
+  width: 935px;
+  height: 770px;
+  position: relative;
+}
+
+.import-container .head_line {
+  background-color: #1b6580;
+  height: 50px;
+}
+
+.import-container .head_line span {
+  color: white;
+}
+/*# sourceMappingURL=import-window.component.css.map */

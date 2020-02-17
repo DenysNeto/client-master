@@ -1,5 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Subject } from 'rxjs';
+import { ICurrentLineToDraw } from '../luwfy-canvas/shapes-interface';
+
 import { Subject, BehaviorSubject } from 'rxjs';
 import { IdbService } from './indexed-db.service';
 // project  id key in localStorage
@@ -11,10 +14,7 @@ const temporaryProjectIdToPost = "2fcd2d98-8f2b-4e8e-b100-6164e7cb791a";
   providedIn: 'root'
 })
 
-
-
 export class HttpClientService {
-
   //TODO  change interfaces
   httpResponsePayload: Subject<any> = new Subject<any>();
 
@@ -73,23 +73,24 @@ export class HttpClientService {
 
   // getFlowData() {
   //   this.http.get(`${apiUrl}/flow`).subscribe((dataPayload: any) => {
+  //     console.log('dataPayload FLOW', dataPayload);
   //     this.httpResponsePayload.next(dataPayload);
   //   }, error => {
   //     console.log('dataPayload INIT ERROR', error);
-
+  //
   //   });
   // }
   // getPaletteData() {
   //   this.http.get(`${apiUrl}/palette`).subscribe((dataPayload: any) => {
-
+  //
   //     console.log('dataPayload PALETTE', dataPayload);
+  //     this.httpResponsePayload.next(dataPayload);
   //   }, error => {
   //     console.log('dataPayload INIT ERROR', error);
-
+  //
   //   });
   // }
 
-  // todo finish 
   async createDeployPayload() {
     let deployPayload = {
       stores: {
@@ -147,8 +148,6 @@ export class HttpClientService {
       console.log('[postDataOnDeployWithoutProjectId] dataPayload', dataPayload)
     }, error => console.log('ERROR_POST_DATA_ON_DEPLOY_WITHOUT_PROJECT', error))
   }
-
-
 
 
 

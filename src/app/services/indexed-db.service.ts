@@ -63,7 +63,7 @@ export class IdbService {
             await this.connectionToIdb();
             const tx = await this.localIDB.transaction(target, 'readwrite');
             const store = tx.objectStore(target);
-            await store.add(value);
+            store.add(value);
         } catch (error) {
             console.log(error.message + ' / ID: ' + value.id + ' / Store: ' + target);
         }
@@ -73,12 +73,11 @@ export class IdbService {
         await this.connectionToIdb();
         const tx = await this.localIDB.transaction(target, 'readonly');
         const store = tx.objectStore(target);
-        return await store.get(key);
+        return store.get(key);
     }
 
     async getStoreFromIDBByNameAndClear(storeName: string) {
         await this.connectionToIdb();
-        console.log('StoreName', this.localIDB);
         const tx = await this.localIDB.transaction(storeName, 'readwrite');
         console.log('tx', tx);
         return tx ? await tx.objectStore(storeName).clear() : -1;
@@ -110,7 +109,7 @@ export class IdbService {
 
 
 
-    
+
 
     async updateData(target: string, value: any) {
         await this.connectionToIdb();

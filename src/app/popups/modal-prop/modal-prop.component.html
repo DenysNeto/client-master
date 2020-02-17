@@ -8,13 +8,9 @@
     <mat-tab-group [(selectedIndex)]="selected">
       <mat-tab *ngFor="let tab of tabs">
         <ng-template mat-tab-label>
-          <i
-            class="fa fa-times-circle-o"
-            aria-hidden="true"
-            (click)="onRemove(tab._id)"
-          ></i>
+          <i class="fa fa-times-circle-o" aria-hidden="true" (click)="onRemove(tab._id)"></i>
           <span>
-          Tab - {{tab._id}}
+            Tab - {{tab._id}}
           </span>
         </ng-template>
         {{tab._id}}
@@ -27,8 +23,7 @@
       <mat-icon>arrow_drop_down_circle</mat-icon>
     </a>
     <mat-menu #menu="matMenu" xPosition="before">
-      <button *ngFor="let item of tabs; let index = index" (click)="selected = index" mat-menu-item>Tab
-        - {{item._id}}</button>
+      <button *ngFor="let item of tabs; index as i" (click)="selected = i" mat-menu-item>Tab- {{item._id}} </button>
     </mat-menu>
   </div>
 

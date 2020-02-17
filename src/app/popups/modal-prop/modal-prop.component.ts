@@ -1,7 +1,7 @@
-import {Component, Inject, OnInit} from '@angular/core';
-import {BlocksRedactorService} from '../blocks-redactor.service';
-import {Group} from 'konva/types/Group';
-import {MAT_DIALOG_DATA, MatDialog} from '@angular/material';
+import { Component, Inject, OnInit } from '@angular/core';
+import { BlocksRedactorService } from '../blocks-redactor.service';
+import { Group } from 'konva/types/Group';
+import { MAT_DIALOG_DATA, MatDialog } from '@angular/material';
 
 @Component({
   selector: 'app-modal-prop',
@@ -13,9 +13,7 @@ export class ModalPropComponent implements OnInit {
   private tabs: Group[] = [];
   selected: number;
 
-  constructor(private blocksRedactorService: BlocksRedactorService,
-              @Inject(MAT_DIALOG_DATA) public data: any,
-              private dialog: MatDialog) {
+  constructor(private blocksRedactorService: BlocksRedactorService, @Inject(MAT_DIALOG_DATA) public data: any, private dialog: MatDialog) {
   }
 
   ngOnInit() {
@@ -27,7 +25,7 @@ export class ModalPropComponent implements OnInit {
   onRemove(_id: number) {
     this.blocksRedactorService.removeBlock(_id);
     this.tabs = this.tabs.filter(elem => elem._id !== _id);
-    if(this.tabs.length === 0){
+    if (this.tabs.length === 0) {
       this.dialog.closeAll();
     }
   }

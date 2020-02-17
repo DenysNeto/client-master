@@ -80,6 +80,7 @@ export interface Board {
 
 export interface PaletteElement {
     id: number,
+    categoryId: number,
     name: string,
     imageId: number,
     colorId: number,
@@ -107,12 +108,13 @@ export interface Category {
 export interface Image {
     id: number,
     name: string,
+    value: string,
     description: string,
     state: DataState,
     formId: number
 }
 
-export interface Colors {
+export interface Color {
     id: number,
     name: string,
     value: any,

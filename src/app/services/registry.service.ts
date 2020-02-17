@@ -1,15 +1,13 @@
-import {Injectable} from '@angular/core';
+import { Injectable } from '@angular/core';
 
-import {BlockType, Registry, Block} from '../models/registry';
+import { BlockType, Registry, Block } from '../models/registry';
 
-import {BehaviorSubject, Observable} from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class RegistryService {
-
-  // private _blockDefinitions = {};
 
   private blockDefinitionsSource = new BehaviorSubject<BlockType[]>([]);
   private blockSetSource = new BehaviorSubject<Block[]>([]);
@@ -32,32 +30,26 @@ export class RegistryService {
     this.currentDraggableItem.next(id);
   }
 
-
-  // private _blockDefinitions: BlockType[] = [];
-  // public blockSet: Block[] = [];
-  // public tabs: Block[] = [];
-  // public subflows: Block[] = [];
-
   constructor() {
     this.registerBlockType('_unknown', {
-      label: {value: 'unknown'},
+      label: { value: 'unknown' },
       color: '#ffffff',
     });
     this.registerBlockType('tab', {
-      label: {value: ''},
-      disabled: {value: false},
-      info: {value: ''},
+      label: { value: '' },
+      disabled: { value: false },
+      info: { value: '' },
       exclude: true,
     });
     this.registerBlockType('subflow', {
-      label: {value: ''},
-      disabled: {value: false},
-      info: {value: ''},
+      label: { value: '' },
+      disabled: { value: false },
+      info: { value: '' },
       exclude: true,
     });
 
     this.registerBlockType('debug', {
-      label: {value: 'debug'},
+      label: { value: 'debug' },
       color: 'rgb(135, 169, 128)',
       button: {
         align: 'right',
@@ -66,7 +58,7 @@ export class RegistryService {
       outputs: 0,
     });
     this.registerBlockType('inject', {
-      label: {value: 'inject'},
+      label: { value: 'inject' },
       color: 'rgb(166, 187, 207)',
       button: {
         align: 'left',
