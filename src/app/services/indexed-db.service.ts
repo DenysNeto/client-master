@@ -77,9 +77,13 @@ export class IdbService {
     }
 
     async getStoreFromIDBByNameAndClear(storeName: string) {
-
+        await this.connectionToIdb();
+        console.log('StoreName', this.localIDB);
         const tx = await this.localIDB.transaction(storeName, 'readwrite');
+        console.log('tx', tx);
         return tx ? await tx.objectStore(storeName).clear() : -1;
+
+
     }
 
     async checkIsKeyExist(target: string, key: any) {
@@ -95,6 +99,18 @@ export class IdbService {
         const store = tx.objectStore(target);
         return store.getAll();
     }
+
+    async getAllDataObjectsFromDatabase() {
+        await this.connectionToIdb();
+        return this.localIDB.objectStoreNames;
+    }
+
+
+
+
+
+
+    
 
     async updateData(target: string, value: any) {
         await this.connectionToIdb();

@@ -1,4 +1,4 @@
-export const parseIndexedDbDataToJson =  () => {
+export const parseIndexedDbDataToJson =  (database) => {
 
 
 
