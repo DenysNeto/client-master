@@ -20,6 +20,7 @@ import { Path } from 'konva/types/shapes/Path';
 import { IdbService } from './indexed-db.service';
 import ShapesClipboard from '../luwfy-canvas/shapes-clipboard';
 import { DataStorages, FlowRelation, FlowBlock, Board, FlowPort, DataState } from './indexed-db.interface';
+import { async } from '@angular/core/testing';
 
 @Injectable({
   providedIn: 'root'
@@ -1090,5 +1091,50 @@ export class CanvasService {
     } else {
       return false;
     }
+  }
+
+  exportData(layer: Layer, callback) {
+    let promisesArr = [];
+    if (this.selectedBlocks.length > 0) {
+      this.selectedBlocks.forEach((elem) => {
+        promisesArr.push(new Promise(res => this.iDBService.getDataByKey(DataStorages.FLOW_BLOCKS, elem._id).then(data => res(data))));
+        elem.children.each(shape => {
+          if (shape.attrs.type === CircleTypes.Input || shape.attrs.type === CircleTypes.Output || shape.attrs.type === CircleTypes.Error) {
+            promisesArr.push(new Promise(res => this.iDBService.getDataByKey(DataStorages.FLOW_PORTS, shape._id).then(data => res(data))));
+          } else if (shape.className === 'Path') {
+            if (this.isPathBetweenSelectedBlocks(shape)) {
+              promisesArr.push(new Promise(res => this.iDBService.getDataByKey(DataStorages.FLOW_RELATIONS, shape._id).then(data => res(data))));
+            }
+          }
+        })
+
+      })
+      callback(promisesArr);
+    } else {
+      callback(promisesArr);
+    }
+  }
+
+
+
+  isPathBetweenSelectedBlocks(path): boolean {
+    let input = false;
+    this.selectedBlocks.forEach(elem => {
+      elem.find('Circle').each(shape => {
+        if (path.attrs.end_info.end_circle_id === shape._id) {
+          input = true;
+        }
+      })
+    })
+    return input;
+  }
+
+  getAllDataFromIdb() {
+    let promisesArr = [];
+    promisesArr.push(new Promise(res => this.iDBService.getAllData(DataStorages.BOARDS).then(data => res(data))));
+    promisesArr.push(new Promise(res => this.iDBService.getAllData(DataStorages.FLOW_BLOCKS).then(data => res(data))));
+    promisesArr.push(new Promise(res => this.iDBService.getAllData(DataStorages.FLOW_PORTS).then(data => res(data))));
+    promisesArr.push(new Promise(res => this.iDBService.getAllData(DataStorages.FLOW_RELATIONS).then(data => res(data))));
+    return promisesArr;
   }
 }

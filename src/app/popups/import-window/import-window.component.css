@@ -9,11 +9,81 @@
 }
 
 .import-container .head_line {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
   background-color: #1b6580;
   height: 50px;
 }
 
-.import-container .head_line span {
+.import-container .head_line h2 {
   color: white;
+}
+
+.view-container {
+  width: 80%;
+  height: 75%;
+  border: 2px solid silver;
+  margin: 20px auto;
+  padding: 10px;
+}
+
+.view-container .paste-or-chose {
+  width: 100%;
+  text-align: center;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+  padding: 10px;
+}
+
+.view-container .paste-or-chose > span {
+  padding-right: 10px;
+}
+
+.view-container .paste-or-chose input[type="file"] {
+  display: none;
+}
+
+.view-container .paste-or-chose .file-upload {
+  border: 1px solid #ccc;
+  display: inline-block;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.view-container .paste-or-chose .file-upload:hover {
+  background-color: #c1cea6;
+}
+
+.view-container > textarea {
+  float: right;
+  width: 70%;
+  height: 80%;
+  resize: none;
+  background-color: #e6e6e6;
+}
+
+.import-action-buttons {
+  width: 100%;
+  height: 50px;
+  text-align: center;
+}
+
+.import-action-buttons > button {
+  width: 100px;
+  height: 30px;
+  background-color: tomato;
+  color: snow;
+  cursor: pointer;
+}
+
+.import-action-buttons > button:not(:first-child) {
+  background-color: slateblue;
 }
 /*# sourceMappingURL=import-window.component.css.map */

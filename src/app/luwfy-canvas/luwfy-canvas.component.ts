@@ -1067,8 +1067,12 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   }
 
   openExport() {
-    this.exportModalRef = this.dialog.open(ExportWindowComponent, {
-      data: this.canvasService.selectedBlocks
+    this.canvasService.exportData(this.mainLayer.getStage(), (data: any) => {
+      Promise.all(data).then(res => {
+        this.dialog.open(ExportWindowComponent, {
+          data: { value: JSON.stringify(res), ifSelect: this.canvasService.selectedBlocks.length > 0 }
+        });
+      })
     });
   }
 

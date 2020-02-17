@@ -1,7 +1,22 @@
 <div class="import-container">
 
     <div class="head_line">
-        <span>Import</span>
+        <h2>IMPORT</h2>
+    </div>
+
+    <div class="view-container">
+        <div class="paste-or-chose">
+            <span>Paste json or select file</span>
+            <label class="file-upload">
+                <input type="file" accept=".json" />
+                <i class="fa fa-cloud-upload"></i> Upload
+            </label>
+        </div>
+        <textarea #textviewer id="exported-json"></textarea>
+    </div>
+    <div class="import-action-buttons">
+        <button (click)="onClose()">Close</button>
+        <button (click)="onImport()" [disabled]="!textviewer.value">Import</button>
     </div>
 
 </div>

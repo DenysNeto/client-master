@@ -8,10 +8,13 @@
   position: relative;
 
   .head_line {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background-color: #1b6580;
     height: 50px;
 
-    span {
+    h2 {
       color: white;
     }
   }
