@@ -1,6 +1,7 @@
 import { Injectable } from "@angular/core";
 import { openDB, deleteDB } from 'idb';
 import { DataStorages } from './indexed-db.interface';
+import { Subject } from 'rxjs';
 
 const DB_NAME = 'luwfy_IDB';
 const VERSION = 1;
@@ -11,6 +12,9 @@ const VERSION = 1;
 
 export class IdbService {
     private localIDB;
+
+    dataInitializationFinished: Subject<Boolean> = new Subject<Boolean>();
+
 
     constructor() { }
 
@@ -79,8 +83,8 @@ export class IdbService {
     async getStoreFromIDBByNameAndClear(storeName: string) {
         await this.connectionToIdb();
         const tx = await this.localIDB.transaction(storeName, 'readwrite');
-        console.log('tx', tx);
-        return tx ? await tx.objectStore(storeName).clear() : -1;
+        console.log('tx', await this.localIDB.transaction(storeName, 'readwrite'));
+        await tx.objectStore(storeName).clear();
 
 
     }

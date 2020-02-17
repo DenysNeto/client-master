@@ -2,8 +2,6 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Subject } from 'rxjs';
 import { ICurrentLineToDraw } from '../luwfy-canvas/shapes-interface';
-
-import { Subject, BehaviorSubject } from 'rxjs';
 import { IdbService } from './indexed-db.service';
 // project  id key in localStorage
 const PROJECT_ID_KEY = "projectId";
@@ -17,9 +15,6 @@ const temporaryProjectIdToPost = "2fcd2d98-8f2b-4e8e-b100-6164e7cb791a";
 export class HttpClientService {
   //TODO  change interfaces
   httpResponsePayload: Subject<any> = new Subject<any>();
-
-
-
 
   constructor(private http: HttpClient, private idbService: IdbService) {
 
@@ -71,26 +66,6 @@ export class HttpClientService {
     });
   }
 
-  // getFlowData() {
-  //   this.http.get(`${apiUrl}/flow`).subscribe((dataPayload: any) => {
-  //     console.log('dataPayload FLOW', dataPayload);
-  //     this.httpResponsePayload.next(dataPayload);
-  //   }, error => {
-  //     console.log('dataPayload INIT ERROR', error);
-  //
-  //   });
-  // }
-  // getPaletteData() {
-  //   this.http.get(`${apiUrl}/palette`).subscribe((dataPayload: any) => {
-  //
-  //     console.log('dataPayload PALETTE', dataPayload);
-  //     this.httpResponsePayload.next(dataPayload);
-  //   }, error => {
-  //     console.log('dataPayload INIT ERROR', error);
-  //
-  //   });
-  // }
-
   async createDeployPayload() {
     let deployPayload = {
       stores: {
@@ -98,10 +73,7 @@ export class HttpClientService {
       }
     };
     let storesCollection = await this.idbService.getAllDataObjectsFromDatabase();
-    // console.log("storeCollection", storesCollection.length, storesCollection[0],
-    //   storesCollection[1], storesCollection[2], storesCollection[3],
-    //   storesCollection[4], storesCollection[5], storesCollection[6],
-    //   storesCollection[7], storesCollection[8], storesCollection[9], storesCollection[10]);
+
     if (storesCollection) {
 
       for (let i = 0; i < storesCollection.length; i++) {
@@ -113,12 +85,6 @@ export class HttpClientService {
         })
       }
       return deployPayload;
-      //console.log('DEPLOY_PAYLOAD', deployPayload);
-      // storesCollection.item(objectStore => {
-      //   console.log('currentStoreValues', objectStore);
-      //   let currentStoreValues = this.idbService.getAllData(objectStore);
-      //   console.log('currentStoreValues', currentStoreValues);
-      // deployPayload.stores.objectStore.push()
 
     }
   }

@@ -21,26 +21,35 @@ export class LuwfyVerticalTabComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.iDBService.getAllData(DataStorages.CATEGORIES).then(data => {
-      if (data) {
-        this.categories = data;
-      }
-    });
-    this.iDBService.getAllData(DataStorages.IMAGES).then(data => {
-      if (data) {
-        this.images = data;
-      }
-    });
-    this.iDBService.getAllData(DataStorages.COLORS).then(data => {
-      if (data) {
-        this.colors = data;
-      }
-    });
-    this.iDBService.getAllData(DataStorages.PALLETE_ELEMENTS).then(data => {
-      if (data) {
-        this.palettes = data;
-      }
-    });
+
+
+
+    this.iDBService.dataInitializationFinished.subscribe(() => {
+
+      this.iDBService.getAllData(DataStorages.CATEGORIES).then(data => {
+        if (data) {
+          this.categories = data;
+        }
+      });
+      this.iDBService.getAllData(DataStorages.IMAGES).then(data => {
+        if (data) {
+          this.images = data;
+        }
+      });
+      this.iDBService.getAllData(DataStorages.COLORS).then(data => {
+        if (data) {
+          this.colors = data;
+        }
+      });
+      this.iDBService.getAllData(DataStorages.PALLETE_ELEMENTS).then(data => {
+        if (data) {
+          this.palettes = data;
+        }
+      });
+    })
+
+
+
   }
 
   dragEvent(event: any) {

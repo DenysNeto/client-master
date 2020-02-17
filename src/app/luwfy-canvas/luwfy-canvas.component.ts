@@ -639,8 +639,14 @@ export class CanvasComponent implements OnInit, AfterViewInit {
             })
           }
         }
+
+        this.iDBService.dataInitializationFinished.next(true);
+
+
+
+        
         //  this.iDBService.getAllDataObjects();
-        this.httpClientService.createDeployPayload();
+        // this.httpClientService.createDeployPayload();
       }
     })
 
@@ -1093,5 +1099,5 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   }
 }
 
-}
+
 
