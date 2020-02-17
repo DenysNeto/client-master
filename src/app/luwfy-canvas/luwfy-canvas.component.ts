@@ -624,24 +624,30 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit() {
+
     this.httpClientService.getInitialData();
-    //this.httpClientService.getFlowData();
-    this.httpClientService.getPaletteData();
+
+    // this.httpClientService.getInitialData();
+    // //this.httpClientService.getFlowData();
+    // this.httpClientService.getPaletteData();
 
     console.log(' localIDB.objectStoreNames');
-    this.httpClientService.httpResponsePayload.subscribe(payloadData => {
-      if (payloadData.stores) {
-        for (let storeName in payloadData.stores) {
-          if (payloadData.stores[storeName].length > 0) {
+    this.httpClientService.httpResponsePayload.subscribe((payloadData) => {
+      if (payloadData) {
+
+        for (let storeName in payloadData) {
+          if (payloadData[storeName].length > 0) {
+            console.log('storeName1', storeName);
             //check if store created in database if no creates it 
-            this.iDBService.connectionToIdb();
             this.iDBService.getStoreFromIDBByNameAndClear(storeName);
-            payloadData.stores[storeName].forEach(storeElement => {
+            payloadData[storeName].forEach((storeElement) => {
+              console.log('storeElement1', storeName, storeElement);
               this.iDBService.addData(storeName, storeElement);
             })
           }
         }
-
+        //  this.iDBService.getAllDataObjects();
+        this.httpClientService.createDeployPayload();
       }
     })
 
@@ -1030,5 +1036,10 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     // TODO: deploy project on server
     // NOW IS DELETE DB
     this.iDBService.deleteDB();
+  }
+
+  deployProject() {
+    this.httpClientService.postDataOnDeploy();
+
   }
 }
