@@ -4,7 +4,7 @@ import { Subject } from 'rxjs';
 import { ICurrentLineToDraw } from '../luwfy-canvas/shapes-interface';
 import { IdbService } from './indexed-db.service';
 import { DataStorages } from './indexed-db.interface';
-import { JsonRegistryService } from './json-registry.service';
+import { JsonInstancesService } from './json-instances.service';
 // project  id key in localStorage
 const PROJECT_ID_KEY = "projectId";
 const apiUrl = "https://sandboxcrm.openax.com/luwfy";
@@ -33,7 +33,7 @@ export class HttpClientService {
   //TODO  change interfaces
   httpResponsePayload: Subject<any> = new Subject<any>();
 
-  constructor(private http: HttpClient, private idbService: IdbService, private jsonRegistryService: JsonRegistryService) {
+  constructor(private http: HttpClient, private idbService: IdbService, private jsonInstancesService: JsonInstancesService) {
 
   }
 
@@ -145,10 +145,10 @@ export class HttpClientService {
     let currentProjectId = localStorage.getItem(PROJECT_ID_KEY);
     //let indexedDbStoragePayload = await this.createDeployPayload();
     let indexedDbStoragePayload = await this.createDeployPayload();
-    console.log('JSON_TO_SEND', this.jsonRegistryService.jsonRegistryObject);
+    console.log('JSON_TO_SEND', this.jsonInstancesService.jsonRegistryObject);
 
     if (currentProjectId) {
-      this.postDataOnDeployWithProjectId(this.jsonRegistryService.jsonRegistryObject, currentProjectId)
+      this.postDataOnDeployWithProjectId(this.jsonInstancesService.jsonRegistryObject, currentProjectId)
     }
     else {
       this.postDataOnDeployWithoutProjectId(indexedDbStoragePayload);

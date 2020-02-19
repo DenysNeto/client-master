@@ -56,11 +56,10 @@ export class BlocksService {
     });
   }
 
-  getFlowBoardById(flowBoardId: number)
-  {
+  getFlowBoardById(flowBoardId: number) {
+    console.log('qwerty', flowBoardId);
     return this.flowboards.find((flowBoardElement => {
-      if(flowBoardElement._id === flowBoardId)
-      {
+      if (flowBoardElement._id === flowBoardId) {
         return flowBoardElement;
 
 
