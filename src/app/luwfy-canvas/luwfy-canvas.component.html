@@ -61,12 +61,12 @@
         *ngIf="activeTab === subTabs[0]"><span style="font-size:xx-large">+</span>
       </button>
 
-      <button class="save-button" mat-mini-fab color="primary" title="Save project" (click)="saveProject()"
+      <button class="save-button" mat-mini-fab color="primary" title="Save project" (click)="deployProject()"
         *ngIf="activeTab === subTabs[0]">
         <mat-icon>save</mat-icon>
       </button>
-      <button mat-mini-fab color="primary" title="Deploy project" (click)="deployProject()">
-        <mat-icon>cloud</mat-icon>
+      <button mat-mini-fab color="primary" title="Deploy project" (click)="clearIdb()">
+        <mat-icon>delete</mat-icon>
       </button>
     </div>
 
