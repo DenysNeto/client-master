@@ -1,7 +1,24 @@
 <div class="import-container">
 
     <div class="head_line">
-        <span>Import</span>
+        <h2>IMPORT</h2>
+    </div>
+
+    <div class="paste-or-chose">
+        <span>Paste json or select file</span>
+        <label class="file-upload">
+            <input type="file" accept=".json" (change)="onGetFile($event)" />
+            <i class="fa fa-cloud-download"></i> Select JSON file
+        </label>
+    </div>
+
+    <div class="view-container">
+        <app-editor-code [content]='viewerData' [isReadOnly]='false' (changeDataImport)="onChangeText($event)">
+        </app-editor-code>
+    </div>
+    <div class="import-action-buttons">
+        <button (click)="onClose()">Close</button>
+        <button [mat-dialog-close]="dataToImport" [disabled]="!viewerData && !dataToImport">Import</button>
     </div>
 
 </div>

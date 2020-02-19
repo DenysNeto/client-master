@@ -1,24 +1,59 @@
 ::ng-deep .mat-dialog-container {
-    padding: 0;
-  }
+  padding: 0;
+}
 
 .export-container {
-    width: 935px;
-    height: 770px;
-  
-    .head_line {
-      background-color: #1b6580;
-      height: 50px;
-  
-      span {
-        color: white;
-      }
-    }
+  width: 935px;
+  height: 770px;
 
-    &>textarea{
-      margin: auto auto;
-      width: 80%;
-      height: 80%;
-      resize: none;
+  .head_line {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #1b6580;
+    height: 50px;
+
+    h2 {
+      color: white;
     }
   }
+}
+
+.export-group-buttons {
+  margin: 20px;
+  & > span {
+    margin: 20px;
+  }
+  & > button {
+    width: 100px;
+    height: 30px;
+  }
+}
+
+.view-container {
+  width: 80%;
+  height: 70%;
+  border: 2px solid silver;
+  margin: 20px auto;
+  padding: 10px;
+}
+
+.export-action-buttons {
+  width: 100%;
+  height: 50px;
+  text-align: center;
+  & > button {
+    width: 100px;
+    height: 30px;
+    background-color: tomato;
+    color: snow;
+  }
+  & > button:not(:first-child) {
+    background-color: slateblue;
+  }
+}
+
+.active-button {
+  background-color: yellowgreen;
+  color: #fff;
+}

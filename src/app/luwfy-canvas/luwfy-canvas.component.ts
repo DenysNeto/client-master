@@ -8,7 +8,6 @@ import { Collection } from 'konva/types/Util';
 import { MatDialog, MatMenuTrigger, MatDialogRef } from '@angular/material';
 import { BlocksRedactorService } from '../popups/blocks-redactor.service';
 import { Group } from 'konva/types/Group';
-import { UndoRedoService } from '../services/undo-redo.service';
 import { ActionType } from './undo-redo.interface';
 import { Layer } from 'konva/types/Layer';
 import { UndoRedoCanvasService } from '../services/undo-redo-canvas.service';
@@ -42,7 +41,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     private canvasService: CanvasService,
     private dialog: MatDialog,
     private blocksRedactorService: BlocksRedactorService,
-    private undoRedoService: UndoRedoService,
     private tempService: UndoRedoCanvasService,
     private blocksService: BlocksService,
     private testStartStop: TestStartStop,
@@ -76,6 +74,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   private palettes: PaletteElement[] = [];
   private colors: Color[] = [];
   private images: Image[] = [];
+  private viewBoardSF: number;
   private exportModalRef: MatDialogRef<ExportWindowComponent>;
   private importModalRef: MatDialogRef<ImportWindowComponent>;
 
@@ -139,12 +138,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     .on('dragstart', event => {
       this.activeWrapperBlock.isDraw = false;
       this.activeWrapperBlock.rectangle.setAttr('visible', false);
-      this.undoRedoService.addAction({
-        action: ActionType.Move,
-        object: event.target,
-        coordinates: { x: event.target.attrs.x, y: event.target.attrs.y },
-        parent: event.target.parent as Layer
-      });
     })
     .on('dragmove', event => {
       if (!event) {
@@ -274,23 +267,18 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     return {
       block,
       //  color,
-      //   image 
+      //   image
     };
   }
 
-
   handleDragOver = e => {
-
     if (this.idChangedTrigger) {
-      console.log("current_id", this.currentId);
       this.currentDraggedGroup = this.canvasService.createDefaultGroup(this.mainLayer, this.activeWrapperBlock, this.currentActiveGroup, this.getAllBlockVariables(this.currentId));
       this.idChangedTrigger = false;
       this.mainLayer.getStage().add(this.currentDraggedGroup);
       this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].setAttr('time', new Date().getTime());
       this.mainLayer.getStage().draw();
-      this.undoRedoService.addAction({ action: ActionType.Create, object: this.currentDraggedGroup, parent: this.mainLayer });
     } else {
-
       this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].position({ x: e.layerX / (this.zoomInPercent / 100), y: e.layerY / (this.zoomInPercent / 100) });
       this.checkingBlockInFlowboard();
       if (!this.interval) {
@@ -463,10 +451,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       this.canvasService.activePathsArr.forEach(elem => {
         elem.remove();
       });
-      // this.undoRedoService.addAction({
-      //   action: ActionType.Delete,
-      //   object: this.canvasService.activePathsArr
-      // });
       this.canvasService.resetActivePathArr();
     }
     this.mainLayer.getStage().draw();
@@ -509,8 +493,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       ShapesClipboard.setSizeForCopiedGroup(this.currentCopiedGroup);
       this.setPositionForGroup(this.currentCopiedGroup);
       this.currentCopiedGroup.setAttr('visible', true);
-    } else {
-      this.localNotificationService.sendLocalNotification(`Clipboard is empty`, NotificationTypes.ERROR);
     }
     this.mainLayer.getStage().draw();
   }
@@ -550,7 +532,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
         this.activeTab.startStageSize.oldHeight = this.stage.getStage().height();
       }
     }
-
     if (this.currentLineToDraw.isLineDrawable) {
       const pos = this.stage.getStage().getPointerPosition();
       if (Math.abs(this.currentLineToDraw.prevMainX - pos.x) > 10 || Math.abs(this.currentLineToDraw.prevMainY - pos.y) > 10) {
@@ -591,7 +572,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       this.updateDragWrapper({ x: e.layerX, y: e.layerY });
       this.mainLayer.getStage().draw();
     }
-
   };
 
   handleMouseDown = e => {
@@ -816,9 +796,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
                   })
                 }
               });
-
-
-
             let temp_custom = actualFlowboard.findOne(elem => elem._id === this.currentDraggedGroup._id);
             temp_custom.dragBoundFunc(pos => this.setDragBoundFunc(temp_custom, pos));
             this.blocksService.pushFlowboardsChanges();
@@ -856,7 +833,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       });
       temp_elem && this.canvasService.checkIfCollisionBetweenFlowBoards(temp_elem, this.blocksService.getFlowboards(), value.dimension);
     });
-
     this.blocksService && this.blocksService.getFlowboards().forEach(flow => {
       this.createGrid(flow);
       this.mainLayer.getStage().add(flow);
@@ -886,8 +862,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     this.zoomInPercent = this.stage.getStage().scaleX() * 100;
     this.canvasService.setCurrentZoom(this.zoomInPercent);
   }
-
-
 
   loadingDataFromIDB() {
     // loading boards from indexedDB
@@ -1067,7 +1041,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     }
   }
 
-
   onMainTabBarClick(event) {
     this.activeTab = this.subTabs.find(
       tab => tab.label === event.tab.textLabel
@@ -1075,6 +1048,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     this.mainLayer.getStage().removeChildren();
     this.mainLayer.getStage().draw();
     if (this.activeTab.label === this.subTabs[0].label) {
+      this.viewBoardSF = null;
       this.stage.getStage().width(this.oldStageWidth);
       this.stage.getStage().height(this.oldStageHeight);
       this.activeTab.layerData.forEach(elem => {
@@ -1098,13 +1072,12 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   showSubView(id) {
     this.mainLayer.getStage().removeChildren();
     this.stage.getStage().content.parentElement.parentElement.parentElement.scroll(0, 0);
-    let showFlow = this.blocksService.getFlowboards().find(flow => flow._id === id).clone();
-    this.stage.getStage().width(KonvaStartSizes.width);
-    if (showFlow.attrs.height * 1.25 > KonvaStartSizes.height) {
-      this.stage.getStage().height(showFlow.attrs.height * 1.25);
-    } else {
-      this.stage.getStage().height(KonvaStartSizes.height);
-    }
+    let showFlow = this.blocksService.getFlowboards().find(flow => {
+      if (flow._id === id) {
+        this.viewBoardSF = flow._id;
+        return flow;
+      }
+    }).clone();
     this.convertMyFlowForView(showFlow);
     this.mainLayer.getStage().add(showFlow);
     this.activeTab.startStageSize.oldWidth = this.stage.getStage().width();
@@ -1172,14 +1145,22 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   }
 
   openExport() {
-    this.exportModalRef = this.dialog.open(ExportWindowComponent, {
-      data: this.canvasService.selectedBlocks
+    this.canvasService.exportData(this.mainLayer.getStage(), this.viewBoardSF, (data: any) => {
+      Promise.all(data).then(res => {
+        this.dialog.open(ExportWindowComponent, {
+          data: { value: JSON.stringify(res, null, 2), ifSelect: this.canvasService.selectedBlocks.length > 0 || this.viewBoardSF }
+        });
+      })
     });
   }
 
   openImport() {
-    this.importModalRef = this.dialog.open(ImportWindowComponent, {
-      data: 'This is Import'
+    this.importModalRef = this.dialog.open(ImportWindowComponent);
+    this.importModalRef.afterClosed().subscribe(data => {
+      if (data) {
+        let importObjArr = JSON.parse(data);
+        console.log(importObjArr);
+      }
     });
   }
 
@@ -1188,6 +1169,3 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
   }
 }
-
-
-

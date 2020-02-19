@@ -71,6 +71,10 @@
   background-color: #4ecf4e;
 }
 
+.buttons-group .save-button:disabled {
+  background-color: #d3d3d3;
+}
+
 .buttons-group .chat-button {
   background-color: #d3af7a;
 }

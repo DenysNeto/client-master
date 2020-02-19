@@ -8,18 +8,63 @@
 }
 
 .export-container .head_line {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
   background-color: #1b6580;
   height: 50px;
 }
 
-.export-container .head_line span {
+.export-container .head_line h2 {
   color: white;
 }
 
-.export-container > textarea {
-  margin: auto auto;
+.export-group-buttons {
+  margin: 20px;
+}
+
+.export-group-buttons > span {
+  margin: 20px;
+}
+
+.export-group-buttons > button {
+  width: 100px;
+  height: 30px;
+}
+
+.view-container {
   width: 80%;
-  height: 80%;
-  resize: none;
+  height: 70%;
+  border: 2px solid silver;
+  margin: 20px auto;
+  padding: 10px;
+}
+
+.export-action-buttons {
+  width: 100%;
+  height: 50px;
+  text-align: center;
+}
+
+.export-action-buttons > button {
+  width: 100px;
+  height: 30px;
+  background-color: tomato;
+  color: snow;
+}
+
+.export-action-buttons > button:not(:first-child) {
+  background-color: slateblue;
+}
+
+.active-button {
+  background-color: yellowgreen;
+  color: #fff;
 }
 /*# sourceMappingURL=export-window.component.css.map */

@@ -1,9 +1,22 @@
 <div class="export-container">
 
     <div class="head_line">
+        <h2>EXPORT</h2>
+    </div>
+    <div class="export-group-buttons">
         <span>Export</span>
+        <button [ngClass]="{'active-button': !activeButton}" (click)="onExportSelectedData()"
+            [disabled]='!ifSelect'>Selected</button>
+        <button [ngClass]="{'active-button': activeButton}" (click)="onExportAllProject()" [disabled]='!ifSelect'>All
+            project</button>
+    </div>
+    <div class="view-container">
+        <app-editor-code [content]='viewerData' [isReadOnly]='true'></app-editor-code>
     </div>
 
-    <textarea id="exported-json" cols="30" rows="10">{{selectedData.toJSON()}}</textarea>
-
+    <div class="export-action-buttons">
+        <button (click)="onClose()">Close</button>
+        <button (click)="onDownload()">Download</button>
+        <button (click)="onCopy()">Copy</button>
+    </div>
 </div>
