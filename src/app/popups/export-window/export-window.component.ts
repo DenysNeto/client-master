@@ -11,8 +11,6 @@ import { LocalNotificationService, NotificationTypes } from '../local-notificati
 })
 export class ExportWindowComponent implements OnInit {
 
-  @ViewChild('textViewer', { static: false }) textViewer: ElementRef;
-
   private setting = {
     element: {
       dynamicDownload: null as HTMLElement
@@ -22,6 +20,7 @@ export class ExportWindowComponent implements OnInit {
   allProjectData: string;
   ifSelect: boolean;
   activeButton: boolean = false;
+  viewerData: string = ''
 
   constructor(
     public dialogRef: MatDialogRef<ExportWindowComponent>,
@@ -37,27 +36,27 @@ export class ExportWindowComponent implements OnInit {
     Promise.all(this.canvasService.getAllDataFromIdb()).then(res => {
       let objectsArray = [];
       res.forEach(array => array.forEach(value => objectsArray.push(value)));
-      this.allProjectData = JSON.stringify(objectsArray);
+      this.allProjectData = JSON.stringify(objectsArray, null, 2);
       if (!this.ifSelect) {
         this.onExportAllProject();
       } else {
-        this.textViewer.nativeElement.value = this.selectedData;
+        this.viewerData = this.selectedData;
       }
     })
   }
 
   onExportAllProject() {
     this.activeButton = !this.activeButton;
-    this.textViewer.nativeElement.value = this.allProjectData;
+    this.viewerData = this.allProjectData;
   }
 
   onExportSelectedData() {
     this.activeButton = !this.activeButton;
-    this.textViewer.nativeElement.value = this.selectedData;
+    this.viewerData = this.selectedData;
   }
 
   onCopy() {
-    this.clipboardService.copyFromContent(this.textViewer.nativeElement.value);
+    this.clipboardService.copyFromContent(this.viewerData);
     this.localNotificationService.sendLocalNotification(`Copied to clipboard`, NotificationTypes.INFO);
     this.dialogRef.close();
   }
@@ -65,7 +64,7 @@ export class ExportWindowComponent implements OnInit {
   onDownload() {
     this.dyanmicDownloadByHtmlTag({
       fileName: 'export.json',
-      text: this.textViewer.nativeElement.value
+      text: this.viewerData
     })
   }
 

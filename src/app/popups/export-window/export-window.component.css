@@ -46,15 +46,6 @@
   padding: 10px;
 }
 
-.view-container > textarea {
-  float: right;
-  width: 70%;
-  height: 80%;
-  resize: none;
-  cursor: not-allowed;
-  background-color: #e6e6e6;
-}
-
 .export-action-buttons {
   width: 100%;
   height: 50px;

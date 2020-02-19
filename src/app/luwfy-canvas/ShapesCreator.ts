@@ -1,7 +1,7 @@
 import Konva from 'konva';
 import { theme } from './theme';
 import { FlowboardSizes, ShapesSizes, ShapesSizes as sizes } from './sizes';
-import { BtnEventBlock, ButtonsTypes, CircleTypes, GroupTypes, IStartPointPathInfo, SettingIcons, IRectCustom } from './shapes-interface';
+import { ButtonsTypes, CircleTypes, GroupTypes, IStartPointPathInfo } from './shapes-interface';
 
 
 const ShapeCreator = {
@@ -45,7 +45,7 @@ const ShapeCreator = {
     return errorPort;
   },
 
-  createRect: (strokeColor: string, height?: number, payload?: any): IRectCustom => {
+  createRect: (strokeColor: string, height?: number, payload?: any) => {
     return new Konva.Rect({
       width: sizes.block_width,
       height: height || sizes.block_height,
@@ -101,7 +101,7 @@ const ShapeCreator = {
       }));
   },
 
-  switcherGroupCreator: (x = 0, y = 0, rectWidth, rectColor, btnValues: BtnEventBlock) => {
+  switcherGroupCreator: (x = 0, y = 0, rectWidth, rectColor, label) => {
     return new Konva.Group({
       x,
       y,
@@ -113,17 +113,17 @@ const ShapeCreator = {
         y: 0,
         width: rectWidth,
         height: 18,
-        fill: btnValues.color_active,
+        fill: rectColor,
         cornerRadius: 10,
         stroke: rectColor,
       }),
       new Konva.Text({
-        x: ((rectWidth + 11) / 2) - (btnValues.label.length * 11 * 0.264),
+        x: ((rectWidth + 11) / 2) - (label.length * 11 * 0.264),
         y: 5,
-        text: btnValues.label,
+        text: label,
         fontSize: 11,
         fontFamily: 'Roboto',
-        fill: btnValues.color_disabled
+        fill: rectColor
       }),
       new Konva.Circle({
         radius: 10,
@@ -135,7 +135,6 @@ const ShapeCreator = {
         strokeWidth: 1,
         fill: 'red',
         switcher_circle: true
-        //type: CircleTypes.Output
       }));
   },
 

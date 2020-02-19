@@ -2,7 +2,6 @@ import { Group } from 'konva/types/Group';
 import { Path } from 'konva/types/shapes/Path';
 import { Circle } from 'konva/types/shapes/Circle';
 import { Rect } from 'konva/types/shapes/Rect';
-import { PaletteElement, Color, Image } from '../services/indexed-db.interface';
 
 
 export enum CircleTypes {
@@ -26,7 +25,6 @@ export enum ButtonsTypes {
   DeleteButton = 'deleteButton'
 }
 
-
 export interface ICoordinates {
   x: number,
   y: number,
@@ -48,7 +46,6 @@ export interface ICurrentLineToDraw {
 
 }
 
-
 export interface IActiveWrapperBlock {
   initial_position: { x: number, y: number },
   now_position: { x: number, y: number },
@@ -66,7 +63,6 @@ export interface IGroupCustom extends Group {
     group_id: number,
   }
 }
-
 
 export interface IStartPointPathInfo {
   start_group_id: number,
@@ -87,15 +83,8 @@ export interface IPathCustom extends Path {
 }
 
 export interface ICircleCustom extends Circle {
-  type: CircleTypes,
-
+  type: CircleTypes
 }
-
-export interface IRectCustom extends Rect {
-
-
-}
-
 
 // interface for icons group in shape group
 export interface SettingIcons {
@@ -104,18 +93,6 @@ export interface SettingIcons {
   edit_icon: string,
   wizard_icon: string
 }
-
-// interface for buttons group in shape group
-// if we have data about button we check
-// is switcher(Debug shape) or button(Inject shape)
-export interface BtnEventBlock {
-  name: string,
-  label: string,
-  switch: number,
-  color_active: string,
-  color_disabled: string
-}
-
 
 export interface dataInTabLayer {
   label: string,

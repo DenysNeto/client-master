@@ -7,10 +7,11 @@
         <span>Export</span>
         <button [ngClass]="{'active-button': !activeButton}" (click)="onExportSelectedData()"
             [disabled]='!ifSelect'>Selected</button>
-        <button [ngClass]="{'active-button': activeButton}" (click)="onExportAllProject()">All project</button>
+        <button [ngClass]="{'active-button': activeButton}" (click)="onExportAllProject()" [disabled]='!ifSelect'>All
+            project</button>
     </div>
     <div class="view-container">
-        <textarea id="exported-json" #textViewer readonly></textarea>
+        <app-editor-code [content]='viewerData' [isReadOnly]='true'></app-editor-code>
     </div>
 
     <div class="export-action-buttons">

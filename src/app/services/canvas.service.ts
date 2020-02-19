@@ -9,10 +9,8 @@ import { theme } from '../luwfy-canvas/theme';
 import { Layer } from 'konva/types/Layer';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { Collection } from 'konva/types/Util';
-import { ActionType } from '../luwfy-canvas/undo-redo.interface';
 import { MatDialog, MatDialogRef } from '@angular/material';
 import { ModalPropComponent } from '../popups/modal-prop/modal-prop.component';
-import { UndoRedoService } from './undo-redo.service';
 import { BlocksRedactorService } from '../popups/blocks-redactor.service';
 import { BlocksService } from './blocks.service';
 import { TestStartStop } from './testStartStop';
@@ -20,7 +18,6 @@ import { Path } from 'konva/types/shapes/Path';
 import { IdbService } from './indexed-db.service';
 import ShapesClipboard from '../luwfy-canvas/shapes-clipboard';
 import { DataStorages, FlowRelation, FlowBlock, Board, FlowPort, DataState } from './indexed-db.interface';
-import { async } from '@angular/core/testing';
 
 @Injectable({
   providedIn: 'root'
@@ -33,7 +30,6 @@ export class CanvasService {
 
   constructor(
     private dialog: MatDialog,
-    private undoRedoService: UndoRedoService,
     private blocksRedactorService: BlocksRedactorService,
     private blocksService: BlocksService,
     private testStartStop: TestStartStop,
@@ -123,11 +119,8 @@ export class CanvasService {
   });
 
   dragFinished: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(true);
-
   lineToDraw: Subject<ICurrentLineToDraw> = new BehaviorSubject<ICurrentLineToDraw>(this.currentLineToDraw);
-
   activeBlock: Subject<IActiveWrapperBlock> = new BehaviorSubject<IActiveWrapperBlock>(this.activeWrapperBlock);
-
   blockSettingDialogRef: MatDialogRef<ModalPropComponent>;
 
   isElem() {
@@ -209,11 +202,6 @@ export class CanvasService {
           end_flowboard_id: event.target.parent.parent._id
         });
         current_path.setAttr('zIndex', 1);
-        this.undoRedoService.addAction({
-          action: ActionType.Create,
-          object: current_path as IPathCustom,
-          parent: event.target.parent as Group
-        });
 
         this.setGradientForPath(current_path as Path,
           { x: start_circle.attrs.x, y: start_circle.attrs.y },
@@ -488,12 +476,6 @@ export class CanvasService {
       if (this.currentLineToDraw.isLineDrawable) {
         return 0;
       }
-      this.undoRedoService.addAction({
-        action: ActionType.Move,
-        object: event.target,
-        coordinates: { x: event.target.attrs.x, y: event.target.attrs.y },
-        parent: event.target.parent as Layer
-      });
       if (currentActiveGroup.isDraw) {
         this.deleteShapesFromGroup(mainLayer, currentActiveGroup);
       }
@@ -770,9 +752,7 @@ export class CanvasService {
   }
 
   createDefaultGroup(mainLayer: Layer, activeWrapperBlock, currentActiveGroup: Group, blockVariables, blockData?: FlowBlock, portsData?) {
-    let temp_group;
-    let height = sizes.block_height;
-    temp_group = new Konva.Group({
+    let temp_group = new Konva.Group({
       draggable: true,
       type: GroupTypes.Block,
       name: blockVariables.block.name,
@@ -781,66 +761,62 @@ export class CanvasService {
       paletteElementId: blockVariables.block.id,
       showOnPanel: true
     }) as IGroupCustom;
-
+    let height = this.calculateHeightForBlock(1, 1, 0);
     temp_group._id = blockData ? blockData.id : ShapeCreator.randomIdNumber();
-
-    // if (newBlockVariables.outputs + newBlockVariables.output_errors > 2 || newBlockVariables.inputs > 2) {
-    //   let max_ports = newBlockVariables.outputs + newBlockVariables.output_errors > newBlockVariables.inputs ?
-    //     newBlockVariables.outputs + newBlockVariables.output_errors : newBlockVariables.inputs;
-    //   height = sizes.block_height + (max_ports - 1) * 30;
-    // } else {
-    //   height = sizes.block_height;
-    // }
-
     temp_group.add(ShapeCreator.createShapeName(blockVariables.block.name, blockVariables.color.value));
-
     temp_group.add(ShapeCreator.createRect(blockVariables.color.value, height));
-
     blockData ? this.createPorts(blockVariables, temp_group, height, blockData.id, portsData) : this.createPorts(blockVariables, temp_group, height);
-
     temp_group.add(ShapeCreator.iconGroupCreator(SwitcherSizes.margin_left, (height - SwitcherSizes.iconsFontSize) / 2).hide());
-
     temp_group.add(ShapeCreator.createFaceImage(ShapesSizes.block_width - ShapesSizes.face_img_font_size - 10,
       (height - ShapesSizes.face_img_font_size) / 2, blockVariables.color.value, blockVariables.image.value)
     );
-
-    // TODO: we haven't info about buttons
-    // if (newBlockVariables.btn_event_block.switch > -1) {
-    //   temp_group.add(ShapeCreator.switcherGroupCreator((ShapesSizes.block_width - 45) / 2, height - 9, 45, newBlockVariables.color, newBlockVariables.btn_event_block)
-    //   );
-    //   let blockSwitcher = temp_group.findOne(elem => !!elem.attrs.switched);
-    //   if (newBlockVariables.btn_event_block.switch === 1) {
-    //     blockSwitcher.on('click', event => {
-    //       this.switcherAnimation(event, newBlockVariables.btn_event_block.color_active, newBlockVariables.btn_event_block.color_disabled, newBlockVariables.color)
-    //     });
-    //   } else if (newBlockVariables.btn_event_block.switch === 0) {
-    //     blockSwitcher.on('mousedown', event =>
-    //       this.clickButtonAnimation(event)
-    //     );
-    //   }
-    // }
-
     temp_group.setAttrs({
       width: sizes.block_width + sizes.circle_radius * 2,
       height: height
     });
-
+    this.setButtonOnBlock(temp_group, -1);
     this.setClickEventForGroup(temp_group);
-
     this.setListenerOnBlock(mainLayer, temp_group);
-
     this.setListenerOnIcons(temp_group);
-
     let circles_collection = this.getAllCirclesFromGroup(temp_group);
-
     circles_collection && circles_collection.each((elem: ICircleCustom) => {
       elem.setAttr('zIndex', 1000);
       this.setMouseDownEventForSwitchCircle(elem, mainLayer, currentActiveGroup);
     });
-
     this.setRegularGroupHandlers(temp_group, mainLayer, activeWrapperBlock, currentActiveGroup);
-
     return temp_group;
+  }
+
+  calculateHeightForBlock(inputPorts, outputPorts, errorPorts) {
+    let calcHeight = 0;
+    if (outputPorts + errorPorts > 2 || inputPorts > 2) {
+      let max_ports = outputPorts + errorPorts > inputPorts ? outputPorts + errorPorts : inputPorts;
+      calcHeight = sizes.block_height + (max_ports - 1) * 30;
+    } else {
+      calcHeight = sizes.block_height;
+    }
+    return calcHeight;
+  }
+
+  setButtonOnBlock(temp_group, buttonType) {
+    let height = temp_group.attrs.height;
+    let color = 'green';
+    let eventColor = 'orange';
+    let disabledCiolor = 'silver';
+    let label = 'Click'
+    if (buttonType > -1) {
+      temp_group.add(ShapeCreator.switcherGroupCreator((ShapesSizes.block_width - 45) / 2, height - 9, 45, color, label));
+      let blockSwitcher = temp_group.findOne(elem => !!elem.attrs.switched);
+      if (buttonType === 1) {
+        blockSwitcher.on('click', event => {
+          this.switcherAnimation(event, eventColor, disabledCiolor, color)
+        });
+      } else if (buttonType === 0) {
+        blockSwitcher.on('mousedown', event =>
+          this.clickButtonAnimation(event)
+        );
+      }
+    }
   }
 
   setMouseDownEventForSwitchCircle(circle: ICircleCustom, mainLayer: Layer, currentActiveGroup: Group) {
@@ -890,7 +866,6 @@ export class CanvasService {
       }
     });
   };
-
 
   // function set listeners on block for hover effect 
   setListenerOnBlock(layer: Layer, group: Group) {
@@ -1093,9 +1068,9 @@ export class CanvasService {
     }
   }
 
-  exportData(layer: Layer, callback) {
+  exportData(layer: Layer, viewBoardSF, callback) {
     let promisesArr = [];
-    if (this.selectedBlocks.length > 0) {
+    if (this.selectedBlocks.length > 0 && !viewBoardSF) {
       this.selectedBlocks.forEach((elem) => {
         promisesArr.push(new Promise(res => this.iDBService.getDataByKey(DataStorages.FLOW_BLOCKS, elem._id).then(data => res(data))));
         elem.children.each(shape => {
@@ -1107,15 +1082,30 @@ export class CanvasService {
             }
           }
         })
-
+      })
+      callback(promisesArr);
+    } else if (viewBoardSF) {
+      let board = this.blocksService.getFlowboards().find(elem => elem._id === viewBoardSF);
+      promisesArr.push(new Promise(res => this.iDBService.getDataByKey(DataStorages.BOARDS, viewBoardSF).then(data => res(data))));
+      board.children.each(block => {
+        if (block.nodeType === 'Group') {
+          promisesArr.push(new Promise(res => this.iDBService.getDataByKey(DataStorages.FLOW_BLOCKS, block._id).then(data => res(data))));
+          block.children.each(shape => {
+            if (shape.attrs.type === CircleTypes.Input || shape.attrs.type === CircleTypes.Output || shape.attrs.type === CircleTypes.Error) {
+              promisesArr.push(new Promise(res => this.iDBService.getDataByKey(DataStorages.FLOW_PORTS, shape._id).then(data => res(data))));
+            } else if (shape.className === 'Path') {
+              if (this.isPathBetweenSelectedBlocks(shape)) {
+                promisesArr.push(new Promise(res => this.iDBService.getDataByKey(DataStorages.FLOW_RELATIONS, shape._id).then(data => res(data))));
+              }
+            }
+          })
+        }
       })
       callback(promisesArr);
     } else {
       callback(promisesArr);
     }
   }
-
-
 
   isPathBetweenSelectedBlocks(path): boolean {
     let input = false;
