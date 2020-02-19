@@ -80,6 +80,9 @@ export class IdbService {
         return store.get(key);
     }
 
+
+
+
     async getStoreFromIDBByNameAndClear(storeName: string) {
         await this.connectionToIdb();
         const tx = await this.localIDB.transaction(storeName, 'readwrite');

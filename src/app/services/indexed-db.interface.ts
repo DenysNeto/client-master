@@ -79,14 +79,14 @@ export interface Board {
 }
 
 export interface PaletteElement {
-    id: number,
-    categoryId: number,
     name: string,
-    imageId: number,
-    colorId: number,
-    description: string,
-    formId: number,
-    state: DataState
+    active:boolean,
+    color: string,
+    input: boolean,
+    outputs: number,
+    id: string,
+    luwfyImageId: string,
+    luwfyBlockcategoyName: string,
 }
 
 export interface Form {

@@ -27,6 +27,7 @@ import { HttpClientService } from '../services/http-client.service';
 import { Observable, of } from 'rxjs';
 import { ExportWindowComponent } from '../popups/export-window/export-window.component';
 import { ImportWindowComponent } from '../popups/import-window/import-window.component';
+import { JsonRegistryService, TYPE_FOR_FLOWBOARD } from '../services/json-registry.service';
 
 @Component({
   selector: 'luwfy-canvas',
@@ -36,6 +37,7 @@ import { ImportWindowComponent } from '../popups/import-window/import-window.com
 
 export class CanvasComponent implements OnInit, AfterViewInit {
   constructor(
+    private jsonRegistryService: JsonRegistryService,
     private RegistryService: RegistryService,
     private canvasService: CanvasService,
     private dialog: MatDialog,
@@ -56,22 +58,24 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
   data = [];
   lines = [];
-  currentId: number;
+  currentId: number | string;
   idChangedTrigger: boolean = false;
   subTabs: dataInTabLayer[] = [];
   menuOfViews: string[] = [];
   zoomInPercent: number = 100;
   activeTab: dataInTabLayer;
 
+
+  private isDataLoadedFromDatabase: boolean = false;
   private interval: any;
   private isMouseDown: boolean;
   private oldStageWidth: number;
   private oldStageHeight: number;
   private calledMenuButton: any;
   private copiedBlocks = [];
-  private palettes: PaletteElement[];
-  private colors: Color[];
-  private images: Image[];
+  private palettes: PaletteElement[] = [];
+  private colors: Color[] = [];
+  private images: Image[] = [];
   private exportModalRef: MatDialogRef<ExportWindowComponent>;
   private importModalRef: MatDialogRef<ImportWindowComponent>;
 
@@ -264,13 +268,21 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   // TODO: taking block data
   getAllBlockVariables(id) {
     let block = this.palettes.find(palette => palette.id === id);
-    let color = this.colors.find(color => color.id === block.colorId);
-    let image = this.images.find(image => image.id === block.imageId);
-    return { block, color, image };
+    // let color = this.colors.find(color => color.id === block.colorId);
+    // let image = this.images.find(image => image.id === block.imageId);
+    console.log('BLOCK', block);
+    return {
+      block,
+      //  color,
+      //   image 
+    };
   }
 
+
   handleDragOver = e => {
+
     if (this.idChangedTrigger) {
+      console.log("current_id", this.currentId);
       this.currentDraggedGroup = this.canvasService.createDefaultGroup(this.mainLayer, this.activeWrapperBlock, this.currentActiveGroup, this.getAllBlockVariables(this.currentId));
       this.idChangedTrigger = false;
       this.mainLayer.getStage().add(this.currentDraggedGroup);
@@ -278,6 +290,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       this.mainLayer.getStage().draw();
       this.undoRedoService.addAction({ action: ActionType.Create, object: this.currentDraggedGroup, parent: this.mainLayer });
     } else {
+
       this.mainLayer.getStage().children[this.mainLayer.getStage().children.length - 1].position({ x: e.layerX / (this.zoomInPercent / 100), y: e.layerY / (this.zoomInPercent / 100) });
       this.checkingBlockInFlowboard();
       if (!this.interval) {
@@ -414,26 +427,56 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     }
   };
 
-  @HostListener('document:keydown.backspace') undoBackspace(event: KeyboardEvent) {
-    if (this.currentActiveGroup.hasChildren()) {
-      this.undoRedoService.addAction({
-        action: ActionType.Delete,
-        object: this.currentActiveGroup.children,
-        parent: this.currentActiveGroup
+  handleBackspaceKeydown() {
+    // get all selected blocks
+    //  get all lines(wires) inputed to each selected block
+    // remove selected blocks
+    // remove lines(wires) input/output from selected block
+
+    if (this.canvasService.selectedBlocks.length > 0) {
+      this.canvasService.selectedBlocks.forEach(selectedBlock => {
+        let currentFlowboard = this.blocksService.getFlowBoardById(selectedBlock.parent._id);
+        let allWiresLinesFromFlowboard = this.canvasService.getAllWiresLinesFromFlowboard(currentFlowboard);
+        let inputWiresLinesForBlock = [];
+        if (allWiresLinesFromFlowboard) {
+          allWiresLinesFromFlowboard.each(wireLine => {
+            if (wireLine.attrs.end_info.end_group_id == selectedBlock._id) {
+              inputWiresLinesForBlock.push(wireLine);
+            }
+          })
+        }
+        if (inputWiresLinesForBlock.length > 0) {
+          inputWiresLinesForBlock.forEach(inputWireLine => inputWireLine.remove());
+        }
+        selectedBlock.remove();
+
       });
-      this.currentActiveGroup.removeChildren();
+
+      // this.undoRedoService.addAction({
+      //   action: ActionType.Delete,
+      //   object: this.currentActiveGroup.children,
+      //   parent: this.currentActiveGroup
+      // });
+      // this.currentActiveGroup.removeChildren();
     }
     if (this.canvasService.activePathsArr.length > 0) {
       this.canvasService.activePathsArr.forEach(elem => {
         elem.remove();
       });
-      this.undoRedoService.addAction({
-        action: ActionType.Delete,
-        object: this.canvasService.activePathsArr
-      });
+      // this.undoRedoService.addAction({
+      //   action: ActionType.Delete,
+      //   object: this.canvasService.activePathsArr
+      // });
       this.canvasService.resetActivePathArr();
     }
+    this.mainLayer.getStage().draw();
   }
+
+  @HostListener('document:keydown.backspace') undoBackspace(event: KeyboardEvent) {
+    this.handleBackspaceKeydown();
+  }
+
+
 
   @HostListener('document:keydown.escape') undoEsc(event: KeyboardEvent) {
     if (this.currentCopiedGroup.isVisible() && this.currentCopiedGroup.hasChildren()) {
@@ -548,6 +591,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       this.updateDragWrapper({ x: e.layerX, y: e.layerY });
       this.mainLayer.getStage().draw();
     }
+
   };
 
   handleMouseDown = e => {
@@ -609,6 +653,9 @@ export class CanvasComponent implements OnInit, AfterViewInit {
             }
             flowboard.destroy();
             this.blocksService.removeFlowboard(flowboard._id);
+
+            console.log("flowboard", flowboard);
+            this.jsonRegistryService.deleteElementFromJsonRegistry(flowboard._id);
             this.localNotificationService.sendLocalNotification(`Flowboard "${flowboard.attrs.name}" was deleted.`, NotificationTypes.INFO);
           }
         })
@@ -616,44 +663,49 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     })
   }
 
+  //get values from indexed DB for [colors, images, palettes]
+  async setInitialValuesForBuildPalleteAndBlock() {
+    // this.colors = await this.iDBService.getAllData(DataStorages.COLORS);
+    // this.images = await this.iDBService.getAllData(DataStorages.IMAGES);
+    this.palettes = await this.iDBService.getAllData(DataStorages.PALLETE_ELEMENTS);
+    console.log("Palettes", this.palettes)
+  }
+
+  async getInitialStoresDataFromDB() {
+    await this.setInitialValuesForBuildPalleteAndBlock();
+    this.iDBService.dataInitializationFinished.next(true);
+    //this.loadingDataFromIDB();
+  }
+
   ngOnInit() {
-
-    this.httpClientService.getInitialData();
-
+    this.httpClientService.getPaletteData();
     // this.httpClientService.getInitialData();
-    // //this.httpClientService.getFlowData();
-    // this.httpClientService.getPaletteData();
-
-    console.log(' localIDB.objectStoreNames');
     this.httpClientService.httpResponsePayload.subscribe((payloadData) => {
+      this.iDBService.getStoreFromIDBByNameAndClear(payloadData[0].storeName);
       if (payloadData) {
+        let payloadDataStoreName = payloadData[0].storeName;
+        payloadData.forEach(payloadDataElement => {
+          delete payloadDataElement.storeName;
+          this.iDBService.addData(payloadDataStoreName, payloadDataElement);
 
-        for (let storeName in payloadData) {
-          if (payloadData[storeName].length > 0) {
-            console.log('storeName1', storeName);
-            //check if store created in database if no creates it
-            this.iDBService.getStoreFromIDBByNameAndClear(storeName);
-            payloadData[storeName].forEach((storeElement) => {
-              console.log('storeElement1', storeName, storeElement);
-              this.iDBService.addData(storeName, storeElement);
-            })
-          }
-        }
-
+        })
+        this.getInitialStoresDataFromDB();
         this.iDBService.dataInitializationFinished.next(true);
 
+        // for (let storeName in payloadData) {
+        //   if (payloadData[storeName].length > 0) {
 
-
-        
-        //  this.iDBService.getAllDataObjects();
-        // this.httpClientService.createDeployPayload();
+        //     //check if store created in database if no creates it
+        //     this.iDBService.getStoreFromIDBByNameAndClear(storeName);
+        //     payloadData[storeName].forEach((storeElement) => {
+        //       this.iDBService.addData(storeName, storeElement);
+        //     })
+        //   }
+        // }
+        // this.getInitialStoresDataFromDB();
+        this.isDataLoadedFromDatabase = true;
       }
     })
-
-    // TODO: take data from iDB
-    this.iDBService.getAllData(DataStorages.IMAGES).then(images => this.images = images);
-    this.iDBService.getAllData(DataStorages.COLORS).then(colors => this.colors = colors);
-    this.iDBService.getAllData(DataStorages.PALLETE_ELEMENTS).then(paletts => this.palettes = paletts);
 
     this.subTabs = [
       {
@@ -676,7 +728,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       });
     }
     this.RegistryService.currentDraggableItem.subscribe(data => {
-      this.currentId = parseInt(data);
+      this.currentId = data;
       this.idChangedTrigger = true;
     });
     this.RegistryService.currentTabBlocks.subscribe(blocks => {
@@ -692,7 +744,12 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit() {
     this.stage.getStage().add(this.mainLayer.getStage());
-    this.loadingDataFromIDB();
+
+    if (!this.isDataLoadedFromDatabase) {
+      this.getInitialStoresDataFromDB();
+      this.iDBService.dataInitializationFinished.next(true);
+      this.loadingDataFromIDB();
+    }
     this.mainLayer.getStage().add(this.activeWrapperBlock.rectangle);
     this.canvasService.dragFinished.subscribe(() => {
       let actualFlowboard;
@@ -706,6 +763,20 @@ export class CanvasComponent implements OnInit, AfterViewInit {
             });
             let actualFlowboardId = actualFlowboard._id;
             actualFlowboard.add(this.currentDraggedGroup);
+            console.log('CURRENT_DRAGGED_GROUP', this.currentDraggedGroup);
+
+            let outputsAmount = this.canvasService.getAllOutputPortsForBoard(this.currentDraggedGroup);
+
+            this.jsonRegistryService.createBlockInJsonRegistry({
+              id: this.currentDraggedGroup._id,
+              wires: [],
+              outputs: outputsAmount,
+              type: this.currentDraggedGroup.attrs.name,
+              x: this.currentDraggedGroup.attrs.x,
+              y: this.currentDraggedGroup.attrs.y,
+              z: this.currentDraggedGroup.parent._id
+            })
+
             // save new Flow block to DB
             this.iDBService.checkIsKeyExist(DataStorages.FLOW_BLOCKS, this.currentDraggedGroup._id)
               .then(res => {
@@ -815,6 +886,8 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     this.zoomInPercent = this.stage.getStage().scaleX() * 100;
     this.canvasService.setCurrentZoom(this.zoomInPercent);
   }
+
+
 
   loadingDataFromIDB() {
     // loading boards from indexedDB
@@ -952,6 +1025,23 @@ export class CanvasComponent implements OnInit, AfterViewInit {
             } as Board);
         }
       });
+
+
+    this.jsonRegistryService.updateTabInJsonRegistry({
+      id: newFlow._id,
+      type: TYPE_FOR_FLOWBOARD,
+      label: newFlow.attrs.name,
+      disabled: false,
+      location: {
+        x: newFlow.attrs.x,
+        y: newFlow.attrs.y
+      },
+      width: newFlow.attrs.width,
+      height: newFlow.attrs.height
+    })
+
+
+
     this.subTabs[0].layerData = [];
     this.subTabs[0].layerData = this.mainLayer.getStage().children.toArray();
     setTimeout(() => {
@@ -1075,7 +1165,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     this.stage.getStage().batchDraw();
   }
 
-  saveProject() {
+  clearIdb() {
     // TODO: deploy project on server
     // NOW IS DELETE DB
     this.iDBService.deleteDB();

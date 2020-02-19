@@ -26,6 +26,9 @@ export enum ButtonsTypes {
   DeleteButton = 'deleteButton'
 }
 
+export enum LineType {
+  LineTypeWires = 'wires',
+}
 
 export interface ICoordinates {
   x: number,
@@ -95,6 +98,8 @@ export interface IRectCustom extends Rect {
 
 
 }
+
+
 
 
 // interface for icons group in shape group

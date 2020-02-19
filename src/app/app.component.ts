@@ -9,10 +9,20 @@ import { IdbService } from './services/indexed-db.service';
 })
 export class AppComponent {
 
+  initInput = false;
   constructor(private RegistryService: RegistryService, private idbService: IdbService) {
   }
 
   ngOnInit() {
+
+
+
+    this.idbService.dataInitializationFinished.subscribe(() => {
+      setTimeout(() => { this.initInput = true }, 1000)
+        ;
+
+    })
+
   }
 
 }
