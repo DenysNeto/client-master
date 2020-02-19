@@ -1,7 +1,7 @@
 import Konva from 'konva';
 import { theme } from './theme';
 import { FlowboardSizes, ShapesSizes, ShapesSizes as sizes } from './sizes';
-import { BtnEventBlock, ButtonsTypes, CircleTypes, GroupTypes, IStartPointPathInfo, SettingIcons, IRectCustom } from './shapes-interface';
+import { BtnEventBlock, ButtonsTypes, CircleTypes, GroupTypes, IStartPointPathInfo, SettingIcons, IRectCustom, LineType } from './shapes-interface';
 
 
 const ShapeCreator = {
@@ -60,6 +60,7 @@ const ShapeCreator = {
     return new Konva.Path({
       data: '',
       start_info,
+      type:LineType.LineTypeWires,
       attached: true,
       strokeWidth: 3,
       lineJoin: 'round',
