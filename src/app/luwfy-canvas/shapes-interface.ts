@@ -25,6 +25,10 @@ export enum ButtonsTypes {
   DeleteButton = 'deleteButton'
 }
 
+export enum LineType {
+  LineTypeWires = 'wires',
+}
+
 export interface ICoordinates {
   x: number,
   y: number,

@@ -56,6 +56,18 @@ export class BlocksService {
     });
   }
 
+  getFlowBoardById(flowBoardId: number)
+  {
+    return this.flowboards.find((flowBoardElement => {
+      if(flowBoardElement._id === flowBoardId)
+      {
+        return flowBoardElement;
+
+
+      }
+    }))
+  }
+
   getCodData() {
     return this.codData;
   }
