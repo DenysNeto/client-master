@@ -17,6 +17,7 @@ interface PaletteDataPayload {
   color: any,
   input: boolean,
   outputs: number,
+  luwfyform_id: string,
   "Luwfyimage.code_icon": any,
   "Blockselected.LuwfyblockBlockselected.blockselected_id": any,
   "Blockselected.LuwfyblockBlockselected.luwfyblock": any,
@@ -52,6 +53,7 @@ export class HttpClientService {
     const { id, name, color, input, outputs, active } = dataPayload;
     return {
       name, color, input, outputs, id, active,
+      luwfyFormId: dataPayload.luwfyform_id,
       luwfyImageId: dataPayload["Luwfyimage.code_icon"],
       luwfyBlockCategoyName: dataPayload["Luwfyblockcategory.name"],
       storeName: DataStorages.PALLETE_ELEMENTS
@@ -99,15 +101,22 @@ export class HttpClientService {
 
 
   }
+
+
+  async  getInitialRequestToGetForProject() {
+    await this.getPaletteData();
+    await this.getInitialDataByProjectId();
+
+  }
+
   //when the application  has id we got last updated data from server
-  getInitialDataByProjectId(projectId: string) {
+  getInitialDataByProjectId(projectId?: string) {
     //TODO  change interfaces
     this.http.get(`${apiUrl}/instance/${temporaryProjectIdToPost}`).subscribe((dataPayload: any) => {
       console.log('[GET_INITIAL_DATA_BY_PROJECT_ID]', dataPayload);
       if (dataPayload) {
-        this.httpResponsePayload.next(dataPayload.json_b.stores);
-        console.log("getInitialDataByProjectId", dataPayload.json_b.stores);
-        this.httpResponsePayload.next(dataPayload.json_b.stores);
+        this.jsonInstancesService.setJsonInstancesObject(dataPayload.json_b);
+        // this.httpResponsePayload.next(dataPayload);
       }
 
     }, error => {
@@ -145,10 +154,10 @@ export class HttpClientService {
     let currentProjectId = localStorage.getItem(PROJECT_ID_KEY);
     //let indexedDbStoragePayload = await this.createDeployPayload();
     let indexedDbStoragePayload = await this.createDeployPayload();
-    console.log('JSON_TO_SEND', this.jsonInstancesService.jsonRegistryObject);
+    console.log('JSON_TO_SEND', this.jsonInstancesService.jsonInstancesObject);
 
     if (currentProjectId) {
-      this.postDataOnDeployWithProjectId(this.jsonInstancesService.jsonRegistryObject, currentProjectId)
+      this.postDataOnDeployWithProjectId(this.jsonInstancesService.jsonInstancesObject, currentProjectId)
     }
     else {
       this.postDataOnDeployWithoutProjectId(indexedDbStoragePayload);

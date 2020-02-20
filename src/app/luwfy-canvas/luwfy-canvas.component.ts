@@ -26,7 +26,7 @@ import { HttpClientService } from '../services/http-client.service';
 import { Observable, of } from 'rxjs';
 import { ExportWindowComponent } from '../popups/export-window/export-window.component';
 import { ImportWindowComponent } from '../popups/import-window/import-window.component';
-import { JsonRegistryService, TYPE_FOR_FLOWBOARD } from '../services/json-registry.service';
+import { JsonInstancesService, TYPE_FOR_FLOWBOARD } from '../services/json-instances.service';
 
 @Component({
   selector: 'luwfy-canvas',
@@ -36,7 +36,7 @@ import { JsonRegistryService, TYPE_FOR_FLOWBOARD } from '../services/json-regist
 
 export class CanvasComponent implements OnInit, AfterViewInit {
   constructor(
-    private jsonRegistryService: JsonRegistryService,
+    private jsonInstancesService: JsonInstancesService,
     private RegistryService: RegistryService,
     private canvasService: CanvasService,
     private dialog: MatDialog,
@@ -423,19 +423,27 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
     if (this.canvasService.selectedBlocks.length > 0) {
       this.canvasService.selectedBlocks.forEach(selectedBlock => {
+
         let currentFlowboard = this.blocksService.getFlowBoardById(selectedBlock.parent._id);
-        let allWiresLinesFromFlowboard = this.canvasService.getAllWiresLinesFromFlowboard(currentFlowboard);
+        let allWiresLinesInFlowboard = this.canvasService.getAllWiresLinesFromFlowboard(currentFlowboard);
+        console.log('allWiresLinesInFlowboard', allWiresLinesInFlowboard);
         let inputWiresLinesForBlock = [];
-        if (allWiresLinesFromFlowboard) {
-          allWiresLinesFromFlowboard.each(wireLine => {
+        if (allWiresLinesInFlowboard) {
+          allWiresLinesInFlowboard.each(wireLine => {
+            console.log('wireLine', wireLine.attrs.end_info.end_group_id, selectedBlock._id);
             if (wireLine.attrs.end_info.end_group_id == selectedBlock._id) {
               inputWiresLinesForBlock.push(wireLine);
             }
           })
         }
+        console.log('inputWiresLinesForBlock', inputWiresLinesForBlock);
         if (inputWiresLinesForBlock.length > 0) {
-          inputWiresLinesForBlock.forEach(inputWireLine => inputWireLine.remove());
+          inputWiresLinesForBlock.forEach(inputWireLine => {
+            this.jsonInstancesService.deleteWireInJsonInstances(inputWireLine._id);
+            inputWireLine.remove();
+          })
         }
+        this.jsonInstancesService.deleteElementFromJsonInstances(selectedBlock._id)
         selectedBlock.remove();
 
       });
@@ -635,7 +643,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
             this.blocksService.removeFlowboard(flowboard._id);
 
             console.log("flowboard", flowboard);
-            this.jsonRegistryService.deleteElementFromJsonRegistry(flowboard._id);
+            this.jsonInstancesService.deleteElementFromJsonInstances(flowboard._id);
             this.localNotificationService.sendLocalNotification(`Flowboard "${flowboard.attrs.name}" was deleted.`, NotificationTypes.INFO);
           }
         })
@@ -657,8 +665,10 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     //this.loadingDataFromIDB();
   }
 
+
+
   ngOnInit() {
-    this.httpClientService.getPaletteData();
+    this.httpClientService.getInitialRequestToGetForProject();
     // this.httpClientService.getInitialData();
     this.httpClientService.httpResponsePayload.subscribe((payloadData) => {
       this.iDBService.getStoreFromIDBByNameAndClear(payloadData[0].storeName);
@@ -747,7 +757,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
             let outputsAmount = this.canvasService.getAllOutputPortsForBoard(this.currentDraggedGroup);
 
-            this.jsonRegistryService.createBlockInJsonRegistry({
+            this.jsonInstancesService.createBlockInJsonInstances({
               id: this.currentDraggedGroup._id,
               wires: [],
               outputs: outputsAmount,
@@ -1001,7 +1011,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       });
 
 
-    this.jsonRegistryService.updateTabInJsonRegistry({
+    this.jsonInstancesService.updateFlowboardInJsonInstances({
       id: newFlow._id,
       type: TYPE_FOR_FLOWBOARD,
       label: newFlow.attrs.name,

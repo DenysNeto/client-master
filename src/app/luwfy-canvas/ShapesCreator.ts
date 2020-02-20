@@ -1,7 +1,7 @@
 import Konva from 'konva';
 import { theme } from './theme';
 import { FlowboardSizes, ShapesSizes, ShapesSizes as sizes } from './sizes';
-import { ButtonsTypes, CircleTypes, GroupTypes, IStartPointPathInfo } from './shapes-interface';
+import { ButtonsTypes, CircleTypes, GroupTypes, IStartPointPathInfo, LineType, IBlockIcons } from './shapes-interface';
 
 
 const ShapeCreator = {
@@ -59,6 +59,7 @@ const ShapeCreator = {
   createLine: (start_info?: IStartPointPathInfo, strokeColor?) => {
     return new Konva.Path({
       data: '',
+      type: LineType.LineTypeWires,
       start_info,
       attached: true,
       strokeWidth: 3,
@@ -79,12 +80,14 @@ const ShapeCreator = {
       x: 0,
       padding: 2,
       fontFamily: 'FontAwesome',
+      type: IBlockIcons.EditIcon, 
       fontSize: 19,
       text: "\uf040",
       fill: 'orange'
     }),
       new Konva.Text({
         x: 20,
+        type: IBlockIcons.SettingsIcon,
         padding: 2,
         fontFamily: 'FontAwesome',
         fontSize: 19,
@@ -93,6 +96,7 @@ const ShapeCreator = {
       }),
       new Konva.Text({
         x: 40,
+        type: IBlockIcons.SettingsIcon,
         padding: 2,
         fontFamily: 'FontAwesome',
         fontSize: 19,

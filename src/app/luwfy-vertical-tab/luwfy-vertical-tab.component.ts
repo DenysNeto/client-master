@@ -20,16 +20,18 @@ export class LuwfyVerticalTabComponent implements OnInit {
   paletteluwfyImageId = "fa fa-address-book";
   colors: Color[] = [];
   images: Image[] = [];
+  icon = "f2de";
+
+
 
   constructor(private registryService: RegistryService, private canvasService: CanvasService, private iDBService: IdbService) {
+
   }
 
 
 
 
   ngOnInit() {
-
-
     this.iDBService.dataInitializationFinished.subscribe(() => {
 
       // this.iDBService.getAllData(DataStorages.CATEGORIES).then(data => {
@@ -50,16 +52,10 @@ export class LuwfyVerticalTabComponent implements OnInit {
       this.iDBService.getAllData(DataStorages.PALLETE_ELEMENTS).then(data => {
         if (data) {
           this.palettes = data;
-          // this.palettes.forEach(paletteElement => {
-
-
-          //   paletteElement.luwfyImageId = '\&#x' + paletteElement.luwfyImageId + ';';
-          //   paletteElement.luwfyImageId.replace("^\"|\"$", "")
-          // }
-
-
-
-          console.log('PALETTES', this.palettes);
+          this.palettes.forEach(paletteElement => {
+            paletteElement.luwfyImageId = '\&#x' + paletteElement.luwfyImageId + ';';
+            //paletteElement.luwfyImageId.replace("^\"|\"$", "")
+          })
         }
       });
 

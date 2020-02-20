@@ -34,6 +34,12 @@ export interface ICoordinates {
   y: number,
 }
 
+export enum IBlockIcons {
+  EditIcon = "editIcon",
+  WizardIcon = "wizard_icon",
+  SettingsIcon = "setting_icon"
+}
+
 export interface ICurrentLineToDraw {
   isLineDrawable: boolean,
   flowboardId: number
